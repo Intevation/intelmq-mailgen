@@ -10,7 +10,6 @@ Implemented workarounds for Python 2.6, postgres 9.1 and old debian packages:
 TODO: "feed.name" ILIKE '%' is slow
 """
 from __future__ import print_function, unicode_literals
-
 import argparse
 import csv
 import datetime
@@ -24,24 +23,18 @@ import sys
 import tempfile
 import zipfile
 import six
-
 import prettytable
 import psycopg2
 import psycopg2.extras
 from termstyle import bold, green, inverted, red, reset
-
 import rt
-
 from intelmq.lib import utils
-
 
 """ options """
 dryrun = False
 verbose = False
 compress_csv = False
-boilerplate=None
-
-
+boilerplate = None
 
 if locale.getpreferredencoding() != 'UTF-8':
     print(red('The preferred encoding of your locale setting is not UTF-8 but'
@@ -53,7 +46,7 @@ if sys.version[0] == '2':
     input = raw_input
 
 CONFIG = dict()
-home = os.path.expanduser("~")      # needed for OSX
+home = os.path.expanduser("~")  # needed for OSX
 with open(os.path.expanduser(home + '/.intelmq/intelmqcli.conf')) as conf_handle:
     user_config = json.load(conf_handle)
 with open('/etc/intelmq/intelmqcli.conf') as conf_handle:
@@ -150,17 +143,20 @@ GROUP BY {conttab}.contacts, grouping;
 send out.  This is based on the order and fields of shadowserver.
 
 Shadowserver format:
-    timestamp,"ip","protocol","port","hostname","packets","size","asn","geo","region","city","naics","sic","sector"
+    timestamp,"ip","protocol","port","hostname","packets","size","asn","geo","region","city",
+    "naics","sic","sector"
 """
 
-CSV_FIELDS=["time.source", "source.ip", "protocol.transport", "source.port", "protocol.application",
-            "source.fqdn", "source.local_hostname", "source.local_ip", "source.url",
-            "source.asn", "source.geolocation.cc",
-            "source.geolocation.city",
-            "classification.taxonomy", "classification.type", "classification.identifier",
-            "destination.ip","destination.port","destination.fqdn","destination.url",
-            "feed", "event_description.text","event_description.url","malware.name","comment", "additional_field_freetext","version: 1.0"
-           ]
+CSV_FIELDS = ["time.source", "source.ip", "protocol.transport", "source.port",
+              "protocol.application",
+              "source.fqdn", "source.local_hostname", "source.local_ip", "source.url",
+              "source.asn", "source.geolocation.cc",
+              "source.geolocation.city",
+              "classification.taxonomy", "classification.type", "classification.identifier",
+              "destination.ip", "destination.port", "destination.fqdn", "destination.url",
+              "feed", "event_description.text", "event_description.url", "malware.name", "comment",
+              "additional_field_freetext", "version: 1.0"
+              ]
 
 QUERY_BY_ASCONTACT = """
 SELECT
@@ -310,7 +306,6 @@ WHERE
 """.format(evtab=CONFIG['database']['events_table'], cc=CONFIG['filter']['cc'],
            conttab=CONFIG['database']['contacts_table'])
 
-
 QUERY_SET_RTIRID = """
 UPDATE {evtab} SET
     rtir_{{type}}_id = {{rtirid}},
@@ -356,15 +351,15 @@ def get_text(query):
     else:
         text_id = types[0]
     if len(types) == 1:
-        CUR.execute(QUERY_GET_TEXT, (text_id, ))
+        CUR.execute(QUERY_GET_TEXT, (text_id,))
         if CUR.rowcount:
             text = CUR.fetchall()[0]['body']
 
     if text is None and boilerplate:
-        return red('--text param given, but boilerplate text %s not found!' %text_id)
+        return red('--text param given, but boilerplate text %s not found!' % text_id)
 
     if text is None:
-        CUR.execute(QUERY_GET_TEXT, (CONFIG['database']['default_key'], ))
+        CUR.execute(QUERY_GET_TEXT, (CONFIG['database']['default_key'],))
         if CUR.rowcount:
             text = CUR.fetchall()[0]['body']
         else:
@@ -431,14 +426,14 @@ def query_by_as(contact, requestor=None, automatic=False, feed='%'):
     else:
         csvfile = io.StringIO()
     if CSV_FIELDS:
-        fieldnames=CSV_FIELDS
+        fieldnames = CSV_FIELDS
     else:
-        fieldnames=(query[0].keys())    # send all
+        fieldnames = (query[0].keys())  # send all
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames,
                             extrasaction='ignore', lineterminator='\n')
     writer.writeheader()
     writer.writerows(query)
-    # note this might contain UTF-8 chars! let's ignore utf-8 errors. sorry. 
+    # note this might contain UTF-8 chars! let's ignore utf-8 errors. sorry.
     attachment_text = utils.decode(csvfile.getvalue(), force=True)
     attachment_lines = attachment_text.splitlines()
 
@@ -539,7 +534,7 @@ Subject: {subj}
                                  date=subj_date,
                                  type=row['classification.type'],
                                  target=target_from_row(row)))
-            save_to_rt(ids=(id_, ), subject=subject, requestor=requestor,
+            save_to_rt(ids=(id_,), subject=subject, requestor=requestor,
                        csvfile=csvfile, body=text)
 
     if requestor != contact and not dryrun:
@@ -644,6 +639,7 @@ def count_by_asn(feed='%'):
           ''.format(sum((row['count'] for row in asn_count)), len(asn_count)))
     return asn_count
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog=APPNAME,
@@ -662,7 +658,8 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Print verbose messages.')
     parser.add_argument('-c', '--compress-csv', action='store_true',
-                        help='Automatically compress/shrink the attached CSV report if fields are empty (default = False).')
+                        help='Automatically compress/shrink the attached CSV report if fields are '
+                             'empty (default = False).')
     parser.add_argument('-n', '--dry-run', action='store_true',
                         help='Do not store anything or change anything. Just simulate.')
     args = parser.parse_args()
