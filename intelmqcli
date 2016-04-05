@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Implemented workarounds for Python 2.6, postgres 9.1 and old debian packages:
-    own table_from_query() instead of prettytable.from_csv()
-    postgres to_char(time.source, 'TZ') instead of 'OF' (from 9.4 up)
-        This gives the timezone instead of the offset (empty if UTC)
-    BytesIO instead of StringIO on Python 2 for csv module
+Implemented workarounds:
+    - postgres to_char(time.source, 'TZ') instead of 'OF' (from 9.4 up)
+      This gives the timezone instead of the offset (empty if UTC)
+    - BytesIO instead of StringIO on Python 2 for csv module
 
 TODO: "feed.name" ILIKE '%' is slow
 """
-from __future__ import print_function, unicode_literals
 import argparse
 import csv
 import datetime
@@ -379,14 +377,6 @@ def target_from_row(row):
             return row[key]
 
 
-def table_from_query(query):
-    header = sorted(query[0].keys())
-    table = prettytable.PrettyTable(header)
-    for row in query:
-        table.add_row([row[key] for key in header])
-    return table
-
-
 def shrink_dict(d):
     if not compress_csv:
         return d
@@ -458,14 +448,14 @@ Subject: {subj}
                 try:
                     handle.write(str(prettytable.from_csv(csvfile)))
                 except AttributeError:
-                    handle.write(str(table_from_query(query)))
+                    handle.write(str(prettytable.from_csv(query)))
                 handle.seek(0)
                 subprocess.call(['less', handle.name])
         else:
             try:
                 print(showed_text, prettytable.from_csv(csvfile), sep='\n')
             except AttributeError:
-                print(showed_text, table_from_query(query), sep='\n')
+                print(showed_text, prettytable.from_csv(query), sep='\n')
     else:
         height = getTerminalHeight() - 4
         if 5 + len(query) > height:  # cut query too, 5 is length of text
