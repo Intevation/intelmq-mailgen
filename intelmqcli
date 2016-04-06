@@ -25,7 +25,6 @@ import prettytable
 import psycopg2
 import psycopg2.extras
 from termstyle import bold, green, inverted, red, reset
-import rt
 from intelmq.lib import utils
 
 """ options """
@@ -106,7 +105,6 @@ CON = psycopg2.connect(database=CONFIG['database']['database'],
 CUR = CON.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 CON.autocommit = True
 
-RT = rt.Rt(CONFIG['rt']['uri'], CONFIG['rt']['user'], CONFIG['rt']['password'])
 TABLE_MODE = False  # for sticky table mode
 
 QUERY_COUNT_ASN = """
@@ -544,69 +542,7 @@ Subject: {subj}
 
 
 def save_to_rt(ids, subject, requestor, csvfile, body):
-    if dryrun:
-        print('Not writing to RT, dry-run selected.')
-        return
-
-    b = six.text_type(body, encoding='utf8', errors='ignore')
-    body = b
-
-    report_id = RT.create_ticket(Queue='Incident Reports', Subject=subject,
-                                 Owner=CONFIG['rt']['user'])
-    if report_id == -1:
-        print(red('Could not create Incident Report.'))
-        return
-    print(green('Created Incident Report {}.'.format(report_id)))
-    CUR.execute(QUERY_SET_RTIRID.format(ids=','.join(ids), rtirid=report_id,
-                                        type='report'))
-    if True:  # TODO: implement zip config
-        attachment = csvfile
-        attachment.seek(0)
-        filename = 'events.csv'
-    else:
-        attachment = io.BytesIO()
-        ziphandle = zipfile.ZipFile(attachment, mode='w')
-        ziphandle.writestr('events.csv', csvfile.getvalue())
-        ziphandle.close()
-        attachment.seek(0)
-        filename = 'events.zip'
-
-    incident_id = RT.create_ticket(Queue='Incidents', Subject=subject,
-                                   Owner=CONFIG['rt']['user'])
-    if incident_id == -1:
-        print(red('Could not create Incident.'))
-        return
-    print(green('Created Incident {}.'.format(incident_id)))
-    if not RT.edit_link(report_id, 'MemberOf', incident_id):
-        print(red('Could not link Incident to Incident Report.'))
-        return
-    CUR.execute(QUERY_SET_RTIRID.format(ids=','.join(ids), rtirid=incident_id,
-                                        type='incident'))
-    investigation_id = RT.create_ticket(Queue='Investigations',
-                                        Subject=subject,
-                                        Owner=CONFIG['rt']['user'],
-                                        Requestor=requestor)
-    if investigation_id == -1:
-        print(red('Could not create Investigation.'))
-        return
-    print(green('Created Investigation {}.'.format(investigation_id)))
-    if not RT.edit_link(incident_id, 'HasMember', investigation_id):
-        print(red('Could not link Investigation to Incident.'))
-        return
-
-    # TODO: CC
-    correspond = RT.reply(investigation_id, text=body,
-                          files=[(filename, attachment, 'text/csv')])
-    if not correspond:
-        print(red('Could not correspond with text and file.'))
-        return
-    print(green('Correspondence added to Investigation.'))
-
-    CUR.execute(QUERY_SET_RTIRID.format(ids=','.join(ids),
-                                        rtirid=investigation_id,
-                                        type='investigation'))
-    if not RT.edit_ticket(incident_id, Status='resolved'):
-        print(red('Could not close incident {}.'.format(incident_id)))
+    pass
 
 
 def count_by_asn(feed='%'):
@@ -677,12 +613,6 @@ if __name__ == '__main__':
                 print(row['key'])
         exit(0)
 
-    if not RT.login():
-        print(red('Could not login as {} on {}.'.format(CONFIG['rt']['user'],
-                                                        CONFIG['rt']['uri'])))
-    else:
-        print('Logged in as {} on {}.'.format(CONFIG['rt']['user'],
-                                              CONFIG['rt']['uri']))
     try:
         while True:
             asn_count = count_by_asn(feed=args.feed)
@@ -724,5 +654,4 @@ if __name__ == '__main__':
             print()
         else:
             raise
-    finally:
-        RT.logout()
+
