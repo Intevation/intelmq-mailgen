@@ -55,6 +55,7 @@ for key, value in user_config.items():
     else:
         CONFIG[key] = value
 
+
 APPNAME = "intelmqcli"
 DESCRIPTION = """
 """
@@ -95,15 +96,15 @@ USAGE = '''
     intelmqcli --text='boilerplate name'
     intelmqcli --feed='feedname' '''
 
-CON = psycopg2.connect(database=CONFIG['database']['database'],
-                       user=CONFIG['database']['user'],
-                       password=CONFIG['database']['password'],
-                       host=CONFIG['database']['host'],
-                       port=CONFIG['database']['port'],
-                       sslmode=CONFIG['database']['sslmode'],
-                       )
-CUR = CON.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-CON.autocommit = True
+CON_EVENTDB = psycopg2.connect(database=CONFIG['database']['cevent']['name'],
+                               user=CONFIG['database']['event']['username'],
+                               password=CONFIG['database']['event']['password'],
+                               host=CONFIG['database']['event']['host'],
+                               port=CONFIG['database']['event']['port'],
+                               #sslmode=CONFIG['database']['event']['sslmode'],
+                               )
+CUR_EVENTDB = CON_EVENTDB.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+CON_EVENTDB.autocommit = True
 
 TABLE_MODE = False  # for sticky table mode
 
