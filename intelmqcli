@@ -10,23 +10,13 @@ TODO: "feed.name" ILIKE '%' is slow
 """
 import smtplib
 import argparse
-import csv
-import datetime
-import io
 import json
 import locale
 import os
-import pprint
 import subprocess
-import sys
-import tempfile
-import zipfile
-import six
-import prettytable
 import psycopg2
 import psycopg2.extras
-from termstyle import bold, green, inverted, red, reset
-from intelmq.lib import utils
+from termstyle import red # bold, green, inverted, reset
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
@@ -42,10 +32,9 @@ if locale.getpreferredencoding() != 'UTF-8':
               '{}. Exiting.'.format(locale.getpreferredencoding())))
     exit(1)
 
-myinverted = str(reset) + str(inverted)
-if sys.version[0] == '2':
-    input = raw_input
 
+# Construct a single configuration dictionary with the contents of the different
+# conf files
 CONFIG = dict()
 home = os.path.expanduser("~")  # needed for OSX
 with open(os.path.expanduser(home + '/.intelmq/intelmqcli.conf')) as conf_handle:
@@ -105,265 +94,14 @@ CON_EVENTDB = psycopg2.connect(database=CONFIG['database']['event']['name'],
                                password=CONFIG['database']['event']['password'],
                                host=CONFIG['database']['event']['host'],
                                port=CONFIG['database']['event']['port'],
-                               #sslmode=CONFIG['database']['event']['sslmode'],
+                               # sslmode=CONFIG['database']['event']['sslmode'],
                                )
 CUR_EVENTDB = CON_EVENTDB.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 CON_EVENTDB.autocommit = True
 
-TABLE_MODE = False  # for sticky table mode
-
-QUERY_COUNT_ASN = """
-SELECT
-    COUNT(*) as count,
-    COALESCE({conttab}.contacts, '') as contacts,
-    string_agg(DISTINCT cast({evtab}."source.asn" as varchar), ', ') as asn,
-    string_agg(DISTINCT {evtab}."classification.type", ', ') as classification,
-    string_agg(DISTINCT {evtab}."feed.code", ', ') as feeds,
-    COALESCE({conttab}.contacts, cast({evtab}."source.asn" as varchar))
-        as grouping
-FROM {evtab}
-LEFT OUTER JOIN as_contacts ON {evtab}."source.asn" = {conttab}.asnum
-WHERE
-    notify = TRUE AND (
-        {evtab}.rtir_report_id IS NULL OR
-        {evtab}.rtir_incident_id IS NULL OR
-        {evtab}.rtir_investigation_id IS NULL
-    )
-    AND
-    (
-        {evtab}."source.geolocation.cc" LIKE '{cc}' OR
-        {evtab}."source.fqdn" LIKE %s
-    )
-    AND "feed.name" ILIKE %s AND
-    "time.source" IS NOT NULL
-GROUP BY {conttab}.contacts, grouping;
-"""
-###.format(evtab=CONFIG['database']['events_table'], cc=CONFIG['filter']['cc'],
-###           conttab=CONFIG['database']['contacts_table'])
-
-
-""" This is the list of fields (and their respective order) which we intend to
-send out.  This is based on the order and fields of shadowserver.
-
-Shadowserver format:
-    timestamp,"ip","protocol","port","hostname","packets","size","asn","geo","region","city",
-    "naics","sic","sector"
-"""
-
-CSV_FIELDS = ["time.source", "source.ip", "protocol.transport", "source.port",
-              "protocol.application",
-              "source.fqdn", "source.local_hostname", "source.local_ip", "source.url",
-              "source.asn", "source.geolocation.cc",
-              "source.geolocation.city",
-              "classification.taxonomy", "classification.type", "classification.identifier",
-              "destination.ip", "destination.port", "destination.fqdn", "destination.url",
-              "feed", "event_description.text", "event_description.url", "malware.name", "comment",
-              "additional_field_freetext", "version: 1.0"
-              ]
-
 QUERY_GET_EVENTS = """SELECT * FROM events LIMIT 40"""
 
-QUERY_BY_ASCONTACT = """
-SELECT
-    to_char({evtab}."time.source",
-            'YYYY-MM-DD"T"HH24:MI:SSOF') as "time.source",
-    {evtab}.id,
-    {evtab}."feed.code" as feed,
-    {evtab}."source.ip",
-    {evtab}."source.port",
-    {evtab}."source.asn",
-    {evtab}."source.network",
-    {evtab}."source.geolocation.cc",
-    {evtab}."source.geolocation.region",
-    {evtab}."source.geolocation.city",
-    {evtab}."source.account",
-    {evtab}."source.fqdn",
-    {evtab}."source.local_hostname",
-    {evtab}."source.local_ip",
-    {evtab}."source.reverse_dns",
-    {evtab}."source.tor_node",
-    {evtab}."source.url",
-    {evtab}."classification.identifier",
-    {evtab}."classification.taxonomy",
-    {evtab}."classification.type",
-    {evtab}."comment",
-    {evtab}."destination.ip",
-    {evtab}."destination.port",
-    {evtab}."destination.asn",
-    {evtab}."destination.network",
-    {evtab}."destination.geolocation.cc",
-    {evtab}."destination.geolocation.region",
-    {evtab}."destination.geolocation.city",
-    {evtab}."destination.account",
-    {evtab}."destination.fqdn",
-    {evtab}."destination.local_hostname",
-    {evtab}."destination.local_ip",
-    {evtab}."destination.reverse_dns",
-    {evtab}."destination.tor_node",
-    {evtab}."destination.url",
-    {evtab}."event_description.target",
-    {evtab}."event_description.text",
-    {evtab}."event_description.url",
-    {evtab}."event_hash",
-    {evtab}."extra",
-    {evtab}."feed.accuracy",
-    {evtab}."malware.hash",
-    {evtab}."malware.hash.md5",
-    {evtab}."malware.hash.sha1",
-    {evtab}."malware.name",
-    {evtab}."malware.version",
-    {evtab}."misp_uuid",
-    {evtab}."notify",
-    {evtab}."protocol.application",
-    {evtab}."protocol.transport",
-    {evtab}."screenshot_url",
-    {evtab}."status",
-    {evtab}."time.observation"
-FROM events
-LEFT OUTER JOIN {conttab} ON {evtab}."source.asn" = {conttab}.asnum
-WHERE
-    notify = TRUE AND (
-        {evtab}.rtir_report_id IS NULL OR
-        {evtab}.rtir_incident_id IS NULL OR
-        {evtab}.rtir_investigation_id IS NULL
-    ) AND
-    (
-        {evtab}."source.geolocation.cc" LIKE '{cc}' OR
-        {evtab}."source.fqdn" LIKE %s
-    ) AND
-    {conttab}.contacts = %s AND
-    "feed.name" ILIKE %s AND
-    "time.source" IS NOT NULL;
-"""
-###""".format(evtab=CONFIG['database']['events_table'], cc=CONFIG['filter']['cc'],
-###           conttab=CONFIG['database']['contacts_table'])
-
-
-QUERY_BY_ASNUM = """
-SELECT
-    to_char({evtab}."time.source" at time zone 'UTC',
-            'YYYY-MM-DD"T"HH24:MI:SSOF') as "time.source",
-    {evtab}.id,
-    {evtab}."feed.code" as feed,
-    {evtab}."source.ip",
-    {evtab}."source.port",
-    {evtab}."source.asn",
-    {evtab}."source.network",
-    {evtab}."source.geolocation.cc",
-    {evtab}."source.geolocation.region",
-    {evtab}."source.geolocation.city",
-    {evtab}."source.account",
-    {evtab}."source.fqdn",
-    {evtab}."source.local_hostname",
-    {evtab}."source.local_ip",
-    {evtab}."source.reverse_dns",
-    {evtab}."source.tor_node",
-    {evtab}."source.url",
-    {evtab}."classification.identifier",
-    {evtab}."classification.taxonomy",
-    {evtab}."classification.type",
-    {evtab}."comment",
-    {evtab}."destination.ip",
-    {evtab}."destination.port",
-    {evtab}."destination.asn",
-    {evtab}."destination.network",
-    {evtab}."destination.geolocation.cc",
-    {evtab}."destination.geolocation.region",
-    {evtab}."destination.geolocation.city",
-    {evtab}."destination.account",
-    {evtab}."destination.fqdn",
-    {evtab}."destination.local_hostname",
-    {evtab}."destination.local_ip",
-    {evtab}."destination.reverse_dns",
-    {evtab}."destination.tor_node",
-    {evtab}."destination.url",
-    {evtab}."event_description.target",
-    {evtab}."event_description.text",
-    {evtab}."event_description.url",
-    {evtab}."event_hash",
-    {evtab}."extra",
-    {evtab}."feed.accuracy",
-    {evtab}."malware.hash",
-    {evtab}."malware.hash.md5",
-    {evtab}."malware.hash.sha1",
-    {evtab}."malware.name",
-    {evtab}."malware.version",
-    {evtab}."misp_uuid",
-    {evtab}."notify",
-    {evtab}."protocol.application",
-    {evtab}."protocol.transport",
-    {evtab}."screenshot_url",
-    {evtab}."status",
-    {evtab}."time.observation"
-FROM events
-LEFT OUTER JOIN {conttab} ON {evtab}."source.asn" = {conttab}.asnum
-WHERE
-    notify = TRUE AND (
-        {evtab}.rtir_report_id IS NULL OR
-        {evtab}.rtir_incident_id IS NULL OR
-        {evtab}.rtir_investigation_id IS NULL
-    ) AND
-    (
-        {evtab}."source.geolocation.cc" LIKE '{cc}' OR
-        {evtab}."source.fqdn" LIKE %s
-    ) AND
-    {evtab}."source.asn" = %s AND
-    "feed.name" ILIKE %s AND
-    "time.source" IS NOT NULL;
-"""
-###""".format(evtab=CONFIG['database']['events_table'], cc=CONFIG['filter']['cc'],
-###           conttab=CONFIG['database']['contacts_table'])
-
-
-
-QUERY_GET_TEXT = """
-SELECT
-    body
-FROM {texttab}
-WHERE
-    key = %s
-"""
-#""".format(texttab=CONFIG['database']['text_table'])
-
-
 QUERY_TEXT_NAMES = "SELECT DISTINCT \"key\" from boilerplates"
-
-
-def get_text(query):
-    types = [row['classification.identifier'] for row in query
-             if 'classification.identifier' in row]
-    text = None
-    if boilerplate:
-        text_id = boilerplate
-    else:
-        text_id = types[0]
-    if len(types) == 1:
-        CUR.execute(QUERY_GET_TEXT, (text_id,))
-        if CUR.rowcount:
-            text = CUR.fetchall()[0]['body']
-
-    if text is None and boilerplate:
-        return red('--text param given, but boilerplate text %s not found!' % text_id)
-
-    if text is None:
-        CUR.execute(QUERY_GET_TEXT, (CONFIG['database']['default_key'],))
-        if CUR.rowcount:
-            text = CUR.fetchall()[0]['body']
-        else:
-            return red('Default text not found!')
-
-    return text
-
-
-def target_from_row(row):
-    """
-    Returns the first value in give row that exists from this list of keys:
-    'source.ip', 'source.fqdn', 'source.url', 'source.account'
-    """
-    keys = ['source.ip', 'source.fqdn', 'source.url', 'source.account']
-    for key in keys:
-        if key in row:
-            return row[key]
 
 
 def shrink_dict(d):
@@ -380,27 +118,6 @@ def shrink_dict(d):
 
 def getTerminalHeight():
     return int(subprocess.check_output(['stty', 'size']).strip().split()[0])
-
-
-def count_by_asn(feed='%'):
-    # TODO: Existing RT ids!
-    CUR.execute(QUERY_COUNT_ASN, (CONFIG['filter']['fqdn'], feed))
-    asn_count = CUR.fetchall()
-    if not asn_count:
-        print('No incidents!')
-        exit(0)
-    print('=' * 100)
-    table = prettytable.PrettyTable(map(bold, ['id', 'n°', 'ASNs', 'contacts',
-                                               'types', 'feeds']))
-    table.align = 'l'
-    for number, row in enumerate(asn_count):
-        table.add_row([number, row['count'], row['asn'], row['contacts'],
-                       row['classification'], row['feeds']])
-    print(table.get_string(border=False, padding_width=1))
-
-    print('{} incidents for {} contacts.'
-          ''.format(sum((row['count'] for row in asn_count)), len(asn_count)))
-    return asn_count
 
 
 def send_email(event):
@@ -423,10 +140,12 @@ def send_email(event):
     smtp.sendmail(EMAIL_FROM, event['email_to'], msg.as_string())
     smtp.close()
 
+
 def process_events(event_list):
     for event in event_list:
         send_email(event)
     pass
+
 
 def get_event_list():
     '''
@@ -448,7 +167,6 @@ if __name__ == '__main__':
     )
     parser.add_argument('-L', '--list-texts', action='store_true',
                         help='List all existing texts.')
-    parser.add_argument('-t', '--text', nargs=1, help='Specify the text to be used.')
     parser.add_argument('-a', '--all', action='store_true', help='Process all events (batch mode)')
     parser.add_argument('-f', '--feed', nargs='?', default='%', const='%',
                         help='Show only incidents reported by given feed.')
@@ -477,7 +195,7 @@ if __name__ == '__main__':
             print('Current batch:')
             for i in to_process:
                 print('    * {0}'.format(i.get('event_description.text')))
-       
+
         if args.all:
             answer = 'a'
         else:
@@ -499,51 +217,8 @@ if __name__ == '__main__':
             break
 
     if args.list_texts:
-        CUR.execute(QUERY_TEXT_NAMES)
-        for row in CUR.fetchall():
+        CUR_EVENTDB.execute(QUERY_TEXT_NAMES)
+        for row in CUR_EVENTDB.fetchall():
             if row['key']:
                 print(row['key'])
         exit(0)
-
-    # try:
-    #     while True:
-    #         asn_count = count_by_asn(feed=args.feed)
-    #         if verbose:
-    #             print(sys.stderr, 'asn_count = {}.'.format(asn_count))
-    #         answer = input('{i}detailed view by id, {b}[a]{i}utomatic '
-    #                        'sending, {b}[q]{i}uit?{r} '
-    #                        ''.format(b=bold, i=myinverted, r=reset)).strip()
-    #         try:
-    #             answer = int(answer)
-    #         except ValueError:
-    #             pass
-    #         if answer == 'q':
-    #             break
-    #         elif answer == 'a':
-    #             for item in asn_count:
-    #                 if item['contacts']:
-    #                     query_by_as(item['contacts'], automatic=True,
-    #                                 feed=args.feed)
-    #                 else:
-    #                     if item['asn']:
-    #                         query_by_as(int(item['asn']), automatic=True,
-    #                                     feed=args.feed)
-    #                     else:
-    #                         print(red('Can not query the data of an unknown ASN. Ignoring.'))
-    #         elif type(answer) is int:
-    #             if asn_count[answer]['contacts']:
-    #                 query_by_as(asn_count[answer]['contacts'], feed=args.feed)
-    #             else:
-    #                 if asn_count[answer] and asn_count[answer]['asn']:
-    #                     query_by_as(int(asn_count[answer]['asn']), feed=args.feed)
-    #                 else:
-    #                     print(red('no ASNs known. Ignoring.'))
-    #         else:
-    #             print(red('Unknown answer {!r}.'.format(answer)))
-    #
-    # except BaseException as exc:
-    #     if isinstance(exc, (SystemExit, KeyboardInterrupt)):
-    #         print()
-    #     else:
-    #         raise
-    #
