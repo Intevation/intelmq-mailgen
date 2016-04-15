@@ -8,6 +8,7 @@ Implemented workarounds:
 
 TODO: "feed.name" ILIKE '%' is slow
 """
+import smtplib
 import argparse
 import csv
 import datetime
@@ -26,6 +27,9 @@ import psycopg2
 import psycopg2.extras
 from termstyle import bold, green, inverted, red, reset
 from intelmq.lib import utils
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 
 """ options """
 dryrun = False
@@ -55,6 +59,7 @@ for key, value in user_config.items():
     else:
         CONFIG[key] = value
 
+EMAIL_FROM = 'noreply@example.com'
 
 APPNAME = "intelmqcli"
 DESCRIPTION = """
@@ -91,12 +96,11 @@ USAGE = '''
     intelmqcli --dry-run
     intelmqcli --verbose
     intelmqcli --compress-csv
-    intelmqcli --list-feeds
     intelmqcli --list-texts
     intelmqcli --text='boilerplate name'
     intelmqcli --feed='feedname' '''
 
-CON_EVENTDB = psycopg2.connect(database=CONFIG['database']['cevent']['name'],
+CON_EVENTDB = psycopg2.connect(database=CONFIG['database']['event']['name'],
                                user=CONFIG['database']['event']['username'],
                                password=CONFIG['database']['event']['password'],
                                host=CONFIG['database']['event']['host'],
@@ -133,8 +137,10 @@ WHERE
     AND "feed.name" ILIKE %s AND
     "time.source" IS NOT NULL
 GROUP BY {conttab}.contacts, grouping;
-""".format(evtab=CONFIG['database']['events_table'], cc=CONFIG['filter']['cc'],
-           conttab=CONFIG['database']['contacts_table'])
+"""
+###.format(evtab=CONFIG['database']['events_table'], cc=CONFIG['filter']['cc'],
+###           conttab=CONFIG['database']['contacts_table'])
+
 
 """ This is the list of fields (and their respective order) which we intend to
 send out.  This is based on the order and fields of shadowserver.
@@ -154,6 +160,8 @@ CSV_FIELDS = ["time.source", "source.ip", "protocol.transport", "source.port",
               "feed", "event_description.text", "event_description.url", "malware.name", "comment",
               "additional_field_freetext", "version: 1.0"
               ]
+
+QUERY_GET_EVENTS = """SELECT * FROM events LIMIT 40"""
 
 QUERY_BY_ASCONTACT = """
 SELECT
@@ -226,8 +234,10 @@ WHERE
     {conttab}.contacts = %s AND
     "feed.name" ILIKE %s AND
     "time.source" IS NOT NULL;
-""".format(evtab=CONFIG['database']['events_table'], cc=CONFIG['filter']['cc'],
-           conttab=CONFIG['database']['contacts_table'])
+"""
+###""".format(evtab=CONFIG['database']['events_table'], cc=CONFIG['filter']['cc'],
+###           conttab=CONFIG['database']['contacts_table'])
+
 
 QUERY_BY_ASNUM = """
 SELECT
@@ -300,31 +310,11 @@ WHERE
     {evtab}."source.asn" = %s AND
     "feed.name" ILIKE %s AND
     "time.source" IS NOT NULL;
-""".format(evtab=CONFIG['database']['events_table'], cc=CONFIG['filter']['cc'],
-           conttab=CONFIG['database']['contacts_table'])
+"""
+###""".format(evtab=CONFIG['database']['events_table'], cc=CONFIG['filter']['cc'],
+###           conttab=CONFIG['database']['contacts_table'])
 
-QUERY_SET_RTIRID = """
-UPDATE {evtab} SET
-    rtir_{{type}}_id = {{rtirid}},
-    sent_at = LOCALTIMESTAMP
-WHERE
-    id = ANY('{{{{{{ids}}}}}}'::int[]);
-""".format(evtab=CONFIG['database']['events_table'])
 
-QUERY_UPDATE_CONTACT = """
-UPDATE {conttab} SET
-    contacts = '{{contacts}}'
-WHERE
-    asnum = ANY('{{{{{{asns}}}}}}'::int[]);
-""".format(conttab=CONFIG['database']['contacts_table'])
-
-QUERY_INSERT_CONTACT = """
-INSERT INTO {conttab} (
-    asnum, contacts, comment, unreliable
-) VALUES (
-    %s, %s, %s, FALSE
-)
-""".format(conttab=CONFIG['database']['contacts_table'])
 
 QUERY_GET_TEXT = """
 SELECT
@@ -332,9 +322,9 @@ SELECT
 FROM {texttab}
 WHERE
     key = %s
-""".format(texttab=CONFIG['database']['text_table'])
+"""
+#""".format(texttab=CONFIG['database']['text_table'])
 
-QUERY_FEED_NAMES = "SELECT DISTINCT \"feed.name\" from events"
 
 QUERY_TEXT_NAMES = "SELECT DISTINCT \"key\" from boilerplates"
 
@@ -392,160 +382,6 @@ def getTerminalHeight():
     return int(subprocess.check_output(['stty', 'size']).strip().split()[0])
 
 
-def query_by_as(contact, requestor=None, automatic=False, feed='%'):
-    if type(contact) is int:
-        CUR.execute(QUERY_BY_ASNUM, (CONFIG['filter']['fqdn'], contact, feed))
-        if requestor is None:
-            requestor = ''
-    else:
-        CUR.execute(QUERY_BY_ASCONTACT, (CONFIG['filter']['fqdn'], contact, feed))
-        if requestor is None:
-            requestor = contact
-    query = shrink_dict(CUR.fetchall())
-    ids = list(str(row['id']) for row in query)
-    asns = set(str(row['source.asn']) for row in query)
-
-    subject = ('{date}: {count} incidents for your AS {asns}'
-               ''.format(count=len(query),
-                         date=datetime.datetime.now().strftime('%Y-%m-%d'),
-                         asns=', '.join(asns)))
-    text = get_text(query)
-    if sys.version_info[0] == 2:
-        csvfile = io.BytesIO()
-    else:
-        csvfile = io.StringIO()
-    if CSV_FIELDS:
-        fieldnames = CSV_FIELDS
-    else:
-        fieldnames = (query[0].keys())  # send all
-    writer = csv.DictWriter(csvfile, fieldnames=fieldnames,
-                            extrasaction='ignore', lineterminator='\n')
-    writer.writeheader()
-    writer.writerows(query)
-    # note this might contain UTF-8 chars! let's ignore utf-8 errors. sorry.
-    attachment_text = utils.decode(csvfile.getvalue(), force=True)
-    attachment_lines = attachment_text.splitlines()
-
-    if verbose:
-        pprint.pprint(text)
-
-    showed_text = '=' * 100 + '''
-To: {to}
-Subject: {subj}
-
-{text}
-'''.format(to=requestor, subj=subject, text=six.text_type(text, encoding='utf8', errors='ignore'))
-    showed_text_len = showed_text.count('\n')
-
-    global TABLE_MODE
-    if TABLE_MODE:
-        height = getTerminalHeight() - 3 - showed_text_len
-        csvfile.seek(0)
-        if len(query) > height:
-            with tempfile.NamedTemporaryFile(mode='w+') as handle:
-                handle.write(showed_text + '\n')
-                try:
-                    handle.write(str(prettytable.from_csv(csvfile)))
-                except AttributeError:
-                    handle.write(str(prettytable.from_csv(query)))
-                handle.seek(0)
-                subprocess.call(['less', handle.name])
-        else:
-            try:
-                print(showed_text, prettytable.from_csv(csvfile), sep='\n')
-            except AttributeError:
-                print(showed_text, prettytable.from_csv(query), sep='\n')
-    else:
-        height = getTerminalHeight() - 4
-        if 5 + len(query) > height:  # cut query too, 5 is length of text
-            print('\n'.join(showed_text.splitlines()[:5]))
-            print('...')
-            print('\n'.join(attachment_lines[:height - 5]))
-            print('...')
-        elif showed_text_len + len(query) > height > 5 + len(query):
-            print('\n'.join(showed_text.splitlines()[:height - len(query)]))
-            print('...')
-            print(attachment_text)
-        else:
-            print(showed_text, attachment_text, sep='\n')
-    print('-' * 100)
-    if automatic and requestor:
-        answer = 's'
-    else:
-        if automatic:
-            print(red('You need to set a valid requestor!'))
-        answer = input('{i}{b}[b]{i}ack, {b}[s]{i}end, show {b}[t]{i}able, '
-                       'change {b}[r]{i}equestor or {b}[q]{i}uit?{r} '
-                       ''.format(b=bold, i=myinverted, r=reset)).strip()
-    if answer == 'q':
-        exit(0)
-    elif answer == 'b':
-        return
-    elif answer == 't':
-        TABLE_MODE = bool((TABLE_MODE + 1) % 2)
-        query_by_as(contact, requestor=requestor, feed=feed)
-        return
-    elif answer == ('r'):
-        answer = input(inverted('New requestor address:') + ' ').strip()
-        if len(answer) == 0:
-            if type(contact) is int:
-                requestor = ''
-            else:
-                requestor = contact
-        else:
-            requestor = answer
-        query_by_as(contact, requestor=requestor, feed=feed)
-        return
-    elif answer != 's':
-        print(red('Unknow command {!r}.'.format(answer)))
-        query_by_as(contact, requestor=requestor, feed=feed)
-        return
-
-    # TODO: Config option for single events (best in ascontacts db)
-    if text.startswith(str(red)):
-        print(red('I won\'t send with a missing text!'))
-        return
-    if True:
-        save_to_rt(ids=ids, subject=subject, requestor=requestor,
-                   csvfile=csvfile, body=text)
-    else:
-        header = attachment_lines[0]
-        for id_, attach_line, row in zip(ids, attachment_lines[1:], query):
-            if sys.version_info[0] == 2:
-                csvfile = io.BytesIO()
-            else:
-                csvfile = io.StringIO()
-            csvfile.write(header + str('\n'))
-            csvfile.write(attach_line)
-            subj_date = datetime.datetime.now().strftime('%Y-%m-%d')
-            subject = ('{date}: Incident {type} for {target}'
-                       ''.format(count=len(query),
-                                 date=subj_date,
-                                 type=row['classification.type'],
-                                 target=target_from_row(row)))
-            save_to_rt(ids=(id_,), subject=subject, requestor=requestor,
-                       csvfile=csvfile, body=text)
-
-    if requestor != contact and not dryrun:
-        answer = input(inverted('Save recipient {!r} for ASNs {!s}? [Y/n]'
-                                ''.format(requestor, ', '.join(asns)))).strip()
-        if answer.lower() in ('', 'y', 'j'):
-            CUR.execute(QUERY_UPDATE_CONTACT.format(asns=','.join(asns),
-                                                    contacts=requestor))
-            if CUR.rowcount != 1:
-                for asn in asns:
-                    user = os.environ['USER']
-                    time = datetime.datetime.now().strftime('%c')
-                    comment = 'Added by {user} @ {time}'.format(user=user,
-                                                                time=time)
-                    CUR.execute(QUERY_INSERT_CONTACT, (int(asn), requestor,
-                                                       comment))
-
-
-def save_to_rt(ids, subject, requestor, csvfile, body):
-    pass
-
-
 def count_by_asn(feed='%'):
     # TODO: Existing RT ids!
     CUR.execute(QUERY_COUNT_ASN, (CONFIG['filter']['fqdn'], feed))
@@ -567,6 +403,41 @@ def count_by_asn(feed='%'):
     return asn_count
 
 
+def send_email(event):
+    msg = MIMEMultipart(
+        From=EMAIL_FROM,
+        To=event['email_to'],
+        Subject=event['subject']
+    )
+    msg.attach(MIMEText(event['email_body']))
+
+    for f in event['files'] or []:
+        with open(f, "rb") as fil:
+            msg.attach(MIMEApplication(
+                fil.read(),
+                Content_Disposition='attachment; filename="%s"' % os.path.basename(f),
+                Name=basename(f)
+            ))
+
+    smtp = smtplib.SMTP(server)
+    smtp.sendmail(EMAIL_FROM, event['email_to'], msg.as_string())
+    smtp.close()
+
+def process_events(event_list):
+    for event in event_list:
+        send_email(event)
+    pass
+
+def get_event_list():
+    '''
+    Retrieves the current event list
+    '''
+    CUR_EVENTDB.execute(QUERY_GET_EVENTS)
+    event_list = [i for i in CUR_EVENTDB.fetchall()]
+
+    return event_list
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog=APPNAME,
@@ -575,11 +446,10 @@ if __name__ == '__main__':
         description=DESCRIPTION,
         epilog=EPILOG,
     )
-    parser.add_argument('-l', '--list-feeds', action='store_true',
-                        help='List all feeds')
     parser.add_argument('-L', '--list-texts', action='store_true',
                         help='List all existing texts.')
     parser.add_argument('-t', '--text', nargs=1, help='Specify the text to be used.')
+    parser.add_argument('-a', '--all', action='store_true', help='Process all events (batch mode)')
     parser.add_argument('-f', '--feed', nargs='?', default='%', const='%',
                         help='Show only incidents reported by given feed.')
     parser.add_argument('-v', '--verbose', action='store_true',
@@ -600,12 +470,33 @@ if __name__ == '__main__':
     if args.text:
         boilerplate = args.text
 
-    if args.list_feeds:
-        CUR.execute(QUERY_FEED_NAMES)
-        for row in CUR.fetchall():
-            if row['feed.name']:
-                print(row['feed.name'])
-        exit(0)
+    event_list = get_event_list()
+    while event_list:
+        to_process = event_list[:10]
+        if not args.all:
+            print('Current batch:')
+            for i in to_process:
+                print('    * {0}'.format(i.get('event_description.text')))
+       
+        if args.all:
+            answer = 'a'
+        else:
+            answer = input('Options: [c]ontinue, [s]end this batch, send [a]ll, [q]uit? ')
+
+        if answer == 'c':
+            print('Continue')
+        elif answer == 's':
+            print('Sending this batch')
+            event_list[:10] = []
+            process_events(to_process)
+        elif answer == 'a':
+            print('Sending all')
+            to_process = event_list[:]
+            event_list = []
+            process_events(to_process)
+        else:
+            print('Exiting')
+            break
 
     if args.list_texts:
         CUR.execute(QUERY_TEXT_NAMES)
@@ -614,45 +505,45 @@ if __name__ == '__main__':
                 print(row['key'])
         exit(0)
 
-    try:
-        while True:
-            asn_count = count_by_asn(feed=args.feed)
-            if verbose:
-                print(sys.stderr, 'asn_count = {}.'.format(asn_count))
-            answer = input('{i}detailed view by id, {b}[a]{i}utomatic '
-                           'sending, {b}[q]{i}uit?{r} '
-                           ''.format(b=bold, i=myinverted, r=reset)).strip()
-            try:
-                answer = int(answer)
-            except ValueError:
-                pass
-            if answer == 'q':
-                break
-            elif answer == 'a':
-                for item in asn_count:
-                    if item['contacts']:
-                        query_by_as(item['contacts'], automatic=True,
-                                    feed=args.feed)
-                    else:
-                        if item['asn']:
-                            query_by_as(int(item['asn']), automatic=True,
-                                        feed=args.feed)
-                        else:
-                            print(red('Can not query the data of an unknown ASN. Ignoring.'))
-            elif type(answer) is int:
-                if asn_count[answer]['contacts']:
-                    query_by_as(asn_count[answer]['contacts'], feed=args.feed)
-                else:
-                    if asn_count[answer] and asn_count[answer]['asn']:
-                        query_by_as(int(asn_count[answer]['asn']), feed=args.feed)
-                    else:
-                        print(red('no ASNs known. Ignoring.'))
-            else:
-                print(red('Unknown answer {!r}.'.format(answer)))
-
-    except BaseException as exc:
-        if isinstance(exc, (SystemExit, KeyboardInterrupt)):
-            print()
-        else:
-            raise
-
+    # try:
+    #     while True:
+    #         asn_count = count_by_asn(feed=args.feed)
+    #         if verbose:
+    #             print(sys.stderr, 'asn_count = {}.'.format(asn_count))
+    #         answer = input('{i}detailed view by id, {b}[a]{i}utomatic '
+    #                        'sending, {b}[q]{i}uit?{r} '
+    #                        ''.format(b=bold, i=myinverted, r=reset)).strip()
+    #         try:
+    #             answer = int(answer)
+    #         except ValueError:
+    #             pass
+    #         if answer == 'q':
+    #             break
+    #         elif answer == 'a':
+    #             for item in asn_count:
+    #                 if item['contacts']:
+    #                     query_by_as(item['contacts'], automatic=True,
+    #                                 feed=args.feed)
+    #                 else:
+    #                     if item['asn']:
+    #                         query_by_as(int(item['asn']), automatic=True,
+    #                                     feed=args.feed)
+    #                     else:
+    #                         print(red('Can not query the data of an unknown ASN. Ignoring.'))
+    #         elif type(answer) is int:
+    #             if asn_count[answer]['contacts']:
+    #                 query_by_as(asn_count[answer]['contacts'], feed=args.feed)
+    #             else:
+    #                 if asn_count[answer] and asn_count[answer]['asn']:
+    #                     query_by_as(int(asn_count[answer]['asn']), feed=args.feed)
+    #                 else:
+    #                     print(red('no ASNs known. Ignoring.'))
+    #         else:
+    #             print(red('Unknown answer {!r}.'.format(answer)))
+    #
+    # except BaseException as exc:
+    #     if isinstance(exc, (SystemExit, KeyboardInterrupt)):
+    #         print()
+    #     else:
+    #         raise
+    #
