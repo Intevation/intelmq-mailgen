@@ -107,13 +107,10 @@ QUERY_TEXT_NAMES = "SELECT DISTINCT \"key\" from boilerplates"
 def shrink_dict(d):
     if not compress_csv:
         return d
-    keys = d[0].keys()
-    empty = dict(zip(keys, [True] * len(keys)))
+    keys = set()
     for line in d:
-        for key, value in line.items():
-            if value is not None:
-                empty[key] = False
-    return [{k: v for k, v in dicti.items() if not empty[k]} for dicti in d]
+        keys.update(line.keys())
+    return [{k: dicti.get(k) for k in keys} for dicti in d]
 
 
 def getTerminalHeight():
