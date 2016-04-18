@@ -109,7 +109,7 @@ def shrink_dict(d):
         return d
     keys = set()
     for line in d:
-        keys.update(line.keys())
+        keys.update([k for k, v in line.items() if v is not None])
     return [{k: dicti.get(k) for k in keys} for dicti in d]
 
 
