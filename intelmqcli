@@ -33,7 +33,8 @@ if locale.getpreferredencoding() != 'UTF-8':
 # conf files
 CONFIG = dict()
 home = os.path.expanduser("~")  # needed for OSX
-with open(os.path.expanduser(home + '/.intelmq/intelmqcli.conf')) as conf_handle:
+with open(os.path.expanduser(home + '/.intelmq/intelmqcli.conf')) \
+     as conf_handle:
     user_config = json.load(conf_handle)
 with open('/etc/intelmq/intelmqcli.conf') as conf_handle:
     CONFIG = json.load(conf_handle)
@@ -133,7 +134,8 @@ def send_email(email_event):
         with open(f, "rb") as fil:
             msg.attach(MIMEApplication(
                 fil.read(),
-                Content_Disposition='attachment; filename="%s"' % os.path.basename(f),
+                Content_Disposition=('attachment; filename="%s"'
+                                     % os.path.basename(f)),
                 Name=basename(f)
             ))
 
@@ -185,16 +187,18 @@ if __name__ == '__main__':
     )
     parser.add_argument('-L', '--list-texts', action='store_true',
                         help='List all existing texts.')
-    parser.add_argument('-a', '--all', action='store_true', help='Process all events (batch mode)')
+    parser.add_argument('-a', '--all', action='store_true',
+                        help='Process all events (batch mode)')
     parser.add_argument('-f', '--feed', nargs='?', default='%', const='%',
                         help='Show only incidents reported by given feed.')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Print verbose messages.')
     parser.add_argument('-c', '--compress-csv', action='store_true',
-                        help='Automatically compress/shrink the attached CSV report if fields are '
-                             'empty (default = False).')
+                        help=('Automatically compress/shrink the attached CSV'
+                              ' report if fields are empty (default = False).'))
     parser.add_argument('-n', '--dry-run', action='store_true',
-                        help='Do not store anything or change anything. Just simulate.')
+                        help=('Do not store anything or change anything.'
+                              ' Just simulate.'))
     args = parser.parse_args()
 
     if args.verbose:
@@ -217,7 +221,8 @@ if __name__ == '__main__':
         if args.all:
             answer = 'a'
         else:
-            answer = input('Options: [c]ontinue, [s]end this batch, send [a]ll, [q]uit? ')
+            answer = input('Options: [c]ontinue, [s]end this batch, send [a]ll,'
+                           ' [q]uit? ')
 
         if answer == 'c':
             print('Continue')
