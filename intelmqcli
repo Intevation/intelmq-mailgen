@@ -86,15 +86,18 @@ USAGE = '''
     intelmqcli --text='boilerplate name'
     intelmqcli --feed='feedname' '''
 
-CON_EVENTDB = psycopg2.connect(database=CONFIG['database']['event']['name'],
-                               user=CONFIG['database']['event']['username'],
-                               password=CONFIG['database']['event']['password'],
-                               host=CONFIG['database']['event']['host'],
-                               port=CONFIG['database']['event']['port'],
-                               # sslmode=CONFIG['database']['event']['sslmode'],
-                               )
-CUR_EVENTDB = CON_EVENTDB.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-CON_EVENTDB.autocommit = True
+
+def open_db_connection(config):
+    conn = psycopg2.connect(database=config['database']['event']['name'],
+                            user=config['database']['event']['username'],
+                            password=config['database']['event']['password'],
+                            host=config['database']['event']['host'],
+                            port=config['database']['event']['port'],
+                            # sslmode=config['database']['event']['sslmode'],
+                            )
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    conn.autocommit = True
+    return cur
 
 QUERY_GET_EVENTS = """SELECT * FROM events LIMIT 40"""
 
@@ -167,12 +170,12 @@ def process_events(event_list):
     pass
 
 
-def get_event_list():
+def get_event_list(cur):
     '''
     Retrieves the current event list and groups and sorts them
     '''
-    CUR_EVENTDB.execute(QUERY_GET_EVENTS)
-    event_list = [i for i in CUR_EVENTDB.fetchall()]
+    cur.execute(QUERY_GET_EVENTS)
+    event_list = [i for i in cur.fetchall()]
 
     return event_list
 
@@ -210,7 +213,8 @@ if __name__ == '__main__':
     if args.text:
         boilerplate = args.text
 
-    event_list = get_event_list()
+    cur = open_db_connection(CONFIG)
+    event_list = get_event_list(cur)
     while event_list:
         to_process = event_list[:10]
         if not args.all:
@@ -240,8 +244,8 @@ if __name__ == '__main__':
             break
 
     if args.list_texts:
-        CUR_EVENTDB.execute(QUERY_TEXT_NAMES)
-        for row in CUR_EVENTDB.fetchall():
+        cur.execute(QUERY_TEXT_NAMES)
+        for row in cur.fetchall():
             if row['key']:
                 print(row['key'])
         exit(0)
