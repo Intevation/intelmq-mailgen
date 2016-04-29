@@ -218,8 +218,6 @@ if __name__ == '__main__':
         dryrun = True
     if args.compress_csv:
         compress_csv = True
-    if args.text:
-        boilerplate = args.text
 
     config = read_configuration()
 
