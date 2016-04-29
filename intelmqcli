@@ -29,22 +29,6 @@ if locale.getpreferredencoding() != 'UTF-8':
     exit(1)
 
 
-# Construct a single configuration dictionary with the contents of the different
-# conf files
-CONFIG = dict()
-home = os.path.expanduser("~")  # needed for OSX
-with open(os.path.expanduser(home + '/.intelmq/intelmqcli.conf')) \
-     as conf_handle:
-    user_config = json.load(conf_handle)
-with open('/etc/intelmq/intelmqcli.conf') as conf_handle:
-    CONFIG = json.load(conf_handle)
-
-for key, value in user_config.items():
-    if key in CONFIG and type(CONFIG[key]) is dict:
-        CONFIG[key].update(value)
-    else:
-        CONFIG[key] = value
-
 EMAIL_FROM = 'noreply@example.com'
 
 APPNAME = "intelmqcli"
@@ -85,6 +69,30 @@ USAGE = '''
     intelmqcli --list-texts
     intelmqcli --text='boilerplate name'
     intelmqcli --feed='feedname' '''
+
+
+def read_configuration():
+    """Read configuration from user and system settings.
+    The return value is a dictionary containing the merged settings read
+    from the configuration files.
+    """
+    # Construct a single configuration dictionary with the contents of
+    # the different conf files
+    home = os.path.expanduser("~")  # needed for OSX
+    with open(os.path.expanduser(home + '/.intelmq/intelmqcli.conf')) \
+         as conf_handle:
+        user_config = json.load(conf_handle)
+    with open('/etc/intelmq/intelmqcli.conf') as conf_handle:
+        system_config = json.load(conf_handle)
+
+    combined = system_config.copy()
+    for key, value in user_config.items():
+        if isinstance(combined.get(key), dict):
+            combined[key].update(value)
+        else:
+            combined[key] = value
+
+    return combined
 
 
 def open_db_connection(config):
@@ -213,7 +221,9 @@ if __name__ == '__main__':
     if args.text:
         boilerplate = args.text
 
-    cur = open_db_connection(CONFIG)
+    config = read_configuration()
+
+    cur = open_db_connection(config)
     event_list = get_event_list(cur)
     while event_list:
         to_process = event_list[:10]
