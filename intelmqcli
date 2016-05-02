@@ -109,9 +109,6 @@ def open_db_connection(config):
 
 QUERY_GET_EVENTS = """SELECT * FROM events LIMIT 40"""
 
-QUERY_TEXT_NAMES = "SELECT DISTINCT \"key\" from boilerplates"
-
-
 def shrink_dict(d):
     if not compress_csv:
         return d
@@ -196,8 +193,6 @@ if __name__ == '__main__':
         description=DESCRIPTION,
         epilog=EPILOG,
     )
-    parser.add_argument('-L', '--list-texts', action='store_true',
-                        help='List all existing texts.')
     parser.add_argument('-a', '--all', action='store_true',
                         help='Process all events (batch mode)')
     parser.add_argument('-f', '--feed', nargs='?', default='%', const='%',
@@ -250,10 +245,3 @@ if __name__ == '__main__':
         else:
             print('Exiting')
             break
-
-    if args.list_texts:
-        cur.execute(QUERY_TEXT_NAMES)
-        for row in cur.fetchall():
-            if row['key']:
-                print(row['key'])
-        exit(0)
