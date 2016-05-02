@@ -185,6 +185,38 @@ def get_event_list(cur):
     return event_list
 
 
+def generate_notifications(args, config):
+    cur = open_db_connection(config)
+    event_list = get_event_list(cur)
+    while event_list:
+        to_process = event_list[:10]
+        if not args.all:
+            print('Current batch:')
+            for i in to_process:
+                print('    * {0}'.format(i.get('event_description.text')))
+
+        if args.all:
+            answer = 'a'
+        else:
+            answer = input('Options: [c]ontinue, [s]end this batch, send [a]ll,'
+                           ' [q]uit? ')
+
+        if answer == 'c':
+            print('Continue')
+        elif answer == 's':
+            print('Sending this batch')
+            event_list[:10] = []
+            process_events(to_process)
+        elif answer == 'a':
+            print('Sending all')
+            to_process = event_list[:]
+            event_list = []
+            process_events(to_process)
+        else:
+            print('Exiting')
+            break
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog=APPNAME,
@@ -216,32 +248,4 @@ if __name__ == '__main__':
 
     config = read_configuration()
 
-    cur = open_db_connection(config)
-    event_list = get_event_list(cur)
-    while event_list:
-        to_process = event_list[:10]
-        if not args.all:
-            print('Current batch:')
-            for i in to_process:
-                print('    * {0}'.format(i.get('event_description.text')))
-
-        if args.all:
-            answer = 'a'
-        else:
-            answer = input('Options: [c]ontinue, [s]end this batch, send [a]ll,'
-                           ' [q]uit? ')
-
-        if answer == 'c':
-            print('Continue')
-        elif answer == 's':
-            print('Sending this batch')
-            event_list[:10] = []
-            process_events(to_process)
-        elif answer == 'a':
-            print('Sending all')
-            to_process = event_list[:]
-            event_list = []
-            process_events(to_process)
-        else:
-            print('Exiting')
-            break
+    generate_notifications(args, config)
