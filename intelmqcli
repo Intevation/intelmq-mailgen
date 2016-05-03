@@ -9,12 +9,13 @@ import argparse
 import json
 import locale
 import os
-import psycopg2
-import psycopg2.extras
-from termstyle import red
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
+
+import psycopg2
+import psycopg2.extras
+from termstyle import red
 
 
 if locale.getpreferredencoding() != 'UTF-8':
