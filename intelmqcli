@@ -1,27 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+"""Command line tool to send notfications for intelmq events.
 """
-TODO: send_email
-      process_events
-"""
+
 import smtplib
 import argparse
 import json
 import locale
 import os
-import subprocess
 import psycopg2
 import psycopg2.extras
-from termstyle import red # bold, green, inverted, reset
+from termstyle import red
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
-""" options """
-dryrun = False
-verbose = False
-compress_csv = False
-boilerplate = None
 
 if locale.getpreferredencoding() != 'UTF-8':
     print(red('The preferred encoding of your locale setting is not UTF-8 but'
@@ -34,41 +28,15 @@ EMAIL_FROM = 'noreply@example.com'
 APPNAME = "intelmqcli"
 DESCRIPTION = """
 """
+
 EPILOG = """
-Searches for all unprocessed incidents. Incidents will be filtered by country
-code and the TLD of a domain according to configuration.
-The search can be restricted to one source feed.
-
-After the start, intelmqcli will immediately connect to RT with the given
-credentials. The incidents will be shown grouped by the contact address if
-known or the ASN otherwise.
-
-You have 3 options here:
-* Select one group by giving the id (number in first column) and show the email
-and all events in detail
-* Automatic sending of all incidents with 'a'
-* Quit with 'q'
-
-For the detailed view, the recipient, the subject and the mail text will be
-shown, and below the technical data as csv. If the terminal is not big enough,
-the data will not be shown in full. In this case, you can press 't' for the
-table mode. less will be opened with the full text and data, whereas the data
-will be formated as table, which is much easier to read and interpret.
-The requestor (recipient of the mail) can be changed manually by pressing 'r'
-and in the following prompt the address is asked. After sending, you can
-optionally save the (new) address to the database linked to the ASNs.
-If you are ready to submit the incidents to RT and send the mails out, press
-'s'.
-'b' for back jumps to the incident overview and 'q' quits.
+Searches for all unprocessed notifications and sends them.
 """
-USAGE = '''
+
+USAGE = """
     intelmqcli
-    intelmqcli --dry-run
-    intelmqcli --verbose
-    intelmqcli --compress-csv
-    intelmqcli --list-texts
-    intelmqcli --text='boilerplate name'
-    intelmqcli --feed='feedname' '''
+    intelmqcli --all
+"""
 
 
 def read_configuration():
@@ -108,21 +76,6 @@ def open_db_connection(config):
     return cur
 
 QUERY_GET_EVENTS = """SELECT * FROM events LIMIT 40"""
-
-def shrink_dict(d):
-    if not compress_csv:
-        return d
-    keys = d[0].keys()
-    empty = dict(zip(keys, [True] * len(keys)))
-    for line in d:
-        for key, value in line.items():
-            if value is not None:
-                empty[key] = False
-    return [{k: v for k, v in dicti.items() if not empty[k]} for dicti in d]
-
-
-def getTerminalHeight():
-    return int(subprocess.check_output(['stty', 'size']).strip().split()[0])
 
 
 def send_email(email_event):
@@ -227,24 +180,7 @@ if __name__ == '__main__':
     )
     parser.add_argument('-a', '--all', action='store_true',
                         help='Process all events (batch mode)')
-    parser.add_argument('-f', '--feed', nargs='?', default='%', const='%',
-                        help='Show only incidents reported by given feed.')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='Print verbose messages.')
-    parser.add_argument('-c', '--compress-csv', action='store_true',
-                        help=('Automatically compress/shrink the attached CSV'
-                              ' report if fields are empty (default = False).'))
-    parser.add_argument('-n', '--dry-run', action='store_true',
-                        help=('Do not store anything or change anything.'
-                              ' Just simulate.'))
     args = parser.parse_args()
-
-    if args.verbose:
-        verbose = True
-    if args.dry_run:
-        dryrun = True
-    if args.compress_csv:
-        compress_csv = True
 
     config = read_configuration()
 
