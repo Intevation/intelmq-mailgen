@@ -76,7 +76,6 @@ def open_db_connection(config):
     conn.autocommit = True
     return cur
 
-QUERY_GET_EVENTS = """SELECT * FROM events LIMIT 40"""
 
 
 def send_email(email_event):
@@ -129,25 +128,41 @@ def process_events(event_list):
     pass
 
 
-def get_event_list(cur):
-    '''
-    Retrieves the current event list and groups and sorts them
-    '''
-    cur.execute(QUERY_GET_EVENTS)
-    event_list = [i for i in cur.fetchall()]
-
-    return event_list
+def get_pending_notifications(cur):
+    """Retrieve all pending notifications from the database.
+    Notifications are pending if they haven't been sent yet.
+    Notifications are grouped by recipient, template and format so that
+    the information about the events for which the notifications are
+    sent can be aggregated.
+    """
+    cur.execute("""\
+        SELECT n.email as email, n.template as template, n.format as format,
+               array_agg(n.events_id) as event_ids,
+               array_agg(n.id) as notification_ids
+          FROM (SELECT * FROM notifications
+                WHERE intelmq_ticket IS NULL
+                FOR UPDATE NOWAIT) n
+      GROUP BY n.email, n.template, n.format
+        HAVING coalesce((SELECT max(sent_at) FROM notifications n2
+                         WHERE n2.email = n.email AND n2.template = n.template
+                         AND n2.format = n.format)
+                        + max(n.notification_interval)
+                        < CURRENT_TIMESTAMP,
+                        TRUE);""")
+    return cur.fetchall()
 
 
 def generate_notifications(args, config):
     cur = open_db_connection(config)
-    event_list = get_event_list(cur)
+    event_list = get_pending_notifications(cur)
     while event_list:
         to_process = event_list[:10]
         if not args.all:
             print('Current batch:')
             for i in to_process:
-                print('    * {0}'.format(i.get('event_description.text')))
+                print('    * {0} {1} {2}: {3} events'.format(
+                    i["email"], i["template"], i["format"],
+                    len(i["event_ids"])))
 
         if args.all:
             answer = 'a'
