@@ -77,28 +77,18 @@ def open_db_connection(config):
     return cur
 
 
+def create_mail(sender, recipient, subject, body):
+    msg = MIMEMultipart()
+    msg.add_header("From", sender)
+    msg.add_header("To", recipient)
+    msg.add_header("Subject", subject)
+    msg.attach(MIMEText(body))
+    return msg
 
-def send_email(email_event):
-    '''
-    Sends processed events to the corresponding contacts
 
-    :param email_event: a dictionary with the processed data from an event
-    '''
-    msg = MIMEMultipart(
-        From=EMAIL_FROM,
-        To=email_event['email_to'],
-        Subject=email_event['subject']
-    )
-    msg.attach(MIMEText(email_event['email_body']))
-
-    for f in email_event['files'] or []:
-        with open(f, "rb") as fil:
-            msg.attach(MIMEApplication(
-                fil.read(),
-                Content_Disposition=('attachment; filename="%s"'
-                                     % os.path.basename(f)),
-                Name=basename(f)
-            ))
+def create_and_send_email(email_event):
+    mail = create_mail(EMAIL_FROM, email_event['email_to'],
+                       email_event['subject'], email_event['email_body'])
 
     smtp = smtplib.SMTP(server)
     smtp.sendmail(EMAIL_FROM, email_event['email_to'], msg.as_string())
@@ -122,9 +112,7 @@ def process_events(event_list):
         # event's data and other sources as needed.
         event_email['email_body'] = 'email body'
 
-        # List of files (see format table) to be sent with the email
-        event_email['files'] = []
-        send_email(event_email)
+        create_and_send_email(event_email)
     pass
 
 
