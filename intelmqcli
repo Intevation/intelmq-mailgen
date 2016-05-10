@@ -93,7 +93,7 @@ def create_and_send_email(smtp, email_event):
     smtp.send_message(mail)
 
 
-def process_events(config, event_list):
+def send_notifications(config, event_list):
     '''
     Processes each event
 
@@ -163,12 +163,12 @@ def generate_notifications(args, config):
         elif answer == 's':
             print('Sending this batch')
             event_list[:10] = []
-            process_events(config, to_process)
+            send_notifications(config, to_process)
         elif answer == 'a':
             print('Sending all')
             to_process = event_list[:]
             event_list = []
-            process_events(config, to_process)
+            send_notifications(config, to_process)
         else:
             print('Exiting')
             break
