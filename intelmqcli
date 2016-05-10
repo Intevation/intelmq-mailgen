@@ -18,7 +18,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 import psycopg2
-import psycopg2.extras
+from psycopg2.extras import RealDictConnection
 from termstyle import red
 
 
@@ -69,16 +69,14 @@ def read_configuration():
 
 
 def open_db_connection(config):
-    conn = psycopg2.connect(database=config['database']['event']['name'],
-                            user=config['database']['event']['username'],
-                            password=config['database']['event']['password'],
-                            host=config['database']['event']['host'],
-                            port=config['database']['event']['port'],
-                            # sslmode=config['database']['event']['sslmode'],
-                            )
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    conn.autocommit = True
-    return cur
+    params = config['database']['event']
+    return psycopg2.connect(database=params['name'],
+                            user=params['username'],
+                            password=params['password'],
+                            host=params['host'],
+                            port=params['port'],
+                            # sslmode=params['sslmode'],
+                            connection_factory=RealDictConnection)
 
 
 def full_template_filename(template_dir, template_name):
@@ -235,7 +233,8 @@ def get_pending_notifications(cur):
 
 
 def generate_notifications(args, config):
-    cur = open_db_connection(config)
+    conn = open_db_connection(config)
+    cur = conn.cursor()
     event_list = get_pending_notifications(cur)
     while event_list:
         to_process = event_list[:10]
