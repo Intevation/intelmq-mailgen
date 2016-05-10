@@ -9,6 +9,11 @@ import argparse
 import json
 import locale
 import os
+import sys
+import io
+import csv
+import string
+from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -115,28 +120,94 @@ def read_template(template_dir, template_name):
         return subject, body
 
 
-def create_mail(sender, recipient, subject, body):
+def create_mail(sender, recipient, subject, body, attachments):
     msg = MIMEMultipart()
     msg.add_header("From", sender)
     msg.add_header("To", recipient)
     msg.add_header("Subject", subject)
     msg.attach(MIMEText(body))
+
+    for filename, contents, maintype, subtype in attachments:
+        part = MIMEBase(maintype, subtype, filename=filename)
+        part.set_payload(contents)
+        msg.attach(part)
+
     return msg
 
 
-def send_notifications(config, notifications):
-    """Create and send notification mails for all items in notifications.
+# characters allowed in identifiers in escape_sql_identifier. There are
+# just the characters that are used in IntelMQ for identifiers in the
+# events table.
+sql_identifier_charset = set(string.ascii_letters + string.digits + "_.")
+
+def escape_sql_identifier(ident):
+    if set(ident) - sql_identifier_charset:
+        raise ValueError("Event column identifier %r contains invalid"
+                         " characters (%r)"
+                         % (ident, set(ident) - sql_identifier_charset))
+    return '"' + ident + '"'
+
+
+def load_events(cur, columns, event_ids):
+    sql_columns = ", ".join(escape_sql_identifier(col) for col in columns)
+    cur.execute("SELECT {} FROM events WHERE id = ANY (%s)".format(sql_columns),
+                (event_ids,))
+    return cur.fetchall()
+
+
+malware_as_csv_columns = [
+    "source.asn", "source.ip", "time.source",
+    "malware.name", "source.port", "destination.ip",
+    "destination.port", "protocol.transport",
+    "destination.fqdn",
+]
+
+def format_malware_as_csv(events):
+    contents = io.StringIO()
+    writer = csv.DictWriter(contents, malware_as_csv_columns, delimiter="|")
+    for event in events:
+        writer.writerow(event)
+    return ("events.csv", contents.getvalue(), "test", "csv")
+
+
+known_formats = {
+    "malware_as_csv": (malware_as_csv_columns, format_malware_as_csv),
+    }
+
+
+def format_event_data(cur, format, event_ids):
+    format_spec = known_formats.get(format)
+    if format_spec is not None:
+        columns, converter = format_spec
+        return converter(load_events(cur, columns, event_ids))
+    else:
+        print("Cannot generate emails for unknown format %r" % format,
+              file=sys.stderr)
+
+
+def send_notifications(config, notifications, cur):
+    """
+    Create and send notification mails for all items in notifications.
     :param config script configuration
     :param notifications a list of notifications
+    :param cur database cursor to use when loading event information
     """
     with smtplib.SMTP(host=config["smtp"]["host"],
                       port=config["smtp"]["port"]) as smtp:
         for notification in notifications:
+            attachments = []
+            event_attachment = format_event_data(cur, notification["format"],
+                                                 notification["event_ids"])
+            if event_attachment is not None:
+                attachments.append(event_attachment)
+
             subject, body = read_template(config["template_dir"],
                                           notification["template"])
+
             smtp.send_message(create_mail(sender=EMAIL_FROM,
                                           recipient=notification["email"],
-                                          subject=subject, body=body))
+                                          subject=subject, body=body,
+                                          attachments=attachments))
 
 
 def get_pending_notifications(cur):
@@ -186,12 +257,12 @@ def generate_notifications(args, config):
         elif answer == 's':
             print('Sending this batch')
             event_list[:10] = []
-            send_notifications(config, to_process)
+            send_notifications(config, to_process, cur)
         elif answer == 'a':
             print('Sending all')
             to_process = event_list[:]
             event_list = []
-            send_notifications(config, to_process)
+            send_notifications(config, to_process, cur)
         else:
             print('Exiting')
             break
