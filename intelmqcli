@@ -86,17 +86,14 @@ def create_mail(sender, recipient, subject, body):
     return msg
 
 
-def send_notifications(config, event_list):
-    '''
-    Processes each event
-
-    This helper also generates a dictionary that is used when sending the emails
-
-    :param event_list a list of events as created by get_event_list
-    '''
+def send_notifications(config, notifications):
+    """Create and send notification mails for all items in notifications.
+    :param config script configuration
+    :param notifications a list of notifications
+    """
     with smtplib.SMTP(host=config["smtp"]["host"],
                       port=config["smtp"]["port"]) as smtp:
-        for event in event_list:
+        for notification in notifications:
             smtp.send_message(create_mail(sender=EMAIL_FROM,
                                           recipient='contact email',
                                           subject='email subject',
