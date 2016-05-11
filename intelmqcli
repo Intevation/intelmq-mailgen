@@ -165,7 +165,7 @@ def format_malware_as_csv(events):
     writer = csv.DictWriter(contents, malware_as_csv_columns, delimiter="|")
     for event in events:
         writer.writerow(event)
-    return ("events.csv", contents.getvalue(), "test", "csv")
+    return ("events.csv", contents.getvalue(), "text", "csv")
 
 
 known_formats = {
