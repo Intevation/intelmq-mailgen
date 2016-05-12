@@ -8,10 +8,30 @@
 
 BEGIN;
 
+
+CREATE ROLE eventdb_owner
+    NOLOGIN NOSUPERUSER NOINHERIT NOCREATEDB CREATEROLE;
+CREATE ROLE eventdb_insert
+    NOLOGIN NOSUPERUSER NOINHERIT NOCREATEDB CREATEROLE;
+CREATE ROLE eventdb_send_notifications
+    NOLOGIN NOSUPERUSER NOINHERIT NOCREATEDB CREATEROLE;
+
+ALTER DATABASE :"DBNAME" OWNER TO eventdb_owner;
+
+ALTER TABLE events OWNER TO eventdb_owner;
+
+SET ROLE eventdb_owner;
+
+GRANT INSERT ON events TO eventdb_insert;
+GRANT USAGE ON events_id_seq TO eventdb_insert;
+GRANT SELECT ON events TO eventdb_send_notifications;
+
+
 CREATE TYPE ip_endpoint AS ENUM ('source', 'destination');
 
 
 CREATE SEQUENCE intelmq_ticket_seq;
+GRANT USAGE ON intelmq_ticket_seq TO eventdb_send_notifications;
 
 
 CREATE TABLE notifications (
@@ -32,6 +52,9 @@ CREATE INDEX notifications_grouping_idx
           ON notifications (email, template, format);
 CREATE INDEX notifications_intelmq_ticket_idx
           ON notifications (intelmq_ticket);
+
+GRANT SELECT, UPDATE ON notifications TO eventdb_send_notifications;
+
 
 
 CREATE OR REPLACE FUNCTION insert_notification(
@@ -87,7 +110,10 @@ BEGIN
     PERFORM notifications_from_extra(NEW.id, NEW.extra);
     RETURN NEW;
 END
-$$ LANGUAGE plpgsql VOLATILE;
+$$ LANGUAGE plpgsql VOLATILE EXTERNAL SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION events_insert_notifications_for_row()
+TO eventdb_insert;
 
 
 CREATE TRIGGER events_insert_notification_trigger
