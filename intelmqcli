@@ -183,9 +183,26 @@ def format_event_data(cur, format, event_ids):
               file=sys.stderr)
 
 
+def mark_as_sent(cur, notification):
+    cur.execute("""WITH ticket AS (SELECT nextval('intelmq_ticket_seq'))
+                 UPDATE notifications
+                    SET sent_at = now(),
+                        intelmq_ticket = (SELECT * FROM ticket)
+                  WHERE id = ANY (%s);""",
+                (notification["notification_ids"],))
+
+
 def send_notifications(config, notifications, cur):
     """
     Create and send notification mails for all items in notifications.
+
+    All notifications that were successfully sent are marked as sent in
+    the database. This function tries to make sure that this information
+    can be committed as part of the transaction in progress even if
+    errors occur during SQL statements executed by this function. The
+    caller should also catch exceptions thrown by this method and always
+    commit the transaction.
+
     :param config script configuration
     :param notifications a list of notifications
     :param cur database cursor to use when loading event information
@@ -193,19 +210,28 @@ def send_notifications(config, notifications, cur):
     with smtplib.SMTP(host=config["smtp"]["host"],
                       port=config["smtp"]["port"]) as smtp:
         for notification in notifications:
-            attachments = []
-            event_attachment = format_event_data(cur, notification["format"],
-                                                 notification["event_ids"])
-            if event_attachment is not None:
-                attachments.append(event_attachment)
+            cur.execute("SAVEPOINT sendmail;")
+            try:
+                attachments = []
+                event_attachment = format_event_data(cur,
+                                                     notification["format"],
+                                                     notification["event_ids"])
+                if event_attachment is not None:
+                    attachments.append(event_attachment)
 
-            subject, body = read_template(config["template_dir"],
-                                          notification["template"])
+                subject, body = read_template(config["template_dir"],
+                                              notification["template"])
 
-            smtp.send_message(create_mail(sender=EMAIL_FROM,
-                                          recipient=notification["email"],
-                                          subject=subject, body=body,
-                                          attachments=attachments))
+                smtp.send_message(create_mail(sender=EMAIL_FROM,
+                                              recipient=notification["email"],
+                                              subject=subject, body=body,
+                                              attachments=attachments))
+                mark_as_sent(cur, notification)
+            except:
+                cur.execute("ROLLBACK TO SAVEPOINT sendmail;")
+                raise
+            finally:
+                cur.execute("RELEASE SAVEPOINT sendmail;")
 
 
 def get_pending_notifications(cur):
@@ -287,6 +313,11 @@ def generate_notifications(args, config):
     finally:
         if cur is not None:
             cur.close()
+        # the only change to the database is marking the sent mails as
+        # actually sent. We always want to commit that information even
+        # when errors occur, so we're calling commit in the finally
+        # block.
+        conn.commit()
         conn.close()
 
 
