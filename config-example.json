@@ -1,0 +1,16 @@
+{
+    "database": {
+	"event": {
+	    "name": "eventdb",
+	    "username": "intelmq_cli",
+	    "password": "your DB password",
+	    "host": "localhost",
+	    "port": 5432
+	}
+    },
+    "template_dir": "/usr/local/lib/intelmq/event-processor/templates",
+    "smtp": {
+	"host": "localhost",
+	"port": 25
+    }
+}
