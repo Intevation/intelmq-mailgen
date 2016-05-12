@@ -232,39 +232,62 @@ def get_pending_notifications(cur):
     return cur.fetchall()
 
 
+def generate_notifications_interactively(config, cur, notifications):
+    batch_size = 10
+
+    pending = notifications[:]
+    while pending:
+        batch, pending = pending[:batch_size], pending[batch_size:]
+        print('Current batch (%d of %d total):'
+              % (len(batch), len(batch) + len(pending)))
+        for i in batch:
+            print('    * {0} {1} {2}: {3} events'.format(
+                i["email"], i["template"], i["format"], len(i["event_ids"])))
+        valid_answers = ("c", "s", "a", "q")
+        while True:
+            answer = input("Options: [c]ontinue, [s]end this batch, send [a]ll,"
+                           " [q]uit? ").strip()
+            if answer not in valid_answers:
+                print("Please enter one of the characters %s"
+                      % ", ".join(valid_answers))
+            else:
+                break
+        if answer == "c":
+            print("Skipping this batch.")
+            pass
+        elif answer == "q":
+            print("Exiting without sending any further mails.")
+            pending = []
+        else:
+            to_send = batch
+            if answer == "a":
+                to_send.extend(pending)
+                pending = []
+
+            print("Sending %d mails... " % (len(to_send),))
+            send_notifications(config, to_send, cur)
+            print("%d mails sent. " % (len(to_send),))
+
+
 def generate_notifications(args, config):
+    cur = None
     conn = open_db_connection(config)
-    cur = conn.cursor()
-    event_list = get_pending_notifications(cur)
-    while event_list:
-        to_process = event_list[:10]
-        if not args.all:
-            print('Current batch:')
-            for i in to_process:
-                print('    * {0} {1} {2}: {3} events'.format(
-                    i["email"], i["template"], i["format"],
-                    len(i["event_ids"])))
+    try:
+        cur = conn.cursor()
+        notifications = get_pending_notifications(cur)
+        if not notifications:
+            print("No pending notifications to be sent")
+            return
 
         if args.all:
-            answer = 'a'
+            send_notifications(config, notifications, cur)
         else:
-            answer = input('Options: [c]ontinue, [s]end this batch, send [a]ll,'
-                           ' [q]uit? ')
+            generate_notifications_interactively(config, cur, notifications)
 
-        if answer == 'c':
-            print('Continue')
-        elif answer == 's':
-            print('Sending this batch')
-            event_list[:10] = []
-            send_notifications(config, to_process, cur)
-        elif answer == 'a':
-            print('Sending all')
-            to_process = event_list[:]
-            event_list = []
-            send_notifications(config, to_process, cur)
-        else:
-            print('Exiting')
-            break
+    finally:
+        if cur is not None:
+            cur.close()
+        conn.close()
 
 
 if __name__ == '__main__':
