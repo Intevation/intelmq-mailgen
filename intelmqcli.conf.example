@@ -1,7 +1,7 @@
 {
     "database": {
 	"event": {
-	    "name": "eventdb",
+	    "name": "intelmq-events",
 	    "username": "intelmq_cli",
 	    "password": "your DB password",
 	    "host": "localhost",

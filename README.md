@@ -14,15 +14,15 @@ Installation
 Database
 --------
 
-Create a new database named `eventdb` in the default cluster:
+Create a new database named `intelmq-events` in the default cluster:
 
-    createdb --encoding=UTF8 --template=template0 eventdb
+    createdb --encoding=UTF8 --template=template0 intelmq-events
 
 
 Initialize the database:
 
-    psql -f sql/events.sql eventdb
-    psql -f sql/notifications.sql eventdb
+    psql -f sql/events.sql intelmq-events
+    psql -f sql/notifications.sql intelmq-events
 
 
 The `notifications.sql` script creates two roles, on for each of the
@@ -36,8 +36,8 @@ in and perform the task:
 	psql -c "GRANT eventdb_send_notifications TO intelmq_cli"
 
     # user for postgres output bot:
-    createuser --encrypted --pwprompt intelmq_output
-    psql -c "GRANT eventdb_insert TO intelmq_output"
+    createuser --encrypted --pwprompt intelmq
+    psql -c "GRANT eventdb_insert TO intelmq"
 
 
 
