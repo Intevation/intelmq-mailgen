@@ -9,6 +9,7 @@
 	}
     },
     "template_dir": "/usr/local/lib/intelmq/event-processor/templates",
+    "sender": "noreply@example.com",
     "smtp": {
 	"host": "localhost",
 	"port": 25

@@ -28,8 +28,6 @@ if locale.getpreferredencoding() != 'UTF-8':
     exit(1)
 
 
-EMAIL_FROM = 'noreply@example.com'
-
 APPNAME = "intelmqcli"
 DESCRIPTION = """
 """
@@ -222,7 +220,7 @@ def send_notifications(config, notifications, cur):
                 subject, body = read_template(config["template_dir"],
                                               notification["template"])
 
-                smtp.send_message(create_mail(sender=EMAIL_FROM,
+                smtp.send_message(create_mail(sender=config["sender"],
                                               recipient=notification["email"],
                                               subject=subject, body=body,
                                               attachments=attachments))
