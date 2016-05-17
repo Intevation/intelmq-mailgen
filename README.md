@@ -4,9 +4,7 @@ Event Processor
 IntelMQ command line tool to process events.
 
 The intelmq-mailgen file was copied from
-https://github.com/certat/intelmq/blob/master/intelmq/bin/intelmqcli
-at revision a29da5d
-
+https://github.com/certat/intelmq/blob/a29da5d798bd114535326ffdd2f5000c4b6a21e7/intelmq/bin/intelmqcli (revision from 2016-03-08).
 
 Installation
 ============
