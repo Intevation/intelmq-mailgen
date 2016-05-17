@@ -28,7 +28,7 @@ if locale.getpreferredencoding() != 'UTF-8':
     exit(1)
 
 
-APPNAME = "intelmqcli"
+APPNAME = "intelmq-mailgen"
 DESCRIPTION = """
 """
 
@@ -37,8 +37,8 @@ Searches for all unprocessed notifications and sends them.
 """
 
 USAGE = """
-    intelmqcli
-    intelmqcli --all
+    intelmq-mailgen
+    intelmq-mailgen --all
 """
 
 
@@ -50,10 +50,10 @@ def read_configuration():
     # Construct a single configuration dictionary with the contents of
     # the different conf files
     home = os.path.expanduser("~")  # needed for OSX
-    with open(os.path.expanduser(home + '/.intelmq/intelmqcli.conf')) \
+    with open(os.path.expanduser(home + '/.intelmq/intelmq-mailgen.conf')) \
          as conf_handle:
         user_config = json.load(conf_handle)
-    with open('/etc/intelmq/intelmqcli.conf') as conf_handle:
+    with open('/etc/intelmq/intelmq-mailgen.conf') as conf_handle:
         system_config = json.load(conf_handle)
 
     combined = system_config.copy()

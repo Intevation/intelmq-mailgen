@@ -2,7 +2,7 @@
     "database": {
 	"event": {
 	    "name": "intelmq-events",
-	    "username": "intelmq_cli",
+	    "username": "intelmq_mailgen",
 	    "password": "your DB password",
 	    "host": "localhost",
 	    "port": 5432
