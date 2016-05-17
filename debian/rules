@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+override_dh_install:
+	dh_install
+	mkdir -p debian/intelmq-mailgen/etc/intelmq
+	sed 's@/usr/local/lib/intelmq@/usr/lib/intelmq@' \
+          debian/intelmq-mailgen/usr/share/doc/intelmq-mailgen/intelmq-mailgen.conf.example \
+          > debian/intelmq-mailgen/etc/intelmq/intelmq-mailgen.conf

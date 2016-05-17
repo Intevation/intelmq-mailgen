@@ -1,0 +1,13 @@
+Source: intelmq-mailgen
+Maintainer: Sascha Wilde <wilde@intevation.de>
+Section: net
+Priority: optional
+Build-Depends: debhelper (>= 9)
+
+Package: intelmq-mailgen
+Architecture: all
+Depends: ${misc:Depends}, postgresql, intelmq, python-psycopg2, python
+Description: Generate and send emails using data from the IntelMQ ContactDB.
+ .
+ The tool processes events written to the PostgreSQL database and send
+ email notifications based on data from the IntelMQ Contacts Database.

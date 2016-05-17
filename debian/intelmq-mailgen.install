@@ -1,0 +1,3 @@
+intelmq-mailgen  usr/bin/
+intelmq-mailgen.conf.example LICENSE README.md  usr/share/doc/intelmq-mailgen/
+sql/*  usr/share/intelmq-mailgen/sql/

@@ -1,0 +1,5 @@
+intelmq-mailgen (0.90~alpha1) UNRELEASED; urgency=medium
+
+  * Initial release. (2auto/issue20)
+
+ -- Sascha Wilde <wilde@sha-bang.de>  Tue, 17 May 2016 16:48:03 +0200

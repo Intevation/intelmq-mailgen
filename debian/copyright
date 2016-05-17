@@ -1,0 +1,12 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: intelmq-mailgen
+Upstream-Contact:  
+Source: https://github.com/Intevation/intelmq-mailgen.git
+
+Files: intelmq-mailgen
+Copyright: 2016 Aaron Kaplan, cert.at, Intevation GmbH
+License: AGPL-3
+
+Files: *
+Copyright: 2016 Intevation GmbH
+License: AGPL-3
