@@ -46,7 +46,7 @@ Configuration
 `~/.intelmq/intelmq-mailgen.conf` and `/etc/intelmq/intelmq-mailgen.conf`.
 Settings are read from both files with the one in `~` taking precedence.
 The format for both files is the same. A complete example can be found
-in `config-example.json`.
+in `intelmq-mailgen.conf.example`.
 
 
 Templates
