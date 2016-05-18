@@ -1,4 +1,4 @@
-Event Processor
+IntelMQ MailGen
 ===============
 
 IntelMQ command line tool to process events.
