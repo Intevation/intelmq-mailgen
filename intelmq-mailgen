@@ -151,7 +151,7 @@ def load_events(cur, columns, event_ids):
     return cur.fetchall()
 
 
-malware_as_csv_columns = [
+malware_columns = [
     "source.asn", "source.ip", "time.source",
     "malware.name", "source.port", "destination.ip",
     "destination.port", "protocol.transport",
@@ -160,19 +160,19 @@ malware_as_csv_columns = [
 
 def format_malware_as_csv(events):
     contents = io.StringIO()
-    writer = csv.DictWriter(contents, malware_as_csv_columns, delimiter="|")
+    writer = csv.DictWriter(contents, malware_columns, delimiter="|")
     for event in events:
         writer.writerow(event)
     return ("events.csv", contents.getvalue(), "text", "csv")
 
 
 known_formats = {
-    "malware_as_csv": (malware_as_csv_columns, format_malware_as_csv),
+    "malware": (malware_columns, format_malware_as_csv),
     }
 
 
-def format_event_data(cur, format, event_ids):
-    format_spec = known_formats.get(format)
+def format_event_data(cur, format, classification_type, event_ids):
+    format_spec = known_formats.get(classification_type)
     if format_spec is not None:
         columns, converter = format_spec
         return converter(load_events(cur, columns, event_ids))
@@ -211,9 +211,10 @@ def send_notifications(config, notifications, cur):
             cur.execute("SAVEPOINT sendmail;")
             try:
                 attachments = []
-                event_attachment = format_event_data(cur,
-                                                     notification["format"],
-                                                     notification["event_ids"])
+                event_attachment = format_event_data(
+                    cur, notification["format"],
+                    notification["classification_type"],
+                    notification["event_ids"])
                 if event_attachment is not None:
                     attachments.append(event_attachment)
 
@@ -241,12 +242,13 @@ def get_pending_notifications(cur):
     """
     cur.execute("""\
         SELECT n.email as email, n.template as template, n.format as format,
+               n.classification_type as classification_type,
                array_agg(n.events_id) as event_ids,
                array_agg(n.id) as notification_ids
           FROM (SELECT * FROM notifications
                 WHERE intelmq_ticket IS NULL
                 FOR UPDATE NOWAIT) n
-      GROUP BY n.email, n.template, n.format
+      GROUP BY n.email, n.template, n.format, n.classification_type
         HAVING coalesce((SELECT max(sent_at) FROM notifications n2
                          WHERE n2.email = n.email AND n2.template = n.template
                          AND n2.format = n.format)
