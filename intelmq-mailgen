@@ -21,6 +21,10 @@ import psycopg2
 from psycopg2.extras import RealDictConnection
 from termstyle import red
 
+#local application/library specific imports (we depend on our special pyxarf)
+from pyxarf import Xarf
+from xarfmail import XarfMail
+
 
 if locale.getpreferredencoding() != 'UTF-8':
     print(red('The preferred encoding of your locale setting is not UTF-8 but'
@@ -165,9 +169,14 @@ def format_malware_as_csv(events):
         writer.writerow(event)
     return ("events.csv", contents.getvalue(), "text", "csv")
 
+def format_malware_as_xarf(events):
+    contents = "To be implemented"
+    return ("placeholder.txt", contents, "text", "plain")
+
 
 known_formats = {
     ("csv", "malware"): (malware_columns, format_malware_as_csv),
+    ("xarf", "malware"): (malware_columns, format_malware_as_xarf),
     }
 
 
