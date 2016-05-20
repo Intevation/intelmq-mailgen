@@ -31,11 +31,11 @@ in and perform the task:
 
     # user for intelmq-mailgen:
     createuser --encrypted --pwprompt intelmq_mailgen
-	psql -c "GRANT eventdb_send_notifications TO intelmq_mailgen"
+    psql -c "GRANT eventdb_send_notifications TO intelmq_mailgen" intelmq-events 
 
     # user for postgres output bot:
     createuser --encrypted --pwprompt intelmq
-    psql -c "GRANT eventdb_insert TO intelmq"
+    psql -c "GRANT eventdb_insert TO intelmq" intelmq-events
 
 
 
