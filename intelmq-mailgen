@@ -170,8 +170,67 @@ def format_malware_as_csv(events):
     return ("events.csv", contents.getvalue(), "text", "csv")
 
 def format_malware_as_xarf(events):
-    contents = "To be implemented"
-    return ("placeholder.txt", contents, "text", "plain")
+    emails = [] #TODO
+    contents ='' #report all reports as yaml until we can do emails
+
+    for e in events:
+        # create a single email
+
+        params = {
+            'schema_cache' : '/tmp/',
+            'schema_url' : 'http://www.x-arf.org/schema/abuse_malware-attack_0.1.4.json',
+            'reported_from' : "meTODO@example.com", #config["sender"] ?TODO
+            'report_id' : "TODO intelmq ID", #TODO
+            'category' : 'abuse',
+            'report_type' : 'malware-attack',
+            'source' : e['source.ip'],
+            'source_type' : 'ip-address',
+            'attachment' : None,
+        }
+
+
+        if 'date' in e:
+            params['date'] = e['time.source'].isoformat(sep=' ')
+        else:
+            params['date'] = "2016" # TODO
+
+        if 'source.url' in e:
+            params['download_link'] = e['source.url']
+
+        # have to set 'attachment' e.g. 'text/plain', if 'evidence' is supplied
+
+        report = Xarf(
+            **params
+            #schema_cache='/tmp/',
+            #schema_url='http://www.x-arf.org/schema/abuse_malware-attack_0.1.4.json',
+
+            #reported_from="meTODO@example.com", #config["sender"] ?TODO
+            #report_id="TODO intelmq ID", #TODO
+            #category='abuse',
+            #report_type='malware-attack',
+            #destination_system = "enum":["real-world","honeypot","spamtrap","honeyd","nepenthes"], optional
+            #date='Jan  1 2014 02:13:35 +0100',
+            #date=e['time.source'].isoformat(sep=' '),
+            #source='83.169.54.26',
+            #source=e['source.ip'],
+            #source_type='ip-address', "enum":["ipv4","ipv6","ip-address"]
+            #source_type='ip-address',
+            #download_link= download_link, # , optional
+            #download_port= , optional
+            #malware-md5= , optional
+            #antivirus-result= , optional
+            #antivirus-vendor= requires":"Antivirus-Result"
+            #feedback-link, optional
+            #attachment=  "enum":["none","text/plain", "message/rfc822"]
+            #attachement=None, #TODO extra information, if it is there.
+            #version= , number, optional
+            #occurrences= , integer, optional
+            #tlp= "enum":["white","green","amber","red"],optional
+        )
+
+        contents += report.to_yaml()
+
+    return ("all-yaml-reports.txt", contents, "text", "plain")
 
 
 known_formats = {
