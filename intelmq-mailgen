@@ -177,8 +177,9 @@ def format_event_data(cur, format, event_ids):
         columns, converter = format_spec
         return converter(load_events(cur, columns, event_ids))
     else:
-        print("Cannot generate emails for unknown format %r" % format,
-              file=sys.stderr)
+        msg = "Cannot generate emails for unknown format %r" % format
+        print(msg, file=sys.stderr)
+        raise NotImplementedError(msg)
 
 
 def mark_as_sent(cur, notification):
