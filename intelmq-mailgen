@@ -260,6 +260,24 @@ def mark_as_sent(cur, notification):
                 (notification["notification_ids"],))
 
 
+def create_mails(cur, notification, config):
+    attachments = []
+    event_attachment = format_event_data(
+        cur, notification["format"],
+        notification["classification_type"],
+        notification["event_ids"])
+    if event_attachment is not None:
+        attachments.append(event_attachment)
+
+    subject, body = read_template(config["template_dir"],
+                                  notification["template"])
+
+    mail = create_mail(sender=config["sender"],
+                                  recipient=notification["email"],
+                                  subject=subject, body=body,
+                                  attachments=attachments)
+    return [mail]
+
 def send_notifications(config, notifications, cur):
     """
     Create and send notification mails for all items in notifications.
@@ -280,21 +298,17 @@ def send_notifications(config, notifications, cur):
         for notification in notifications:
             cur.execute("SAVEPOINT sendmail;")
             try:
-                attachments = []
-                event_attachment = format_event_data(
-                    cur, notification["format"],
-                    notification["classification_type"],
-                    notification["event_ids"])
-                if event_attachment is not None:
-                    attachments.append(event_attachment)
+                emails = create_mails(cur, notification, config)
+                #replacing
 
-                subject, body = read_template(config["template_dir"],
-                                              notification["template"])
+                #end replacing
 
-                smtp.send_message(create_mail(sender=config["sender"],
-                                              recipient=notification["email"],
-                                              subject=subject, body=body,
-                                              attachments=attachments))
+                if len(emails)<1:
+                    #TODO maybe use a user defined exception here?
+                    raise RuntimeError("No emails for sending were generated!")
+                for email in emails:
+                    smtp.send_message(email)
+
                 mark_as_sent(cur, notification)
             except:
                 cur.execute("ROLLBACK TO SAVEPOINT sendmail;")
