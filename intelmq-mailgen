@@ -167,17 +167,18 @@ def format_malware_as_csv(events):
 
 
 known_formats = {
-    "malware": (malware_columns, format_malware_as_csv),
+    ("csv", "malware"): (malware_columns, format_malware_as_csv),
     }
 
 
-def format_event_data(cur, format, classification_type, event_ids):
-    format_spec = known_formats.get(classification_type)
+def format_event_data(cur, outgoing_format, classification_type, event_ids):
+    format_spec = known_formats.get((outgoing_format, classification_type))
     if format_spec is not None:
         columns, converter = format_spec
         return converter(load_events(cur, columns, event_ids))
     else:
-        msg = "Cannot generate emails for unknown format %r" % format
+        msg = ("Cannot generate emails for combination (%r, %r)" %
+                (outgoing_format, classification_type))
         print(msg, file=sys.stderr)
         raise NotImplementedError(msg)
 
@@ -268,8 +269,8 @@ def generate_notifications_interactively(config, cur, notifications):
         print('Current batch (%d of %d total):'
               % (len(batch), len(batch) + len(pending)))
         for i in batch:
-            print('    * {0} {1} {2}: {3} events'.format(
-                i["email"], i["template"], i["format"], len(i["event_ids"])))
+            print('    * {0} {1} ({2}, {3}): {4} events'.format(
+                i["email"], i["template"], i["format"], i["classification_type"], len(i["event_ids"])))
         valid_answers = ("c", "s", "a", "q")
         while True:
             answer = input("Options: [c]ontinue, [s]end this batch, send [a]ll,"
