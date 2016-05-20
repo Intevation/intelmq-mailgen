@@ -2,12 +2,17 @@
 # -*- coding: utf-8 -*-
 
 """Command line tool to send notfications for intelmq events.
+
+Authors:
+    TODO
+    Bernhard E. Reiter <bernhard@intevation.de>
 """
 
 import smtplib
 import argparse
 import json
 import locale
+import logging
 import os
 import sys
 import io
@@ -30,6 +35,14 @@ if locale.getpreferredencoding() != 'UTF-8':
     print(red('The preferred encoding of your locale setting is not UTF-8 but'
               '{}. Exiting.'.format(locale.getpreferredencoding())))
     exit(1)
+
+
+logging.basicConfig(
+            format='%(asctime)s %(name)s %(levelname)s - %(message)s'
+        )
+logger = logging.getLogger('intelmq-mailgen')
+#logger.setLevel(logging.DEBUG)  # defaults to WARNING
+
 
 
 APPNAME = "intelmq-mailgen"
@@ -119,8 +132,6 @@ def read_template(template_dir, template_name):
         body = infile.read().strip() + "\n"
         return subject, body
 
-
-
 # characters allowed in identifiers in escape_sql_identifier. There are
 # just the characters that are used in IntelMQ for identifiers in the
 # events table.
@@ -135,110 +146,98 @@ def escape_sql_identifier(ident):
 
 
 def load_events(cur, columns, event_ids):
-    sql_columns = ", ".join(escape_sql_identifier(col) for col in columns)
-    cur.execute("SELECT {} FROM events WHERE id = ANY (%s)".format(sql_columns),
-                (event_ids,))
+    if columns:
+        sql_columns = ", ".join(escape_sql_identifier(col) for col in columns)
+        cur.execute("SELECT {} FROM events WHERE id = ANY (%s)".format(
+                    sql_columns),(event_ids,))
+    else:
+        cur.execute("SELECT * FROM events WHERE id = ANY (%s)", (event_ids,))
     return cur.fetchall()
 
 
-malware_columns = [
-    "source.asn", "source.ip", "time.source",
-    "malware.name", "source.port", "destination.ip",
-    "destination.port", "protocol.transport",
-    "destination.fqdn",
-]
+def create_malware_xarf_report(e, notification, config):
 
-def format_malware_as_csv(events):
-    contents = io.StringIO()
-    writer = csv.DictWriter(contents, malware_columns, delimiter="|")
-    for event in events:
-        writer.writerow(event)
-    return ("events.csv", contents.getvalue(), "text", "csv")
+    logger.debug("xarf: creating malware report for event {}".format(e))
+    logger.warn("xarf, malware: Using experimental mapping.")
 
-def format_malware_as_xarf(events):
-    emails = [] #TODO
-    contents ='' #report all reports as yaml until we can do emails
-
-    for e in events:
-        # create a single email
-
-        params = {
-            'schema_cache' : '/tmp/',
-            'schema_url' : 'http://www.x-arf.org/schema/abuse_malware-attack_0.1.4.json',
-            'reported_from' : "meTODO@example.com", #config["sender"] ?TODO
-            'report_id' : "TODO intelmq ID", #TODO
-            'category' : 'abuse',
-            'report_type' : 'malware-attack',
-            'source' : e['source.ip'],
-            'source_type' : 'ip-address',
-            'attachment' : None,
-        }
+    params = {
+        'schema_cache' : '/tmp/',
+        'schema_url' : 'http://www.x-arf.org/schema/abuse_malware-attack_0.1.4.json',
+        'reported_from' : config["sender"],
+        'report_id' : "TODO intelmq ID", #TODO
+        'category' : 'abuse',
+        'report_type' : 'malware-attack',
+        'source' : e['source.ip'],
+        'source_type' : 'ip-address',
+        'attachment' : None,
+    }
 
 
-        if 'date' in e:
-            params['date'] = e['time.source'].isoformat(sep=' ')
-        else:
-            params['date'] = "2016" # TODO
-
-        if 'source.url' in e:
-            params['download_link'] = e['source.url']
-
-        # have to set 'attachment' e.g. 'text/plain', if 'evidence' is supplied
-
-        report = Xarf(
-            **params
-            #schema_cache='/tmp/',
-            #schema_url='http://www.x-arf.org/schema/abuse_malware-attack_0.1.4.json',
-
-            #reported_from="meTODO@example.com", #config["sender"] ?TODO
-            #report_id="TODO intelmq ID", #TODO
-            #category='abuse',
-            #report_type='malware-attack',
-            #destination_system = "enum":["real-world","honeypot","spamtrap","honeyd","nepenthes"], optional
-            #date='Jan  1 2014 02:13:35 +0100',
-            #date=e['time.source'].isoformat(sep=' '),
-            #source='83.169.54.26',
-            #source=e['source.ip'],
-            #source_type='ip-address', "enum":["ipv4","ipv6","ip-address"]
-            #source_type='ip-address',
-            #download_link= download_link, # , optional
-            #download_port= , optional
-            #malware-md5= , optional
-            #antivirus-result= , optional
-            #antivirus-vendor= requires":"Antivirus-Result"
-            #feedback-link, optional
-            #attachment=  "enum":["none","text/plain", "message/rfc822"]
-            #attachement=None, #TODO extra information, if it is there.
-            #version= , number, optional
-            #occurrences= , integer, optional
-            #tlp= "enum":["white","green","amber","red"],optional
-        )
-
-        contents += report.to_yaml()
-
-    return ("all-yaml-reports.txt", contents, "text", "plain")
-
-
-def format_event_data(cur, outgoing_format, classification_type, event_ids):
-    format_spec = known_formats.get((outgoing_format, classification_type))
-    if format_spec is not None:
-        columns, converter = format_spec
-        return converter(load_events(cur, columns, event_ids))
+    if 'date' in e:
+        params['date'] = e['time.source'].isoformat(sep=' ')
     else:
-        msg = ("Cannot generate emails for combination (%r, %r)" %
-                (outgoing_format, classification_type))
-        print(msg, file=sys.stderr)
-        raise NotImplementedError(msg)
+        params['date'] = "2016" # TODO
+
+    if 'source.url' in e:
+        params['download_link'] = e['source.url']
+
+    # have to set 'attachment' e.g. 'text/plain', if 'evidence' is supplied
+
+    report = Xarf(
+        **params
+        #schema_cache='/tmp/',
+        #schema_url='http://www.x-arf.org/schema/abuse_malware-attack_0.1.4.json',
+        # list of potential parameters (with some examples) for this schema:
+
+        #reported_from=
+        #report_id=
+        #category='abuse',
+        #report_type='malware-attack',
+        #destination_system = "enum":["real-world","honeypot","spamtrap","honeyd","nepenthes"], optional
+        #date='Jan  1 2014 02:13:35 +0100',
+        #date=
+        #source='83.169.54.26',
+        #source=e['source.ip'],
+        #source_type='ip-address', "enum":["ipv4","ipv6","ip-address"]
+        #download_link= , optional
+        #download_port= , optional
+        #malware-md5= , optional
+        #antivirus-result= , optional
+        #antivirus-vendor= requires":"Antivirus-Result"
+        #feedback-link=, optional
+        #attachment=  "enum":["none","text/plain", "message/rfc822"]
+        #attachement=
+        #version= , number, optional
+        #occurrences= , integer, optional
+        #tlp= "enum":["white","green","amber","red"],optional
+
+        #evidence= , optional would become the additional attachment
+    )
+
+    return report
 
 
-def mark_as_sent(cur, notification):
-    cur.execute("""WITH ticket AS (SELECT nextval('intelmq_ticket_seq'))
-                 UPDATE notifications
-                    SET sent_at = now(),
-                        intelmq_ticket = (SELECT * FROM ticket)
-                  WHERE id = ANY (%s);""",
-                (notification["notification_ids"],))
+def mail_format_malware_as_xarf(cur, notification, config):
+    emails = []
 
+    events = load_events(cur, None, notification["event_ids"])
+    for event in events:
+        report = create_malware_xarf_report(event, notification, config)
+
+        subject, text = read_template(config["template_dir"],
+                                  notification["template"])
+
+        xarfmail = XarfMail(
+            report,
+            mail_from = config["sender"],
+            mail_to = notification["email"],
+            subject = subject,
+            greeting = text
+            )
+
+        emails.append(xarfmail._email) # TODO fix pyxarf to be a real email obj
+
+    return emails
 
 def create_mail(sender, recipient, subject, body, attachments):
     msg = MIMEMultipart()
@@ -254,28 +253,29 @@ def create_mail(sender, recipient, subject, body, attachments):
 
     return msg
 
+malware_columns = [
+    "source.asn", "source.ip", "time.source",
+    "malware.name", "source.port", "destination.ip",
+    "destination.port", "protocol.transport",
+    "destination.fqdn",
+]
 
-def mail_format_malware_as_xarf(cur, notification, config):
-    attachments = []
+def format_malware_as_csv(events):
+    contents = io.StringIO()
+    writer = csv.DictWriter(contents, malware_columns, delimiter="|")
+    for event in events:
+        writer.writerow(event)
+    return ("events.csv", contents.getvalue(), "text", "csv")
 
-    event_attachment = format_malware_as_xarf(
-                load_events(cur, malware_columns, notification["event_ids"])
-                )
 
-    if event_attachment is not None:
-        attachments.append(event_attachment)
-
-    subject, body = read_template(config["template_dir"],
-                                  notification["template"])
-
-    mail = create_mail(sender=config["sender"],
-                                  recipient=notification["email"],
-                                  subject=subject, body=body,
-                                  attachments=attachments)
-    return [mail]
 
 
 def mail_format_malware_as_csv(cur, notification, config):
+    """Creates one email with csv attachment for malware.
+
+    :returns: list of email objects
+    :rtype: list
+    """
     attachments = []
 
     event_attachment = format_malware_as_csv(
@@ -330,6 +330,13 @@ def create_mails(cur, notification, config):
     return emails
 
 
+def mark_as_sent(cur, notification):
+    cur.execute("""WITH ticket AS (SELECT nextval('intelmq_ticket_seq'))
+                 UPDATE notifications
+                    SET sent_at = now(),
+                        intelmq_ticket = (SELECT * FROM ticket)
+                  WHERE id = ANY (%s);""",
+                (notification["notification_ids"],))
 
 
 def send_notifications(config, notifications, cur):
@@ -346,22 +353,24 @@ def send_notifications(config, notifications, cur):
     :param config script configuration
     :param notifications a list of notifications
     :param cur database cursor to use when loading event information
+
+    :returns: number of send mails
+    :rtype: int
     """
+    send_mails = 0
     with smtplib.SMTP(host=config["smtp"]["host"],
                       port=config["smtp"]["port"]) as smtp:
         for notification in notifications:
             cur.execute("SAVEPOINT sendmail;")
             try:
                 emails = create_mails(cur, notification, config)
-                #replacing
-
-                #end replacing
 
                 if len(emails)<1:
                     #TODO maybe use a user defined exception here?
                     raise RuntimeError("No emails for sending were generated!")
                 for email in emails:
                     smtp.send_message(email)
+                    send_mails += 1
 
                 mark_as_sent(cur, notification)
             except:
@@ -369,6 +378,7 @@ def send_notifications(config, notifications, cur):
                 raise
             finally:
                 cur.execute("RELEASE SAVEPOINT sendmail;")
+    return send_mails
 
 
 def get_pending_notifications(cur):
@@ -428,9 +438,9 @@ def generate_notifications_interactively(config, cur, notifications):
                 to_send.extend(pending)
                 pending = []
 
-            print("Sending %d mails... " % (len(to_send),))
-            send_notifications(config, to_send, cur)
-            print("%d mails sent. " % (len(to_send),))
+            print("Sending mails for %d entries... " % (len(to_send),))
+            send_mails = send_notifications(config, to_send, cur)
+            print("%d mails sent. " % (send_mails,))
 
 
 def generate_notifications(args, config):
