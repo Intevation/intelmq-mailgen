@@ -120,20 +120,6 @@ def read_template(template_dir, template_name):
         return subject, body
 
 
-def create_mail(sender, recipient, subject, body, attachments):
-    msg = MIMEMultipart()
-    msg.add_header("From", sender)
-    msg.add_header("To", recipient)
-    msg.add_header("Subject", subject)
-    msg.attach(MIMEText(body))
-
-    for filename, contents, maintype, subtype in attachments:
-        part = MIMEBase(maintype, subtype, filename=filename)
-        part.set_payload(contents)
-        msg.attach(part)
-
-    return msg
-
 
 # characters allowed in identifiers in escape_sql_identifier. There are
 # just the characters that are used in IntelMQ for identifiers in the
@@ -260,7 +246,35 @@ def mark_as_sent(cur, notification):
                 (notification["notification_ids"],))
 
 
+def create_mail(sender, recipient, subject, body, attachments):
+    msg = MIMEMultipart()
+    msg.add_header("From", sender)
+    msg.add_header("To", recipient)
+    msg.add_header("Subject", subject)
+    msg.attach(MIMEText(body))
+
+    for filename, contents, maintype, subtype in attachments:
+        part = MIMEBase(maintype, subtype, filename=filename)
+        part.set_payload(contents)
+        msg.attach(part)
+
+    return msg
+
+
 def create_mails(cur, notification, config):
+    """Create one or several email objects for a notification.
+
+    Depending on the classification_type and format
+    does the formatting and returns one or several email objects.
+
+    :param config: script configuration
+    :param notification: the notification to create mails for
+    :param cur. database cursor to use when loading event information
+
+    :returns: list of email objects with len >=1
+    :rtype: list
+
+    """
     attachments = []
     event_attachment = format_event_data(
         cur, notification["format"],
