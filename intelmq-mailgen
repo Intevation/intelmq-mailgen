@@ -219,12 +219,6 @@ def format_malware_as_xarf(events):
     return ("all-yaml-reports.txt", contents, "text", "plain")
 
 
-known_formats = {
-    ("csv", "malware"): (malware_columns, format_malware_as_csv),
-    ("xarf", "malware"): (malware_columns, format_malware_as_xarf),
-    }
-
-
 def format_event_data(cur, outgoing_format, classification_type, event_ids):
     format_spec = known_formats.get((outgoing_format, classification_type))
     if format_spec is not None:
@@ -261,25 +255,13 @@ def create_mail(sender, recipient, subject, body, attachments):
     return msg
 
 
-def create_mails(cur, notification, config):
-    """Create one or several email objects for a notification.
-
-    Depending on the classification_type and format
-    does the formatting and returns one or several email objects.
-
-    :param config: script configuration
-    :param notification: the notification to create mails for
-    :param cur. database cursor to use when loading event information
-
-    :returns: list of email objects with len >=1
-    :rtype: list
-
-    """
+def mail_format_malware_as_xarf(cur, notification, config):
     attachments = []
-    event_attachment = format_event_data(
-        cur, notification["format"],
-        notification["classification_type"],
-        notification["event_ids"])
+
+    event_attachment = format_malware_as_xarf(
+                load_events(cur, malware_columns, notification["event_ids"])
+                )
+
     if event_attachment is not None:
         attachments.append(event_attachment)
 
@@ -291,6 +273,64 @@ def create_mails(cur, notification, config):
                                   subject=subject, body=body,
                                   attachments=attachments)
     return [mail]
+
+
+def mail_format_malware_as_csv(cur, notification, config):
+    attachments = []
+
+    event_attachment = format_malware_as_csv(
+                load_events(cur, malware_columns, notification["event_ids"])
+                )
+
+    if event_attachment is not None:
+        attachments.append(event_attachment)
+
+    subject, body = read_template(config["template_dir"],
+                                  notification["template"])
+
+    mail = create_mail(sender=config["sender"],
+                                  recipient=notification["email"],
+                                  subject=subject, body=body,
+                                  attachments=attachments)
+    return [mail]
+
+
+known_formatters = {
+    ("csv", "malware"):  mail_format_malware_as_csv,
+    ("xarf", "malware"): mail_format_malware_as_xarf,
+    }
+
+
+def create_mails(cur, notification, config):
+    """Create one or several email objects for a notification.
+
+    Depending on the classification_type and format
+    does the formatting and returns one or several email objects.
+
+    :param config: script configuration
+    :param notification: the notification to create mails for
+    :param cur: database cursor to use when loading event information
+
+    :returns: list of email objects with len >=1
+    :rtype: list
+
+    """
+
+    emails = []
+    formatter =  known_formatters.get((notification["format"],
+                                    notification["classification_type"]))
+    if formatter is not None:
+        emails = formatter(cur, notification, config)
+    else:
+        msg = ("Cannot generate emails for combination (%r, %r)" %
+                (notification["format"], notification["classification_type"]))
+        print(msg, file=sys.stderr)
+        raise NotImplementedError(msg)
+
+    return emails
+
+
+
 
 def send_notifications(config, notifications, cur):
     """
