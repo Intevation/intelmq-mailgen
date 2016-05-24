@@ -37,9 +37,7 @@ if locale.getpreferredencoding() != 'UTF-8':
     exit(1)
 
 
-logging.basicConfig(
-            format='%(asctime)s %(name)s %(levelname)s - %(message)s'
-        )
+logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
 logger = logging.getLogger('intelmq-mailgen')
 #logger.setLevel(logging.DEBUG)  # defaults to WARNING
 
@@ -150,8 +148,8 @@ def load_events(cur, columns, event_ids):
         sql_columns = ", ".join(escape_sql_identifier(col) for col in columns)
     else:
         sql_columns = "*"
-    cur.execute("SELECT {} FROM events WHERE id = ANY (%s)".format(sql_columns),
-        (event_ids,))
+    cur.execute("SELECT {} FROM events WHERE id = ANY (%s)".format(
+                sql_columns), (event_ids,))
 
     return cur.fetchall()
 
@@ -171,7 +169,7 @@ def create_malware_xarf_report(e, notification, config):
         'source' : e['source.ip'],
         'source_type' : 'ip-address',
         'attachment' : None,
-    }
+        }
 
 
     if 'time.source' in e and e['time.source']:
@@ -213,7 +211,7 @@ def create_malware_xarf_report(e, notification, config):
         #tlp= "enum":["white","green","amber","red"],optional
 
         #evidence= , optional would become the additional attachment
-    )
+        )
 
     return report
 
@@ -226,7 +224,7 @@ def mail_format_malware_as_xarf(cur, notification, config):
         report = create_malware_xarf_report(event, notification, config)
 
         subject, text = read_template(config["template_dir"],
-                                  notification["template"])
+                                      notification["template"])
 
         xarfmail = XarfMail(
             report,
@@ -259,7 +257,7 @@ malware_columns = [
     "malware.name", "source.port", "destination.ip",
     "destination.port", "protocol.transport",
     "destination.fqdn",
-]
+    ]
 
 def format_malware_as_csv(events):
     contents = io.StringIO()
@@ -280,8 +278,7 @@ def mail_format_malware_as_csv(cur, notification, config):
     attachments = []
 
     event_attachment = format_malware_as_csv(
-                load_events(cur, malware_columns, notification["event_ids"])
-                )
+        load_events(cur, malware_columns, notification["event_ids"]))
 
     if event_attachment is not None:
         attachments.append(event_attachment)
@@ -290,9 +287,9 @@ def mail_format_malware_as_csv(cur, notification, config):
                                   notification["template"])
 
     mail = create_mail(sender=config["sender"],
-                                  recipient=notification["email"],
-                                  subject=subject, body=body,
-                                  attachments=attachments)
+                       recipient=notification["email"],
+                       subject=subject, body=body,
+                       attachments=attachments)
     return [mail]
 
 
@@ -324,7 +321,7 @@ def create_mails(cur, notification, config):
         emails = formatter(cur, notification, config)
     else:
         msg = ("Cannot generate emails for combination (%r, %r)" %
-                (notification["format"], notification["classification_type"]))
+               (notification["format"], notification["classification_type"]))
         print(msg, file=sys.stderr)
         raise NotImplementedError(msg)
 
@@ -477,7 +474,7 @@ if __name__ == '__main__':
         usage=USAGE,
         description=DESCRIPTION,
         epilog=EPILOG,
-    )
+        )
     parser.add_argument('-a', '--all', action='store_true',
                         help='Process all events (batch mode)')
     args = parser.parse_args()
