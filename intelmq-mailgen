@@ -174,10 +174,10 @@ def create_malware_xarf_report(e, notification, config):
     }
 
 
-    if 'date' in e:
+    if 'time.source' in e and e['time.source']:
         params['date'] = e['time.source'].isoformat(sep=' ')
     else:
-        params['date'] = "2016" # TODO
+        params['date'] = "2016" # this is just a placeholder TODO
 
     if 'source.url' in e:
         params['download_link'] = e['source.url']
