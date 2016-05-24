@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 9)
 
 Package: intelmq-mailgen
 Architecture: all
-Depends: ${misc:Depends}, postgresql, intelmq, python3-psycopg2, python3
+Depends: ${misc:Depends}, postgresql, python3-psycopg2, python3
 Description: Generate and send emails using data from the IntelMQ ContactDB.
  .
  The tool processes events written to the PostgreSQL database and send

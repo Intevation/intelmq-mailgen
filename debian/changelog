@@ -1,3 +1,15 @@
+intelmq-mailgen (0.90~rc2) unstable; urgency=low
+
+  * Drop dependency on intelmq.
+
+ -- Sascha Wilde <wilde@intevation.de>  Mon, 24 May 2016 11:44:37 +0200
+
+intelmq-mailgen (0.90~rc1) unstable; urgency=low
+
+  * New Release.
+
+ -- Sascha Wilde <wilde@intevation.de>  Mon, 23 May 2016 15:46:37 +0200
+
 intelmq-mailgen (0.90~alpha1) UNRELEASED; urgency=medium
 
   * Initial release. (2auto/issue20)
