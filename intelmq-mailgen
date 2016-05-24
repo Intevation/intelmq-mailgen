@@ -358,7 +358,7 @@ def send_notifications(config, notifications, cur):
     :returns: number of send mails
     :rtype: int
     """
-    send_mails = 0
+    sent_mails = 0
     with smtplib.SMTP(host=config["smtp"]["host"],
                       port=config["smtp"]["port"]) as smtp:
         for notification in notifications:
@@ -371,7 +371,7 @@ def send_notifications(config, notifications, cur):
                     raise RuntimeError("No emails for sending were generated!")
                 for email in emails:
                     smtp.send_message(email)
-                    send_mails += 1
+                    sent_mails += 1
 
                 mark_as_sent(cur, notification)
             except:
@@ -379,7 +379,7 @@ def send_notifications(config, notifications, cur):
                 raise
             finally:
                 cur.execute("RELEASE SAVEPOINT sendmail;")
-    return send_mails
+    return sent_mails
 
 
 def get_pending_notifications(cur):
@@ -440,8 +440,8 @@ def generate_notifications_interactively(config, cur, notifications):
                 pending = []
 
             print("Sending mails for %d entries... " % (len(to_send),))
-            send_mails = send_notifications(config, to_send, cur)
-            print("%d mails sent. " % (send_mails,))
+            sent_mails = send_notifications(config, to_send, cur)
+            print("%d mails sent. " % (sent_mails,))
 
 
 def generate_notifications(args, config):
