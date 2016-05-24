@@ -146,12 +146,13 @@ def escape_sql_identifier(ident):
 
 
 def load_events(cur, columns, event_ids):
-    if columns:
+    if columns is not None:
         sql_columns = ", ".join(escape_sql_identifier(col) for col in columns)
-        cur.execute("SELECT {} FROM events WHERE id = ANY (%s)".format(
-                    sql_columns),(event_ids,))
     else:
-        cur.execute("SELECT * FROM events WHERE id = ANY (%s)", (event_ids,))
+        sql_columns = "*"
+    cur.execute("SELECT {} FROM events WHERE id = ANY (%s)".format(sql_columns),
+        (event_ids,))
+
     return cur.fetchall()
 
 
