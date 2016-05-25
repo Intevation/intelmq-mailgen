@@ -50,11 +50,19 @@ def read_configuration():
     # Construct a single configuration dictionary with the contents of
     # the different conf files
     home = os.path.expanduser("~")  # needed for OSX
-    with open(os.path.expanduser(home + '/.intelmq/intelmq-mailgen.conf')) \
-         as conf_handle:
-        user_config = json.load(conf_handle)
-    with open('/etc/intelmq/intelmq-mailgen.conf') as conf_handle:
-        system_config = json.load(conf_handle)
+    user_conf_file = os.path.expanduser(home + '/.intelmq/intelmq-mailgen.conf')
+    sys_conf_file = os.path.expanduser('/etc/intelmq/intelmq-mailgen.conf')
+    if os.path.isfile(user_conf_file):
+        with open(user_conf_file) \
+             as conf_handle:
+            user_config = json.load(conf_handle)
+    else:
+        user_config = dict()
+    if os.path.isfile(sys_conf_file):
+        with open(sys_conf_file) as conf_handle:
+            system_config = json.load(conf_handle)
+    else:
+        system_config = dict()
 
     combined = system_config.copy()
     for key, value in user_config.items():
@@ -63,6 +71,9 @@ def read_configuration():
         else:
             combined[key] = value
 
+    if not combined:
+        raise OSError("No configuration found.")
+            
     return combined
 
 
