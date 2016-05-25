@@ -158,21 +158,59 @@ malware_columns = [
     "destination.fqdn",
 ]
 
-def format_malware_as_csv(events):
+all_columns = [ "classification.identifier",
+    "classification.taxonomy", "classification.type", "comment",
+    "destination.abuse_contact", "destination.account",
+    "destination.allocated", "destination.as_name", "destination.asn",
+    "destination.fqdn", "destination.geolocation.cc",
+    "destination.geolocation.city", "destination.geolocation.country",
+    "destination.geolocation.latitude",
+    "destination.geolocation.longitude",
+    "destination.geolocation.region", "destination.geolocation.state",
+    "destination.ip", "destination.local_hostname",
+    "destination.local_ip", "destination.network", "destination.port",
+    "destination.registry", "destination.reverse_dns",
+    "destination.tor_node", "destination.url",
+    "event_description.target", "event_description.text",
+    "event_description.url", "event_hash", "malware.hash",
+    "malware.hash.md5", "malware.hash.sha1", "malware.name",
+    "malware.version", "misp_uuid", "protocol.application",
+    "protocol.transport", "rtir_id", "screenshot_url",
+    "source.abuse_contact", "source.account", "source.allocated",
+    "source.as_name", "source.asn", "source.fqdn",
+    "source.geolocation.cc", "source.geolocation.city",
+    "source.geolocation.country", "source.geolocation.cymru_cc",
+    "source.geolocation.geoip_cc", "source.geolocation.latitude",
+    "source.geolocation.longitude", "source.geolocation.region",
+    "source.geolocation.state", "source.ip", "source.local_hostname",
+    "source.local_ip", "source.network", "source.port",
+    "source.registry", "source.reverse_dns", "source.tor_node",
+    "source.url", "status", "time.source",
+]
+
+def format_as_csv(columns, events):
     contents = io.StringIO()
-    writer = csv.DictWriter(contents, malware_columns, delimiter="|")
+    writer = csv.DictWriter(contents, columns, delimiter="|")
     for event in events:
         writer.writerow(event)
     return ("events.csv", contents.getvalue(), "text", "csv")
 
+def format_malware_as_csv(events):
+    return format_as_csv(malware_columns,events)
+
+def format_GENERIC_as_csv(events):
+    return format_as_csv(all_columns,events)
 
 known_formats = {
     ("csv", "malware"): (malware_columns, format_malware_as_csv),
+    ("csv", "GENERIC"): (all_columns, format_GENERIC_as_csv),
     }
 
 
 def format_event_data(cur, outgoing_format, classification_type, event_ids):
     format_spec = known_formats.get((outgoing_format, classification_type))
+    if format_spec is None:
+        format_spec = known_formats.get((outgoing_format, "GENERIC"))
     if format_spec is not None:
         columns, converter = format_spec
         return converter(load_events(cur, columns, event_ids))

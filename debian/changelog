@@ -1,3 +1,9 @@
+intelmq-mailgen (0.91~rc1) unstable; urgency=high
+
+  * Added generic csv output for unknown classification types.
+
+ -- Sascha Wilde <wilde@intevation.de>  Mon, 25 May 2016 10:43:00p +0200
+
 intelmq-mailgen (0.90~rc2) unstable; urgency=low
 
   * Drop dependency on intelmq.
