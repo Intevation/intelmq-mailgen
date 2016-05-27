@@ -65,11 +65,19 @@ def read_configuration():
     # Construct a single configuration dictionary with the contents of
     # the different conf files
     home = os.path.expanduser("~")  # needed for OSX
-    with open(os.path.expanduser(home + '/.intelmq/intelmq-mailgen.conf')) \
-         as conf_handle:
-        user_config = json.load(conf_handle)
-    with open('/etc/intelmq/intelmq-mailgen.conf') as conf_handle:
-        system_config = json.load(conf_handle)
+    user_conf_file = os.path.expanduser(home + '/.intelmq/intelmq-mailgen.conf')
+    sys_conf_file = os.path.expanduser('/etc/intelmq/intelmq-mailgen.conf')
+    if os.path.isfile(user_conf_file):
+        with open(user_conf_file) \
+             as conf_handle:
+            user_config = json.load(conf_handle)
+    else:
+        user_config = dict()
+    if os.path.isfile(sys_conf_file):
+        with open(sys_conf_file) as conf_handle:
+            system_config = json.load(conf_handle)
+    else:
+        system_config = dict()
 
     combined = system_config.copy()
     for key, value in user_config.items():
@@ -78,6 +86,9 @@ def read_configuration():
         else:
             combined[key] = value
 
+    if not combined:
+        raise OSError("No configuration found.")
+            
     return combined
 
 
@@ -171,7 +182,6 @@ def create_malware_xarf_report(e, notification, config):
         'attachment' : None,
         }
 
-
     if 'time.source' in e and e['time.source']:
         params['date'] = e['time.source'].isoformat(sep=' ')
     else:
@@ -238,6 +248,7 @@ def mail_format_malware_as_xarf(cur, notification, config):
 
     return emails
 
+
 def create_mail(sender, recipient, subject, body, attachments):
     msg = MIMEMultipart()
     msg.add_header("From", sender)
@@ -252,6 +263,7 @@ def create_mail(sender, recipient, subject, body, attachments):
 
     return msg
 
+
 malware_columns = [
     "source.asn", "source.ip", "time.source",
     "malware.name", "source.port", "destination.ip",
@@ -259,26 +271,55 @@ malware_columns = [
     "destination.fqdn",
     ]
 
-def format_malware_as_csv(events):
+all_columns = [ "classification.identifier",
+    "classification.taxonomy", "classification.type", "comment",
+    "destination.abuse_contact", "destination.account",
+    "destination.allocated", "destination.as_name", "destination.asn",
+    "destination.fqdn", "destination.geolocation.cc",
+    "destination.geolocation.city", "destination.geolocation.country",
+    "destination.geolocation.latitude",
+    "destination.geolocation.longitude",
+    "destination.geolocation.region", "destination.geolocation.state",
+    "destination.ip", "destination.local_hostname",
+    "destination.local_ip", "destination.network", "destination.port",
+    "destination.registry", "destination.reverse_dns",
+    "destination.tor_node", "destination.url",
+    "event_description.target", "event_description.text",
+    "event_description.url", "event_hash", "malware.hash",
+    "malware.hash.md5", "malware.hash.sha1", "malware.name",
+    "malware.version", "misp_uuid", "protocol.application",
+    "protocol.transport", "rtir_id", "screenshot_url",
+    "source.abuse_contact", "source.account", "source.allocated",
+    "source.as_name", "source.asn", "source.fqdn",
+    "source.geolocation.cc", "source.geolocation.city",
+    "source.geolocation.country", "source.geolocation.cymru_cc",
+    "source.geolocation.geoip_cc", "source.geolocation.latitude",
+    "source.geolocation.longitude", "source.geolocation.region",
+    "source.geolocation.state", "source.ip", "source.local_hostname",
+    "source.local_ip", "source.network", "source.port",
+    "source.registry", "source.reverse_dns", "source.tor_node",
+    "source.url", "status", "time.source",
+    ]
+
+
+def format_as_csv(columns, events):
     contents = io.StringIO()
-    writer = csv.DictWriter(contents, malware_columns, delimiter="|")
+    writer = csv.DictWriter(contents, columns, delimiter="|")
     for event in events:
         writer.writerow(event)
     return ("events.csv", contents.getvalue(), "text", "csv")
 
 
-
-
-def mail_format_malware_as_csv(cur, notification, config):
-    """Creates one email with csv attachment for malware.
+def mail_format_as_csv(columns, cur, notification, config):
+    """Creates one email with csv attachment for given columns.
 
     :returns: list of email objects
     :rtype: list
     """
     attachments = []
 
-    event_attachment = format_malware_as_csv(
-        load_events(cur, malware_columns, notification["event_ids"]))
+    event_attachment = format_as_csv(columns,
+        load_events(cur, columns, notification["event_ids"]))
 
     if event_attachment is not None:
         attachments.append(event_attachment)
@@ -293,8 +334,27 @@ def mail_format_malware_as_csv(cur, notification, config):
     return [mail]
 
 
+def mail_format_malware_as_csv(cur, notification, config):
+    """Creates one email with csv attachment for malware.
+
+    :returns: list of email objects
+    :rtype: list
+    """
+    return mail_format_as_csv(malware_columnsm, cur, notification, config)
+
+
+def mail_format_GENERIC_as_csv(cur, notification, config):
+    """Creates one email with csv attachment for malware.
+
+    :returns: list of email objects
+    :rtype: list
+    """
+    return mail_format_as_csv(all_columns, cur, notification, config)
+
+    
 known_formatters = {
     ("csv", "malware"):  mail_format_malware_as_csv,
+    ("csv", "GENERIC"):  mail_format_GENERIC_as_csv,
     ("xarf", "malware"): mail_format_malware_as_xarf,
     }
 
@@ -316,7 +376,13 @@ def create_mails(cur, notification, config):
 
     emails = []
     formatter =  known_formatters.get((notification["format"],
-                                    notification["classification_type"]))
+                                       notification["classification_type"]))
+    if formatter is None:
+        # Try Fallback on "GENERIC" type, that is use a standard set
+        # of fields to export.
+        formatter =  known_formatters.get((notification["format"],
+                                           "GENERIC"))
+
     if formatter is not None:
         emails = formatter(cur, notification, config)
     else:

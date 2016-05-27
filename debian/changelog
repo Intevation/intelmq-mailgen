@@ -1,3 +1,34 @@
+intelmq-mailgen (0.93~alpha1) unstable; urgency=medium
+
+  * Mark as alpha again, as most functionallity is still inkomplete.
+  * Merged in xarf and related code changes.
+
+ -- Sascha Wilde <wilde@intevation.de>  Fri, 27 May 2016 10:52:55 +0200
+
+intelmq-mailgen (0.92~rc1) unstable; urgency=medium
+
+  * Don't require both (user and system) configuration files.
+
+ -- Sascha Wilde <wilde@intevation.de>  Mon, 25 May 2016 11:15:00 +0200
+
+intelmq-mailgen (0.91~rc1) unstable; urgency=high
+
+  * Added generic csv output for unknown classification types.
+
+ -- Sascha Wilde <wilde@intevation.de>  Mon, 25 May 2016 10:43:00 +0200
+
+intelmq-mailgen (0.90~rc2) unstable; urgency=low
+
+  * Drop dependency on intelmq.
+
+ -- Sascha Wilde <wilde@intevation.de>  Mon, 24 May 2016 11:44:37 +0200
+
+intelmq-mailgen (0.90~rc1) unstable; urgency=low
+
+  * New Release.
+
+ -- Sascha Wilde <wilde@intevation.de>  Mon, 23 May 2016 15:46:37 +0200
+
 intelmq-mailgen (0.90~alpha1) UNRELEASED; urgency=medium
 
   * Initial release. (2auto/issue20)
