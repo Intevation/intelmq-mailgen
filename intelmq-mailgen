@@ -325,11 +325,16 @@ all_columns = [ "classification.identifier",
     ]
 
 
-def format_as_csv(columns, events):
+def format_as_csv(columns, events, header=None):
     contents = io.StringIO()
+
     writer = csv.DictWriter(contents, columns, delimiter="|")
+    if header:
+        writer.writerow(header)
+
     for event in events:
         writer.writerow(event)
+
     return ("events.csv", contents.getvalue(), "text", "csv")
 
 
@@ -342,7 +347,7 @@ def mail_format_as_csv(columns, cur, notification, config):
     attachments = []
 
     event_attachment = format_as_csv(columns,
-        load_events(cur, columns, notification["event_ids"]))
+        load_events(cur, columns, notification["event_ids"], columns))
 
     if event_attachment is not None:
         attachments.append(event_attachment)
@@ -374,7 +379,7 @@ def mail_format_GENERIC_as_csv(cur, notification, config):
     """
     return mail_format_as_csv(all_columns, cur, notification, config)
 
-    
+
 known_formatters = {
     ("csv", "malware"):  mail_format_malware_as_csv,
     ("csv", "GENERIC"):  mail_format_GENERIC_as_csv,
