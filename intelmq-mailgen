@@ -373,7 +373,7 @@ def mail_format_malware_as_csv(cur, notification, config):
     :returns: list of email objects
     :rtype: list
     """
-    return mail_format_as_csv(malware_columnsm, cur, notification, config)
+    return mail_format_as_csv(malware_columns, cur, notification, config)
 
 
 def mail_format_GENERIC_as_csv(cur, notification, config):

@@ -9,6 +9,13 @@ https://github.com/certat/intelmq/blob/a29da5d798bd114535326ffdd2f5000c4b6a21e7/
 Installation
 ============
 
+Dependencies
+------------
+
+ * https://bitbucket.org/bereiter/pyxarf (v==0.0.5bereiter)
+ * (intelmq)
+ * (python3)
+
 Database
 --------
 
