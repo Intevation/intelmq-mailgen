@@ -64,8 +64,6 @@ logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
 logger = logging.getLogger('intelmq-mailgen')
 #logger.setLevel(logging.DEBUG)  # defaults to WARNING
 
-
-
 APPNAME = "intelmq-mailgen"
 DESCRIPTION = """
 """
@@ -88,7 +86,8 @@ def read_configuration():
     # Construct a single configuration dictionary with the contents of
     # the different conf files
     home = os.path.expanduser("~")  # needed for OSX
-    user_conf_file = os.path.expanduser(home + '/.intelmq/intelmq-mailgen.conf')
+    user_conf_file = os.path.expanduser(home +
+                                        '/.intelmq/intelmq-mailgen.conf')
     sys_conf_file = os.path.expanduser('/etc/intelmq/intelmq-mailgen.conf')
     if os.path.isfile(user_conf_file):
         with open(user_conf_file) \
@@ -169,6 +168,7 @@ def read_template(template_dir, template_name):
 # events table.
 sql_identifier_charset = set(string.ascii_letters + string.digits + "_.")
 
+
 def escape_sql_identifier(ident):
     if set(ident) - sql_identifier_charset:
         raise ValueError("Event column identifier %r contains invalid"
@@ -194,21 +194,22 @@ def create_malware_xarf_report(e, notification, config):
     logger.warn("xarf, malware: Using experimental mapping.")
 
     params = {
-        'schema_cache' : '/tmp/',
-        'schema_url' : 'http://www.x-arf.org/schema/abuse_malware-attack_0.1.4.json',
-        'reported_from' : config["sender"],
-        'report_id' : "TODO intelmq ID", #TODO
-        'category' : 'abuse',
-        'report_type' : 'malware-attack',
-        'source' : e['source.ip'],
-        'source_type' : 'ip-address',
-        'attachment' : None,
+        'schema_cache': '/tmp/',
+        'schema_url': 'http://www.x-arf.org/schema/' +
+                       'abuse_malware-attack_0.1.4.json',
+        'reported_from': config["sender"],
+        'report_id': "TODO intelmq ID",  # TODO
+        'category': 'abuse',
+        'report_type': 'malware-attack',
+        'source': e['source.ip'],
+        'source_type': 'ip-address',
+        'attachment': None,
         }
 
     if 'time.source' in e and e['time.source']:
         params['date'] = e['time.source'].isoformat(sep=' ')
     else:
-        params['date'] = "2016" # this is just a placeholder TODO
+        params['date'] = "2016"  # this is just a placeholder TODO
 
     if 'source.url' in e:
         params['download_link'] = e['source.url']
@@ -218,14 +219,16 @@ def create_malware_xarf_report(e, notification, config):
     report = Xarf(
         **params
         #schema_cache='/tmp/',
-        #schema_url='http://www.x-arf.org/schema/abuse_malware-attack_0.1.4.json',
+        #schema_url='http://www.x-arf.org/schema/' +
+        #           'abuse_malware-attack_0.1.4.json',
         # list of potential parameters (with some examples) for this schema:
 
         #reported_from=
         #report_id=
         #category='abuse',
         #report_type='malware-attack',
-        #destination_system = "enum":["real-world","honeypot","spamtrap","honeyd","nepenthes"], optional
+        #destination_system = "enum":["real-world","honeypot","spamtrap",
+        #                             "honeyd","nepenthes"], optional
         #date='Jan  1 2014 02:13:35 +0100',
         #date=
         #source='83.169.54.26',
@@ -261,13 +264,14 @@ def mail_format_malware_as_xarf(cur, notification, config):
 
         xarfmail = XarfMail(
             report,
-            mail_from = config["sender"],
-            mail_to = notification["email"],
-            subject = subject,
-            greeting = text
+            mail_from=config["sender"],
+            mail_to=notification["email"],
+            subject=subject,
+            greeting=text
             )
 
-        emails.append(xarfmail._email) # TODO fix pyxarf to be a real email obj
+        emails.append(xarfmail._email)
+        # TODO fix pyxarf to be a real email obj
 
     return emails
 
@@ -294,7 +298,8 @@ malware_columns = [
     "destination.fqdn",
     ]
 
-all_columns = [ "classification.identifier",
+all_columns = [
+    "classification.identifier",
     "classification.taxonomy", "classification.type", "comment",
     "destination.abuse_contact", "destination.account",
     "destination.allocated", "destination.as_name", "destination.asn",
@@ -403,12 +408,12 @@ def create_mails(cur, notification, config):
     """
 
     emails = []
-    formatter =  known_formatters.get((notification["format"],
+    formatter = known_formatters.get((notification["format"],
                                        notification["classification_type"]))
     if formatter is None:
         # Try Fallback on "GENERIC" type, that is use a standard set
         # of fields to export.
-        formatter =  known_formatters.get((notification["format"],
+        formatter = known_formatters.get((notification["format"],
                                            "GENERIC"))
 
     if formatter is not None:
@@ -457,8 +462,8 @@ def send_notifications(config, notifications, cur):
             try:
                 emails = create_mails(cur, notification, config)
 
-                if len(emails)<1:
-                    #TODO maybe use a user defined exception here?
+                if len(emails) < 1:
+                    # TODO maybe use a user defined exception here?
                     raise RuntimeError("No emails for sending were generated!")
                 for email in emails:
                     smtp.send_message(email)
@@ -508,11 +513,18 @@ def generate_notifications_interactively(config, cur, notifications):
               % (len(batch), len(batch) + len(pending)))
         for i in batch:
             print('    * {0} {1} ({2}, {3}): {4} events'.format(
-                i["email"], i["template"], i["format"], i["classification_type"], len(i["event_ids"])))
+                  i["email"],
+                  i["template"],
+                  i["format"],
+                  i["classification_type"],
+                  len(i["event_ids"]))
+                  )
         valid_answers = ("c", "s", "a", "q")
         while True:
-            answer = input("Options: [c]ontinue, [s]end this batch, send [a]ll,"
-                           " [q]uit? ").strip()
+            answer = input("Options: [c]ontinue, "
+                           "[s]end this batch, "
+                           "send [a]ll, "
+                           "[q]uit? ").strip()
             if answer not in valid_answers:
                 print("Please enter one of the characters %s"
                       % ", ".join(valid_answers))
