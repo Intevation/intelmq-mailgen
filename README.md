@@ -84,3 +84,10 @@ An easy way to test the actual sending of emails, is to use Python's
 `smtpd` module, running the `DebuggingServer`:
 
     python3 -m smtpd -d -n -c DebuggingServer localhost:8025 
+
+Run Test-Suite
+--------------
+```
+cd tests
+python3 -m unittest
+```

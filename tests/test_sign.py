@@ -5,34 +5,52 @@
 First revision without test framework to be directly run.
 
 Dependencies:
- * pygpgme build for python3
+ * pygpgme build for python3 (tested with v0.3)
 Authors:
  *  Bernhard E. Reiter <bernhard@intevation.de>
 """
 
-import gpgme
+import unittest
 from io import BytesIO
 
-def test_sign_nomime():
-    #TODO setup a separate GNUPGHOME
-    email_body = """Hello,
+import gpgme
+from util import GpgHomeTestCase
 
-    this is my email body,
-    which shall be signed."""
+class SignTestCase(GpgHomeTestCase):
+    import_keys = ['test1.sec']
 
-    ctx = gpgme.Context()
+    def test_sign_nomime(self):
+        email_body = """Hello,
 
-    #TODO create or find test-key
-    key = ctx.get_key('2E17923D761D9154B2C1A1763C43F4C8EFF5D42A')
-    ctx.signers = [key]
+        this is my email body,
+        which shall be signed."""
 
-    #plaintext = BytesIO(b"Hello World!")
-    plaintext = BytesIO(email_body.encode())
-    signature = BytesIO()
-    sig = ctx.sign(plaintext, signature, gpgme.SIG_MODE_CLEAR)
+        ctx = gpgme.Context()
+        key = ctx.get_key('5F50 3EFA C8C8 9323 D54C 2525 91B8 CD7E 1592 5678')
+        ctx.signers = [key]
 
-    signature.seek(0)
-    print(signature.read().decode(), sig[0])
+        #plaintext = BytesIO(b"Hello World!")
+        plaintext = BytesIO(email_body.encode())
+        signature = BytesIO()
 
-if __name__ == "__main__":
-    test_sign_nomime()
+        sigs = ctx.sign(plaintext, signature, gpgme.SIG_MODE_CLEAR)
+        self.assertEqual(len(sigs), 1)
+
+        sig = sigs[0]
+        self.assertEqual(sig.type, gpgme.SIG_MODE_CLEAR)
+        self.assertIsInstance(sig, gpgme.NewSignature)
+
+        ## print out the unicode string of the signed email body
+        #signature.seek(0)
+        #print(signature.read().decode())
+
+        # let us verify the signature
+        signature.seek(0)
+        plaintext = BytesIO()
+        vsigs = ctx.verify(signature, None, plaintext)
+
+        plaintext.seek(0)
+        self.assertEqual(plaintext.read().decode(), email_body + '\n')
+        self.assertEqual(len(sigs), 1)
+        vsig = vsigs[0]
+        self.assertEqual(vsig.fpr, '5F503EFAC8C89323D54C252591B8CD7E15925678')
