@@ -14,7 +14,7 @@ Dependencies
 
  * https://bitbucket.org/bereiter/pyxarf (v==0.0.5bereiter)
  * (intelmq)
- * (python3)
+ * python3 (v>=3.2)
 
 Database
 --------
