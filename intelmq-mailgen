@@ -29,6 +29,10 @@ Authors:
 
 Based upon intelmqcli
 https://github.com/certat/intelmq/blob/master/intelmq/bin/intelmqcli.py
+
+
+Requires Python 3.2 because of DictWriter.writeheader()
+
 """
 
 import smtplib
@@ -330,12 +334,13 @@ all_columns = [
     ]
 
 
-def format_as_csv(columns, events, header=None):
+def format_as_csv(columns, events, header=False):
     contents = io.StringIO()
 
     writer = csv.DictWriter(contents, columns, delimiter="|")
+
     if header:
-        writer.writerow(header)
+        writer.writeheader()
 
     for event in events:
         writer.writerow(event)
@@ -352,7 +357,7 @@ def mail_format_as_csv(columns, cur, notification, config):
     attachments = []
 
     event_attachment = format_as_csv(columns,
-        load_events(cur, columns, notification["event_ids"], columns))
+        load_events(cur, columns, notification["event_ids"]), True)
 
     if event_attachment is not None:
         attachments.append(event_attachment)
