@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 """Command line tool to send notfications for intelmq events.
 
 
@@ -51,22 +50,20 @@ from email.mime.multipart import MIMEMultipart
 
 import psycopg2
 from psycopg2.extras import RealDictConnection
-from termstyle import red
 
 #local application/library specific imports (we depend on our special pyxarf)
 from pyxarf import Xarf
 from xarfmail import XarfMail
 
-
-if locale.getpreferredencoding() != 'UTF-8':
-    print(red('The preferred encoding of your locale setting is not UTF-8 but'
-              '{}. Exiting.'.format(locale.getpreferredencoding())))
-    exit(1)
-
-
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
 logger = logging.getLogger('intelmq-mailgen')
 #logger.setLevel(logging.DEBUG)  # defaults to WARNING
+
+if locale.getpreferredencoding() == 'UTF-8':
+    logger.critical(
+        'The preferred encoding of your locale setting is not UTF-8'
+        ' but "{}". Exiting.'.format(locale.getpreferredencoding()))
+    exit(1)
 
 APPNAME = "intelmq-mailgen"
 DESCRIPTION = """
