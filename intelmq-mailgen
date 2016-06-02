@@ -178,7 +178,17 @@ def escape_sql_identifier(ident):
     return '"' + ident + '"'
 
 
-def load_events(cur, columns, event_ids):
+def load_events(cur, event_ids, columns=None):
+    """Return events for the ids with all or a subset of available columns.
+
+    Use the columns parameter to set the order of the returned columns.
+
+    :param cur: database connection
+    :param event_ids: list of events ids
+    :param columns: list of column names, defaults to all if 'None' is given.
+    returns: tuple of (column_names, list of corresponding events)
+    rtype: tuple
+    """
     if columns is not None:
         sql_columns = ", ".join(escape_sql_identifier(col) for col in columns)
     else:
@@ -186,7 +196,9 @@ def load_events(cur, columns, event_ids):
     cur.execute("SELECT {} FROM events WHERE id = ANY (%s)".format(
                 sql_columns), (event_ids,))
 
-    return cur.fetchall()
+    returned_columns = [column.name for column in cur.description]
+    logger.debug(returned_columns)
+    return (returned_columns, cur.fetchall())
 
 
 def create_malware_xarf_report(e, notification, config):
@@ -256,7 +268,7 @@ def create_malware_xarf_report(e, notification, config):
 def mail_format_malware_as_xarf(cur, notification, config):
     emails = []
 
-    events = load_events(cur, None, notification["event_ids"])
+    columns, events = load_events(cur, notification["event_ids"])
     for event in events:
         report = create_malware_xarf_report(event, notification, config)
 
@@ -292,14 +304,14 @@ def create_mail(sender, recipient, subject, body, attachments):
     return msg
 
 
-malware_columns = [
+malware_csv_columns = [
     "source.asn", "source.ip", "time.source",
     "malware.name", "source.port", "destination.ip",
     "destination.port", "protocol.transport",
     "destination.fqdn",
     ]
 
-all_columns = [
+all_csv_columns = [
     "classification.identifier",
     "classification.taxonomy", "classification.type", "comment",
     "destination.abuse_contact", "destination.account",
@@ -331,6 +343,8 @@ all_columns = [
     ]
 
 
+
+
 def format_as_csv(columns, events, header=False):
     contents = io.StringIO()
 
@@ -345,7 +359,7 @@ def format_as_csv(columns, events, header=False):
     return ("events.csv", contents.getvalue(), "text", "csv")
 
 
-def mail_format_as_csv(columns, cur, notification, config):
+def mail_format_as_csv(cur, notification, config, columns=None):
     """Creates one email with csv attachment for given columns.
 
     :returns: list of email objects
@@ -353,8 +367,9 @@ def mail_format_as_csv(columns, cur, notification, config):
     """
     attachments = []
 
-    event_attachment = format_as_csv(columns,
-        load_events(cur, columns, notification["event_ids"]), True)
+    rcolumns, events = load_events(cur, notification["event_ids"], columns)
+
+    event_attachment = format_as_csv(rcolumns, events, True)
 
     if event_attachment is not None:
         attachments.append(event_attachment)
@@ -375,7 +390,7 @@ def mail_format_malware_as_csv(cur, notification, config):
     :returns: list of email objects
     :rtype: list
     """
-    return mail_format_as_csv(malware_columns, cur, notification, config)
+    return mail_format_as_csv(cur, notification, config, malware_csv_columns)
 
 
 def mail_format_GENERIC_as_csv(cur, notification, config):
@@ -384,7 +399,7 @@ def mail_format_GENERIC_as_csv(cur, notification, config):
     :returns: list of email objects
     :rtype: list
     """
-    return mail_format_as_csv(all_columns, cur, notification, config)
+    return mail_format_as_csv(cur, notification, config, all_csv_columns)
 
 
 known_formatters = {
