@@ -57,6 +57,7 @@ from xarfmail import XarfMail
 
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
 log = logging.getLogger('intelmq-mailgen')
+log.setLevel(logging.INFO)  # defaults to WARNING
 #log.setLevel(logging.DEBUG)  # defaults to WARNING
 
 if locale.getpreferredencoding() != 'UTF-8':
@@ -575,7 +576,8 @@ def generate_notifications(args, config):
             return
 
         if args.all:
-            send_notifications(config, notifications, cur)
+            sent_mails = send_notifications(config, notifications, cur)
+            log.info("{:d} mails sent.".format(sent_mails))
         else:
             generate_notifications_interactively(config, cur, notifications)
 
