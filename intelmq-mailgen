@@ -30,8 +30,7 @@ Based upon intelmqcli
 https://github.com/certat/intelmq/blob/master/intelmq/bin/intelmqcli.py
 
 
-Requires Python 3.2 because of DictWriter.writeheader()
-
+Requires at least Python 3.2 because of DictWriter.writeheader()
 """
 
 import smtplib
@@ -48,6 +47,7 @@ from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+import gpgme # developed for pygpgme 0.3
 import psycopg2
 from psycopg2.extras import RealDictConnection
 
@@ -266,7 +266,7 @@ def create_malware_xarf_report(e, notification, config):
     return report
 
 
-def mail_format_malware_as_xarf(cur, notification, config):
+def mail_format_malware_as_xarf(cur, notification, config, gpgme_ctx):
     emails = []
 
     columns, events = load_events(cur, notification["event_ids"])
@@ -345,6 +345,18 @@ all_csv_columns = [
 
 
 
+def clearsign(gpgme_ctx, text):
+    plaintext = io.BytesIO(text.encode())
+    signature = io.BytesIO()
+
+    try:
+        sigs = gpgme_ctx.sign(plaintext, signature, gpgme.SIG_MODE_CLEAR)
+    except:
+        log.error("OpenPGP signing failed!")
+        raise
+
+    signature.seek(0)
+    return(signature.read().decode())
 
 def format_as_csv(columns, events, header=False):
     contents = io.StringIO()
@@ -360,7 +372,7 @@ def format_as_csv(columns, events, header=False):
     return ("events.csv", contents.getvalue(), "text", "csv")
 
 
-def mail_format_as_csv(cur, notification, config, columns=None):
+def mail_format_as_csv(cur, notification, config, gpgme_ctx, columns=None):
     """Creates one email with csv attachment for given columns.
 
     :returns: list of email objects
@@ -378,6 +390,9 @@ def mail_format_as_csv(cur, notification, config, columns=None):
     subject, body = read_template(config["template_dir"],
                                   notification["template"])
 
+    if gpgme_ctx:
+        body = clearsign(gpgme_ctx, body)
+
     mail = create_mail(sender=config["sender"],
                        recipient=notification["email"],
                        subject=subject, body=body,
@@ -385,22 +400,24 @@ def mail_format_as_csv(cur, notification, config, columns=None):
     return [mail]
 
 
-def mail_format_malware_as_csv(cur, notification, config):
+def mail_format_malware_as_csv(cur, notification, config, gpgme_ctx):
     """Creates one email with csv attachment for malware.
 
     :returns: list of email objects
     :rtype: list
     """
-    return mail_format_as_csv(cur, notification, config, malware_csv_columns)
+    return mail_format_as_csv(cur, notification,
+                              config, gpgme_ctx, malware_csv_columns)
 
 
-def mail_format_GENERIC_as_csv(cur, notification, config):
+def mail_format_GENERIC_as_csv(cur, notification, config, gpgme_ctx):
     """Creates one email with csv attachment for malware.
 
     :returns: list of email objects
     :rtype: list
     """
-    return mail_format_as_csv(cur, notification, config, all_csv_columns)
+    return mail_format_as_csv(cur, notification,
+                              config, gpgme_ctx, all_csv_columns)
 
 
 known_formatters = {
@@ -410,7 +427,7 @@ known_formatters = {
     }
 
 
-def create_mails(cur, notification, config):
+def create_mails(cur, notification, config, gpgme_ctx):
     """Create one or several email objects for a notification.
 
     Depending on the classification_type and format
@@ -435,7 +452,7 @@ def create_mails(cur, notification, config):
                                            "GENERIC"))
 
     if formatter is not None:
-        emails = formatter(cur, notification, config)
+        emails = formatter(cur, notification, config, gpgme_ctx)
     else:
         msg = ("Cannot generate emails for combination (%r, %r)" %
                (notification["format"], notification["classification_type"]))
@@ -473,12 +490,19 @@ def send_notifications(config, notifications, cur):
     :rtype: int
     """
     sent_mails = 0
+    gpgme_ctx = None
+
+    if config["openpgp"]["always_sign"]:
+        gpgme_ctx = gpgme.Context()
+        signing_key = gpgme_ctx.get_key(config["openpgp"]["signing_key"])
+        gpgme_ctx.signers = [signing_key]
+
     with smtplib.SMTP(host=config["smtp"]["host"],
                       port=config["smtp"]["port"]) as smtp:
         for notification in notifications:
             cur.execute("SAVEPOINT sendmail;")
             try:
-                emails = create_mails(cur, notification, config)
+                emails = create_mails(cur, notification, config, gpgme_ctx)
 
                 if len(emails) < 1:
                     # TODO maybe use a user defined exception here?
@@ -605,5 +629,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     config = read_configuration()
+
+    # checking openpgp config
+    if "openpgp" not in config or {
+            "always_sign", "gnupg_home", "signing_key"
+            } != config["openpgp"].keys():
+        log.critical("Config section openpgp missing or incomplete. Exiting.")
+        exit(1)
+    # setting up gnupg
+    os.environ['GNUPGHOME'] = config["openpgp"]["gnupg_home"]
 
     generate_notifications(args, config)

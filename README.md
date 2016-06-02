@@ -15,6 +15,8 @@ Dependencies
  * https://bitbucket.org/bereiter/pyxarf (v==0.0.5bereiter)
  * (intelmq)
  * python3 (v>=3.2)
+ * pygpgme (v>=0.3)
+   * GnuPG (v>=2)
 
 Database
 --------
@@ -54,6 +56,28 @@ Configuration
 Settings are read from both files with the one in `~` taking precedence.
 The format for both files is the same. A complete example can be found
 in `intelmq-mailgen.conf.example`.
+
+### OpenPGP Signatures
+You need to set ```gnupg_home``` to a directory that is a home directory
+for the version of GnuPG that you are using. It has to contain the
+private and public key parts for the OpenPGP signature without
+password protection.
+
+For example the following lines will create a directory, 
+check that it is fresh and import the testing key:
+
+```
+mkdir /tmp/gnupghome
+chmod og-rwx /tmp/gnupghome
+GNUPGHOME=/tmp/gnupghome gpg2 --list-secret-keys
+GNUPGHOME=/tmp/gnupghome gpg2 --import src/intelmq-mailgen/tests/keys/test1.sec
+```
+
+Now signing a file should work for your ```signing_key``` 
+without asking for a passphrase, e.g.
+```
+echo Moin moin. | GNUPGHOME=/tmp/gnupghome gpg2 --clearsign --local-user "5F50 3EFA C8C8 9323 D54C  2525 91B8 CD7E 1592 5678"
+```
 
 
 Templates
