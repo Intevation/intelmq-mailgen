@@ -59,7 +59,7 @@ logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
 logger = logging.getLogger('intelmq-mailgen')
 #logger.setLevel(logging.DEBUG)  # defaults to WARNING
 
-if locale.getpreferredencoding() == 'UTF-8':
+if locale.getpreferredencoding() != 'UTF-8':
     logger.critical(
         'The preferred encoding of your locale setting is not UTF-8'
         ' but "{}". Exiting.'.format(locale.getpreferredencoding()))
