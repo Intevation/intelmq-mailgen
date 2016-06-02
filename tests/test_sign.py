@@ -26,7 +26,7 @@ class SignTestCase(GpgHomeTestCase):
         which shall be signed."""
 
         ctx = gpgme.Context()
-        key = ctx.get_key('5F50 3EFA C8C8 9323 D54C 2525 91B8 CD7E 1592 5678')
+        key = ctx.get_key('5F50 3EFA C8C8 9323 D54C  2525 91B8 CD7E 1592 5678')
         ctx.signers = [key]
 
         #plaintext = BytesIO(b"Hello World!")
