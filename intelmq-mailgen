@@ -56,11 +56,11 @@ from pyxarf import Xarf
 from xarfmail import XarfMail
 
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
-logger = logging.getLogger('intelmq-mailgen')
-#logger.setLevel(logging.DEBUG)  # defaults to WARNING
+log = logging.getLogger('intelmq-mailgen')
+#log.setLevel(logging.DEBUG)  # defaults to WARNING
 
 if locale.getpreferredencoding() != 'UTF-8':
-    logger.critical(
+    log.critical(
         'The preferred encoding of your locale setting is not UTF-8'
         ' but "{}". Exiting.'.format(locale.getpreferredencoding()))
     exit(1)
@@ -197,14 +197,14 @@ def load_events(cur, event_ids, columns=None):
                 sql_columns), (event_ids,))
 
     returned_columns = [column.name for column in cur.description]
-    logger.debug(returned_columns)
+    log.debug(returned_columns)
     return (returned_columns, cur.fetchall())
 
 
 def create_malware_xarf_report(e, notification, config):
 
-    logger.debug("xarf: creating malware report for event {}".format(e))
-    logger.warn("xarf, malware: Using experimental mapping.")
+    log.debug("xarf: creating malware report for event {}".format(e))
+    log.warn("xarf, malware: Using experimental mapping.")
 
     params = {
         'schema_cache': '/tmp/',
