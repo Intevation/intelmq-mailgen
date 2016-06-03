@@ -90,15 +90,26 @@ sent by `intelmq-mailgen` and the rest of the lines as the body.
 
 Security considerations
 -----------------------
- * It is assumed that we need to protect against malicious external data coming 
+ * It is assumed that we need to protect against malicious external 
+data coming 
 to us via the database. 
- * We do not need (or can) protect against attacks with administration rights.
+ * We do not need (or can) protect against local attacks with administration rights.
  * As our command will be able to run with and witout user interaction, 
 we assume that only users with administration rights 
 have access to the machine and are allowed to start the interactive variant.
- * The privat key material for signing will have no extra protection by passphrase, 
-thus the system itself needs to be secured adequately. (This can include separating
-to setup intelmq itself on a different machine with only access to fill the database.)
+ * The privat key material for signing will have 
+no extra protection by passphrase, thus the system itself 
+needs to be secured adequately. (This can include separating
+to setup intelmq itself on a different machine with only access 
+to fill the database.)
+* We should pay attention preventing that the complete system 
+becomes an effective signature (or encryption) oracle. 
+To explain: Consider an attacker who will receive an automatic notification 
+from our system. If this attacker also can trigger a warning over 
+an used feed, she may partly control which plaintext is to be signed 
+(or somewhere encrypted) and get the automated result. There is a small
+potential that this may be used for an adaptive-plaintext attack 
+under some circumstances.
 
 
 Testing
