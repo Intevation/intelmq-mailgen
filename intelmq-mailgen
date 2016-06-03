@@ -334,17 +334,17 @@ malware_csv_columns = [
 # A dictionary defining the ids of the columns which
 # have to be used for this classification type and
 # their Names
-botnet_drone_csv_column_names = {
-    "source.asn": "ASN",
-    "source.ip": "IP",
-    "time.source": "Timestamp (UTC)",
-    "malware.name": "Malware",
-    "source.port": "Source Port",
-    "destination.ip": "Target IP",
-    "destination.port": "Target Port",
-    "protocol.transport": "Protocol",
-    "destination.fqdn": "Target Hostname"
-}
+botnet_drone_csv_columns = [
+    ("source.asn", "ASN"),
+    ("source.ip", "IP"),
+    ("time.source", "Timestamp (UTC)"),
+    ("malware.name", "Malware"),
+    ("source.port", "Source Port"),
+    ("destination.ip", "Target IP"),
+    ("destination.port", "Target Port"),
+    ("protocol.transport", "Protocol"),
+    ("destination.fqdn", "Target Hostname"),
+]
 
 most_csv_columns = [
     "classification.identifier",
@@ -430,33 +430,25 @@ def clearsign(gpgme_ctx, text):
     return(signature.read().decode())
 
 
-def format_as_csv(columns, events, header=False):
+def format_as_csv(columns, events, header):
     """ Creates an events.csv
     :columns: a list of columns
     :events: an array containing the events as dicts
-    :header: A boolean if a header has to be printed, or a dict containing
-    the mappiing between columns and column names
+    :header: Mapping of columns to column titles for the header line
     """
     contents = io.StringIO()
 
-    if isinstance(header, dict):
-       writer = csv.DictWriter(contents, list(header.values()), delimiter="|")
-    else:
-       writer = csv.DictWriter(contents, columns, delimiter="|")
+    writer = csv.DictWriter(contents, columns, delimiter="|")
 
-    if header:
-        writer.writeheader()
+    writer.writerow(header)
 
     for event in events:
-        if isinstance(header, dict):
-            # replace keys in dict
-            event = dict((header[key], value) for (key, value) in event.items())
         writer.writerow(event)
 
     return ("events.csv", contents.getvalue(), "text", "csv")
 
 
-def mail_format_as_csv(cur, notification, config, gpgme_ctx, columns=None):
+def mail_format_as_csv(cur, notification, config, gpgme_ctx, columns):
     """Creates one email with csv attachment for given columns.
 
     :returns: list of email objects
@@ -464,23 +456,20 @@ def mail_format_as_csv(cur, notification, config, gpgme_ctx, columns=None):
     """
     attachments = []
 
-    if columns:
-        # Columns might be a map consisting of
-        # Column-Key and Column-Name
-        if isinstance(columns, dict):
-            column_keys = list(columns.keys())
-            column_names = list(columns.values())
+    column_keys = []
+    column_titles = {}
+    for description in columns:
+        if isinstance(description, tuple):
+            identifier, title = description
         else:
-            column_keys = columns
-            column_names = None
+            identifier = title = description
+        column_keys.append(identifier)
+        column_titles[identifier] = title
+
 
     rcolumns, events = load_events(cur, notification["event_ids"], column_keys)
 
-    if column_names:
-        events_as_csv = format_as_csv(rcolumns, events, columns)[1]
-    else:
-        events_as_csv = format_as_csv(rcolumns, events, True)[1]
-
+    events_as_csv = format_as_csv(rcolumns, events, column_titles)[1]
 
     subject, body_template = read_template(config["template_dir"],
                                            notification["template"])
@@ -514,7 +503,7 @@ def mail_format_botnet_drone_as_csv(cur, notification, config, gpgme_ctx):
     :rtype: list
     """
     return mail_format_as_csv(cur, notification,
-                              config, gpgme_ctx, botnet_drone_csv_column_names)
+                              config, gpgme_ctx, botnet_drone_csv_columns)
 
 
 def mail_format_GENERIC_as_csv(cur, notification, config, gpgme_ctx):
