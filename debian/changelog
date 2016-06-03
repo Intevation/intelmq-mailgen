@@ -1,3 +1,10 @@
+intelmq-mailgen (0.94~alpha1) unstable; urgency=medium
+
+  * New upstream release
+  * New dependencies: gnupg2, python3-gpgme
+
+ -- Gernot Schulz <gernot@intevation.de>  Fri, 03 Jun 2016 15:47:54 +0200
+
 intelmq-mailgen (0.93~alpha1) unstable; urgency=medium
 
   * Mark as alpha again, as most functionallity is still inkomplete.
