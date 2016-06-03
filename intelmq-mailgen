@@ -312,6 +312,18 @@ malware_csv_columns = [
     "destination.fqdn",
     ]
 
+botnet_drone_csv_columns = [
+    "source.asn",  # ASN
+    "source.ip",  # IP
+    "time.source",  # Timestamp (UTC)
+    "malware.name",  # Malware
+    "source.port",  # Source Port
+    "destination.ip",  # Target IP
+    "destination.port",  # Target Port
+    "protocol.transport",  # Protocol
+    "destination.fqdn"  # Target Hostname
+    ]
+
 all_csv_columns = [
     "classification.identifier",
     "classification.taxonomy", "classification.type", "comment",
@@ -409,6 +421,14 @@ def mail_format_malware_as_csv(cur, notification, config, gpgme_ctx):
     return mail_format_as_csv(cur, notification,
                               config, gpgme_ctx, malware_csv_columns)
 
+def mail_format_botnet_drone_as_csv(cur, notification, config, gpgme_ctx):
+    """Creates one email with csv attachment for botnet_drone
+
+    :returns: list of email objects
+    :rtype: list
+    """
+    return mail_format_as_csv(cur, notification,
+                              config, gpgme_ctx, malware_csv_columns)
 
 def mail_format_GENERIC_as_csv(cur, notification, config, gpgme_ctx):
     """Creates one email with csv attachment for malware.
@@ -422,6 +442,7 @@ def mail_format_GENERIC_as_csv(cur, notification, config, gpgme_ctx):
 
 known_formatters = {
     ("csv", "malware"):  mail_format_malware_as_csv,
+    ("csv", "botnet drone"):  mail_format_botnet_drone_as_csv,
     ("csv", "GENERIC"):  mail_format_GENERIC_as_csv,
     ("xarf", "malware"): mail_format_malware_as_xarf,
     }
