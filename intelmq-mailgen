@@ -450,16 +450,12 @@ def mail_format_as_csv(cur, notification, config, gpgme_ctx, columns=None):
     attachments = []
 
     rcolumns, events = load_events(cur, notification["event_ids"], columns)
-
-    event_attachment = format_as_csv(rcolumns, events, True)
-
-    if event_attachment is not None:
-        attachments.append(event_attachment)
+    events_as_csv = format_as_csv(rcolumns, events, True)[1]
 
     subject, body_template = read_template(config["template_dir"],
                                            notification["template"])
 
-    body = body_template.substitute()
+    body = body_template.substitute(events_as_csv=events_as_csv)
 
     if gpgme_ctx:
         body = clearsign(gpgme_ctx, body)
