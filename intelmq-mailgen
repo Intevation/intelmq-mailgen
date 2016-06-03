@@ -477,9 +477,9 @@ def mail_format_as_csv(cur, notification, config, gpgme_ctx, columns=None):
     rcolumns, events = load_events(cur, notification["event_ids"], column_keys)
 
     if column_names:
-        event_as_csv = format_as_csv(rcolumns, events, columns)[1]
+        events_as_csv = format_as_csv(rcolumns, events, columns)[1]
     else:
-        event_as_csv = format_as_csv(rcolumns, events, True)[1]
+        events_as_csv = format_as_csv(rcolumns, events, True)[1]
 
 
     subject, body_template = read_template(config["template_dir"],
