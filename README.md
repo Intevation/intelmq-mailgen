@@ -86,7 +86,15 @@ Templates
 Templates for the emails should be in the directory named as
 `template_dir` in the configuration file or a sub-directory thereof. The
 first line of a template file is used as the subject line of the mails
-sent by `intelmq-mailgen` and the rest of the lines as the body.
+sent by `intelmq-mailgen` and the rest of the lines as the body. The
+body may optionally be separated from the subject line by one or more
+empty lines.
+
+The body text may allow some substitutions, depending on the format. For
+instance, the CSV based formats replace `${events_as_csv}` with the CSV
+formatted event data.
+
+
 
 Security considerations
 -----------------------
