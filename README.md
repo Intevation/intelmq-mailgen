@@ -122,12 +122,12 @@ under some circumstances.
 
 Column Names
 ------------
-It is possible to define Names for the CSV-Columns in code.
-This can be achieved by altering the appropriate formatter.
-For instance `mail_format_botnet_drone_as_csv` calls `mail_format_as_csv`
-as with a `dict` as last parameter. This dict contains a mapping of the column-ids
-to column names.
 
+It is possible to define Names for the CSV-Columns in code. This can be
+achieved by altering the appropriate formatter. For instance
+`mail_format_botnet_drone_as_csv` calls `mail_format_as_csv` as with a
+list of pairs as the last parameter, one pair for each column. Each pair
+consists of the IntelMQ-internal identifier and the column title.
 
 
 
