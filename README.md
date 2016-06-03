@@ -112,6 +112,17 @@ potential that this may be used for an adaptive-plaintext attack
 under some circumstances.
 
 
+Column Names
+------------
+It is possible to define Names for the CSV-Columns in code.
+This can be achieved by altering the appropriate formatter.
+For instance `mail_format_botnet_drone_as_csv` calls `mail_format_as_csv`
+as with a `dict` as last parameter. This dict contains a mapping of the column-ids
+to column names.
+
+
+
+
 Testing
 =======
 
