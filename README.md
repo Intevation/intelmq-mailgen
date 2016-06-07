@@ -139,6 +139,19 @@ An easy way to test the actual sending of emails, is to use Python's
 
     python3 -m smtpd -d -n -c DebuggingServer localhost:8025 
 
+If you want to capture the emails in maildir format you can use
+https://pypi.python.org/pypi/dsmtpd/0.2.2, e.g. like
+```
+git clone https://github.com/matrixise/dsmtpd.git
+cd dsmtpd
+# now you need to have python3-docopt installed
+# or drop docopt.py in from https://github.com/docopt/docopt
+python3 -c 'from dsmtpd._dsmtpd import *; main()' -i localhost -p 8025 -d /path/to/emaildir
+```
+
+(Don't forget to configure the right sending host and port in your config.)
+
+
 Run Test-Suite
 --------------
 ```
