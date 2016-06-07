@@ -76,7 +76,7 @@ GNUPGHOME=/tmp/gnupghome gpg2 --import src/intelmq-mailgen/tests/keys/test1.sec
 Now signing a file should work for your ```signing_key``` 
 without asking for a passphrase, e.g.
 ```
-echo Moin moin. | GNUPGHOME=/tmp/gnupghome gpg2 --clearsign --local-user "5F50 3EFA C8C8 9323 D54C  2525 91B8 CD7E 1592 5678"
+echo Moin moin. | GNUPGHOME=/tmp/gnupghome gpg2 --clearsign --local-user "5F503EFAC8C89323D54C252591B8CD7E15925678"
 ```
 
 
