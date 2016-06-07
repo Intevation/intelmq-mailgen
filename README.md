@@ -145,3 +145,16 @@ Run Test-Suite
 cd tests
 python3 -m unittest
 ```
+
+License
+=======
+IntelMQ Mailgen is Free Software under the GNU Affero GPL v>=3
+and comes with ABSOLUTELY NO WARRANTY!
+See LICENSE for details.
+
+Copyright (C) 2016 by Bundesamt für Sicherheit in der Informationstechnik
+Software engineering by Intevation GmbH
+
+tests/utils.py is Copyright (C) 2006  James Henstridge
+and Free Software under GNU LGPL v>=2.1.
+See source code header lines for details.
