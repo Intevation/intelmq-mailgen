@@ -152,7 +152,7 @@ smtp host and port in your config.)
 If you want to capture the emails in maildir format you can use
 https://pypi.python.org/pypi/dsmtpd/0.2.2, e.g. like
 ```sh
-git clone https://github.com/matrixise/dsmtpd.git
+git clone https://github.com/bernhardreiter/dsmtpd.git
 cd dsmtpd
 # now you need to have python3-docopt installed
 # or drop docopt.py in from https://github.com/docopt/docopt
