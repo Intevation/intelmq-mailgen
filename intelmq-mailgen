@@ -305,16 +305,21 @@ def mail_format_malware_as_xarf(cur, notification, config, gpgme_ctx):
 
 
 def create_mail(sender, recipient, subject, body, attachments):
-    msg = MIMEMultipart()
+    """Create an email either as single or multi-part with attachments."""
+    if len(attachments) == 0:
+        msg = MIMEText(body)
+    else:
+        msg = MIMEMultipart()
+        msg.attach(MIMEText(body))
+
+        for filename, contents, maintype, subtype in attachments:
+            part = MIMEBase(maintype, subtype, filename=filename)
+            part.set_payload(contents)
+            msg.attach(part)
+
     msg.add_header("From", sender)
     msg.add_header("To", recipient)
     msg.add_header("Subject", subject)
-    msg.attach(MIMEText(body))
-
-    for filename, contents, maintype, subtype in attachments:
-        part = MIMEBase(maintype, subtype, filename=filename)
-        part.set_payload(contents)
-        msg.attach(part)
 
     return msg
 
