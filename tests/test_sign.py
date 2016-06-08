@@ -26,7 +26,12 @@ class SignTestCase(GpgHomeTestCase):
         which shall be signed."""
 
         ctx = gpgme.Context()
-        key = ctx.get_key('5F50 3EFA C8C8 9323 D54C  2525 91B8 CD7E 1592 5678')
+        #key = ctx.get_key('5F50 3EFA C8C8 9323 D54C  2525 91B8 CD7E 1592 5678')
+        # GnuPG v>=2.0.19 should allow fingerprints with spaces as user ids
+        # but some versions (2.0.22 Ubuntu LTS and 2.0.30) have a defect here:
+        # https://bugs.gnupg.org/gnupg/issue2382
+        # Beside 2.1.11 works, it is better to fall back and do without spaces:
+        key = ctx.get_key('5F503EFAC8C89323D54C252591B8CD7E15925678')
         ctx.signers = [key]
 
         #plaintext = BytesIO(b"Hello World!")

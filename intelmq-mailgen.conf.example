@@ -2,7 +2,7 @@
     "openpgp": {
 	"gnupg_home" : "/usr/local/lib/intelmq/event-processor/dot.gnupg",
 	"always_sign" : true,
-	"signing_key" : "5F50 3EFA C8C8 9323 D54C  2525 91B8 CD7E 1592 5678"
+	"signing_key" : "5F503EFAC8C89323D54C252591B8CD7E15925678"
     },
     "database": {
 	"event": {

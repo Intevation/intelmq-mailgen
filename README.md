@@ -73,10 +73,17 @@ GNUPGHOME=/tmp/gnupghome gpg2 --list-secret-keys
 GNUPGHOME=/tmp/gnupghome gpg2 --import src/intelmq-mailgen/tests/keys/test1.sec
 ```
 
+Depending on your GnuPG version you may want to set additional options
+for example using this line in ```$GNUPGHOME/gpg.conf``` to set the
+default digest algorithm:
+```
+personal-digest-preferences SHA256
+```
+
 Now signing a file should work for your ```signing_key``` 
 without asking for a passphrase, e.g.
 ```
-echo Moin moin. | GNUPGHOME=/tmp/gnupghome gpg2 --clearsign --local-user "5F50 3EFA C8C8 9323 D54C  2525 91B8 CD7E 1592 5678"
+echo Moin moin. | GNUPGHOME=/tmp/gnupghome gpg2 --clearsign --local-user "5F503EFAC8C89323D54C252591B8CD7E15925678"
 ```
 
 
@@ -139,9 +146,35 @@ An easy way to test the actual sending of emails, is to use Python's
 
     python3 -m smtpd -d -n -c DebuggingServer localhost:8025 
 
+If you want to capture the emails in maildir format you can use
+https://pypi.python.org/pypi/dsmtpd/0.2.2, e.g. like
+```
+git clone https://github.com/matrixise/dsmtpd.git
+cd dsmtpd
+# now you need to have python3-docopt installed
+# or drop docopt.py in from https://github.com/docopt/docopt
+python3 -c 'from dsmtpd._dsmtpd import *; main()' -i localhost -p 8025 -d /path/to/emaildir
+```
+
+(Don't forget to configure the right sending host and port in your config.)
+
+
 Run Test-Suite
 --------------
 ```
 cd tests
 python3 -m unittest
 ```
+
+License
+=======
+IntelMQ Mailgen is Free Software under the GNU Affero GPL v>=3
+and comes with ABSOLUTELY NO WARRANTY!
+See LICENSE for details.
+
+Copyright (C) 2016 by Bundesamt für Sicherheit in der Informationstechnik
+Software engineering by Intevation GmbH
+
+tests/utils.py is Copyright (C) 2006  James Henstridge
+and Free Software under GNU LGPL v>=2.1.
+See source code header lines for details.

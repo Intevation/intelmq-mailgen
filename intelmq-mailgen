@@ -6,7 +6,7 @@
 Copyright (C) 2016 by Bundesamt für Sicherheit in der Informationstechnik
 Software engineering by Intevation GmbH
 
-This program is free software: you can redistribute it and/or modify
+This program is Free Software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -305,16 +305,21 @@ def mail_format_malware_as_xarf(cur, notification, config, gpgme_ctx):
 
 
 def create_mail(sender, recipient, subject, body, attachments):
-    msg = MIMEMultipart()
+    """Create an email either as single or multi-part with attachments."""
+    if len(attachments) == 0:
+        msg = MIMEText(body)
+    else:
+        msg = MIMEMultipart()
+        msg.attach(MIMEText(body))
+
+        for filename, contents, maintype, subtype in attachments:
+            part = MIMEBase(maintype, subtype, filename=filename)
+            part.set_payload(contents)
+            msg.attach(part)
+
     msg.add_header("From", sender)
     msg.add_header("To", recipient)
     msg.add_header("Subject", subject)
-    msg.attach(MIMEText(body))
-
-    for filename, contents, maintype, subtype in attachments:
-        part = MIMEBase(maintype, subtype, filename=filename)
-        part.set_payload(contents)
-        msg.attach(part)
 
     return msg
 
