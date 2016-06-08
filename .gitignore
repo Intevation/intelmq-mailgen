@@ -3,3 +3,8 @@
 *.log
 *.*~
 tests/__pycache__/
+
+# packaging-related
+debian/files
+debian/intelmq-mailgen.substvars
+debian/intelmq-mailgen/
