@@ -73,6 +73,13 @@ GNUPGHOME=/tmp/gnupghome gpg2 --list-secret-keys
 GNUPGHOME=/tmp/gnupghome gpg2 --import src/intelmq-mailgen/tests/keys/test1.sec
 ```
 
+Depending on your GnuPG version you may want to set additional options
+for example using this line in ```$GNUPGHOME/gpg.conf``` to set the
+default digest algorithm:
+```
+personal-digest-preferences SHA256
+```
+
 Now signing a file should work for your ```signing_key``` 
 without asking for a passphrase, e.g.
 ```
