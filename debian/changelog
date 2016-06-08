@@ -1,3 +1,9 @@
+intelmq-mailgen (0.94~alpha2) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Gernot Schulz <gernot@intevation.de>  Wed, 08 Jun 2016 13:10:52 +0200
+
 intelmq-mailgen (0.94~alpha1) unstable; urgency=medium
 
   * New upstream release
