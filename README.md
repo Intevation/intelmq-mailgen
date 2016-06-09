@@ -146,22 +146,35 @@ An easy way to test the actual sending of emails, is to use Python's
 
     python3 -m smtpd -d -n -c DebuggingServer localhost:8025 
 
+(Don't forget to configure the corresponding
+smtp host and port in your config.)
+
 If you want to capture the emails in maildir format you can use
 https://pypi.python.org/pypi/dsmtpd/0.2.2, e.g. like
-```
-git clone https://github.com/matrixise/dsmtpd.git
+```sh
+git clone https://github.com/bernhardreiter/dsmtpd.git
 cd dsmtpd
 # now you need to have python3-docopt installed
 # or drop docopt.py in from https://github.com/docopt/docopt
-python3 -c 'from dsmtpd._dsmtpd import *; main()' -i localhost -p 8025 -d /path/to/emaildir
+python3 -c 'from dsmtpd._dsmtpd import *; main()' -i localhost -p 8025 -d /path/to/Maildir
 ```
 
-(Don't forget to configure the right sending host and port in your config.)
+`Maildir` has to be either an existing email storage directory in 
+[Maildir format](https://en.wikipedia.org/wiki/Maildir) or non-existing,
+it which case it will be created by dsmtpd.
+
+You can access a Maildir storage with several mail clients, e.g for mutt:
+```
+mutt -f  /path/to/Maildir
+```
+Hint: By default `Esc P` will trigger mutt's `<check-traditional-pgp>`
+[function](http://www.mutt.org/doc/manual/#reading-misc), in case you
+want to check a no-mime signature.
 
 
 Run Test-Suite
 --------------
-```
+```sh
 cd tests
 python3 -m unittest
 ```
