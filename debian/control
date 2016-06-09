@@ -1,8 +1,9 @@
 Source: intelmq-mailgen
-Maintainer: Sascha Wilde <wilde@intevation.de>
+Maintainer: Gernot Schulz <gernot@intevation.de>
 Section: net
 Priority: optional
 Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.8.0
 
 Package: intelmq-mailgen
 Architecture: all
