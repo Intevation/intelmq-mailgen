@@ -188,6 +188,6 @@ See LICENSE for details.
 Copyright (C) 2016 by Bundesamt für Sicherheit in der Informationstechnik
 Software engineering by Intevation GmbH
 
-tests/utils.py is Copyright (C) 2006  James Henstridge
+tests/util.py is Copyright (C) 2006  James Henstridge
 and Free Software under GNU LGPL v>=2.1.
 See source code header lines for details.
