@@ -1,2 +1,3 @@
 intelmq-mailgen  usr/bin/
 sql/*  usr/share/intelmq-mailgen/sql/
+tests/*  usr/share/intelmq-mailgen/tests/
