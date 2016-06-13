@@ -172,10 +172,13 @@ Hint: By default `Esc P` will trigger mutt's `<check-traditional-pgp>`
 want to check a no-mime signature.
 
 
-Run Test-Suite
+Run Test Suite
 --------------
-```sh
-cd tests
-python3 -m unittest
-```
+
+The test suite is split into two parts because some tests may fail depending on
+hardware specs (execution time) and their failure would not indicate errors per
+se.
+
+The regular unit tests which must succeed can be started with ``make check``;
+to run the complete test suite, use ``make check_all``.
 
