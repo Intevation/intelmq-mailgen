@@ -16,6 +16,15 @@ from io import BytesIO
 import gpgme
 from util import GpgHomeTestCase
 
+from os import environ
+
+# Read env var to enable all tests, including tests which may be
+# hardware-dependent.
+run_all_tests = False
+if 'ALLTESTS' in environ:
+    if environ['ALLTESTS'] == '1':
+        run_all_tests = True
+
 class SignTestCase(GpgHomeTestCase):
     import_keys = ['test1.sec']
 
@@ -60,6 +69,8 @@ class SignTestCase(GpgHomeTestCase):
         vsig = vsigs[0]
         self.assertEqual(vsig.fpr, '5F503EFAC8C89323D54C252591B8CD7E15925678')
 
+    @unittest.skipUnless(run_all_tests,
+                         'Set ALLTESTS=1 to include this test.')
     def test_speed(self):
         email_body = """Hello,
 

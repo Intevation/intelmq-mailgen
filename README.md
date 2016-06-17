@@ -172,22 +172,13 @@ Hint: By default `Esc P` will trigger mutt's `<check-traditional-pgp>`
 want to check a no-mime signature.
 
 
-Run Test-Suite
+Run Test Suite
 --------------
-```sh
-cd tests
-python3 -m unittest
-```
 
-License
-=======
-IntelMQ Mailgen is Free Software under the GNU Affero GPL v>=3
-and comes with ABSOLUTELY NO WARRANTY!
-See LICENSE for details.
+The test suite is split into two parts because some tests may fail depending on
+hardware specs (execution time) and their failure would not indicate errors per
+se.
 
-Copyright (C) 2016 by Bundesamt für Sicherheit in der Informationstechnik
-Software engineering by Intevation GmbH
+The regular unit tests which must succeed can be started with ``make check``;
+to run the complete test suite, use ``make check_all``.
 
-tests/utils.py is Copyright (C) 2006  James Henstridge
-and Free Software under GNU LGPL v>=2.1.
-See source code header lines for details.

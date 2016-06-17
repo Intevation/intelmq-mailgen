@@ -5,8 +5,12 @@ Source: https://github.com/Intevation/intelmq-mailgen.git
 
 Files: intelmq-mailgen
 Copyright: 2016 Aaron Kaplan, cert.at, Intevation GmbH
-License: AGPL-3
+License: AGPL-3+
+
+Files: tests/util.py
+Copyright: 2006 James Henstridge
+License: LGPL-2.1+
 
 Files: *
 Copyright: 2016 Intevation GmbH
-License: AGPL-3
+License: AGPL-3+
