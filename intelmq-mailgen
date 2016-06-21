@@ -501,6 +501,18 @@ def mail_format_malware_as_csv(cur, notification, config, gpgme_ctx):
                               config, gpgme_ctx, malware_csv_columns)
 
 
+def mail_format_feed_specific_as_csv(cur, notification, config, gpgme_ctx):
+    """Creates one email with csv attachment for botnet_drone
+
+    :returns: list of email objects
+    :rtype: list
+    """
+    notification["template"] = "specific.txt"
+
+    return mail_format_as_csv(cur, notification,
+                              config, gpgme_ctx, botnet_drone_csv_columns)
+
+
 def mail_format_botnet_drone_as_csv(cur, notification, config, gpgme_ctx):
     """Creates one email with csv attachment for botnet_drone
 
@@ -524,6 +536,7 @@ def mail_format_GENERIC_as_csv(cur, notification, config, gpgme_ctx):
 known_formatters = {
     # ("csv", "malware"):  mail_format_malware_as_csv,  # This formatter is
     # currently not required
+    ("feed_specific", "SPECIFIC"):  mail_format_feed_specific_as_csv,
     ("csv", "botnet drone"):  mail_format_botnet_drone_as_csv,
     ("csv", "GENERIC"):  mail_format_GENERIC_as_csv,
     # ("xarf", "malware"): mail_format_malware_as_xarf,  # This formatter is
@@ -552,8 +565,12 @@ def create_mails(cur, notification, config, gpgme_ctx):
     if formatter is None:
         # Try Fallback on "GENERIC" type, that is use a standard set
         # of fields to export.
-        formatter = known_formatters.get((notification["format"],
-                                           "GENERIC"))
+        if notification["format"] == "feed_specific":
+            formatter = known_formatters.get((notification["format"],
+                                              "SPECIFIC"))
+        else:
+            formatter = known_formatters.get((notification["format"],
+                                              "GENERIC"))
 
     if formatter is not None:
         emails = formatter(cur, notification, config, gpgme_ctx)

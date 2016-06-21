@@ -101,6 +101,10 @@ The body text may allow some substitutions, depending on the format. For
 instance, the CSV based formats replace `${events_as_csv}` with the CSV
 formatted event data.
 
+Specific Templates
+------------------
+A template which will be elaborated for more specific templates is called
+`specific.txt` this template has to exist in the template directory.
 
 
 Security considerations
