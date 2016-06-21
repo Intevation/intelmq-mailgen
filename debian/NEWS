@@ -1,0 +1,9 @@
+intelmq-mailgen (0.94~alpha3) unstable; urgency=medium
+
+    The notification table scheme has been changed to include feed names which
+    are used by intelmq-mailgen to group notifications by.
+
+    Due to this change, the notification table will have to be reinitialized
+    after this update.
+
+ -- Gernot Schulz <gernot@intevation.de>  Tue, 21 Jun 2016 14:50:38 +0200

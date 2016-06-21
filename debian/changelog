@@ -1,3 +1,12 @@
+intelmq-mailgen (0.94~alpha3) unstable; urgency=medium
+
+  * New release (requires reinitialization of the notification table!)
+  * Fix license information
+  * Update maintainer information
+  * Run tests when building package
+
+ -- Gernot Schulz <gernot@intevation.de>  Tue, 21 Jun 2016 14:32:50 +0200
+
 intelmq-mailgen (0.94~alpha2) unstable; urgency=medium
 
   * New upstream release
