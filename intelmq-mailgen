@@ -343,7 +343,7 @@ botnet_drone_csv_columns = [
     ("source.asn", "ASN"),
     ("source.ip", "IP"),
     ("time.source", "Timestamp (UTC)"),
-    ("malware.name", "Malware"),
+    ("classification.identifier", "Malware"),
     ("source.port", "Source Port"),
     ("destination.ip", "Target IP"),
     ("destination.port", "Target Port"),
