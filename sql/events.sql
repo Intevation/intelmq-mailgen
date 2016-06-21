@@ -4,7 +4,7 @@
 -- regenerate it instead.
 
 CREATE table events (
-        "id" BIGSERIAL UNIQUE PRIMARY KEY,
+    "id" BIGSERIAL UNIQUE PRIMARY KEY,
     "classification.identifier" varchar(2000),
     "classification.taxonomy" varchar(2000),
     "classification.type" varchar(2000),
