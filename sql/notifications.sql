@@ -41,6 +41,7 @@ CREATE TABLE notifications (
     email VARCHAR(100) NOT NULL,
     format VARCHAR(100) NOT NULL,
     classification_type VARCHAR(100) NOT NULL,
+    feed_name VARCHAR(2000) NOT NULL,
     template VARCHAR(100) NOT NULL,
     notification_interval INTERVAL NOT NULL,
     endpoint ip_endpoint NOT NULL,
@@ -62,7 +63,8 @@ CREATE OR REPLACE FUNCTION insert_notification(
     event_id BIGINT,
     notification JSON,
     notification_endpoint ip_endpoint,
-    classification_type VARCHAR(100)
+    classification_type VARCHAR(100),
+    feed_name VARCHAR(2000)
 ) RETURNS VOID
 AS $$
 DECLARE
@@ -77,11 +79,22 @@ BEGIN
        AND template IS NOT NULL
        AND notification_interval IS NOT NULL
     THEN
-        INSERT INTO notifications (events_id, email, format, template,
-                                   classification_type, notification_interval,
+        INSERT INTO notifications (events_id,
+                                   email,
+                                   format,
+                                   template,
+                                   classification_type,
+                                   feed_name,
+                                   notification_interval,
                                    endpoint)
-        VALUES (event_id,  email, format, template, classification_type,
-                notification_interval, notification_endpoint);
+        VALUES (event_id,
+                email,
+                format,
+                template,
+                classification_type,
+                feed_name,
+                notification_interval,
+                notification_endpoint);
     END IF;
 END
 $$ LANGUAGE plpgsql VOLATILE;
@@ -90,7 +103,8 @@ $$ LANGUAGE plpgsql VOLATILE;
 CREATE OR REPLACE FUNCTION notifications_from_extra(
     event_id BIGINT,
     extra JSON,
-    classification_type VARCHAR(100)
+    classification_type VARCHAR(100),
+    feed_name VARCHAR(2000)
 ) RETURNS VOID
 AS $$
 DECLARE
@@ -100,8 +114,11 @@ BEGIN
     IF json_notifications IS NOT NULL THEN
         FOR notification
          IN SELECT * FROM json_array_elements(json_notifications) LOOP
-            PERFORM insert_notification(event_id, notification, 'source',
-	                                classification_type);
+            PERFORM insert_notification(event_id,
+                                        notification,
+                                        'source',
+	                                    classification_type,
+	                                    feed_name);
         END LOOP;
     END IF;
 END
@@ -112,8 +129,10 @@ CREATE OR REPLACE FUNCTION events_insert_notifications_for_row()
 RETURNS TRIGGER
 AS $$
 BEGIN
-    PERFORM notifications_from_extra(NEW.id, NEW.extra,
-                                     NEW."classification.type");
+    PERFORM notifications_from_extra(NEW.id,
+                                     NEW.extra,
+                                     NEW."classification.type",
+                                     NEW."feed.name");
     RETURN NEW;
 END
 $$ LANGUAGE plpgsql VOLATILE EXTERNAL SECURITY DEFINER;
