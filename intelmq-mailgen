@@ -639,7 +639,7 @@ def get_pending_notifications(cur):
           FROM (SELECT * FROM notifications
                 WHERE intelmq_ticket IS NULL
                 FOR UPDATE NOWAIT) n
-      GROUP BY n.email, n.template, n.format, n.classification_type
+      GROUP BY n.email, n.template, n.format, n.classification_type, n.feed_name
         HAVING coalesce((SELECT max(sent_at) FROM notifications n2
                          WHERE n2.email = n.email AND n2.template = n.template
                          AND n2.format = n.format)
