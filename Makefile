@@ -8,4 +8,4 @@ check:
 check_all:
 	cd tests && ALLTESTS=1 python3 -m unittest -v
 
-PHONY: all check check_all
+.PHONY: all check check_all
