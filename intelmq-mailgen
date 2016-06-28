@@ -715,6 +715,7 @@ def generate_notifications(args, config):
     conn = open_db_connection(config)
     try:
         cur = conn.cursor()
+        cur.execute("SET TIME ZONE 'UTC';")
         notifications = get_pending_notifications(cur)
         if not notifications:
             print("No pending notifications to be sent")
