@@ -40,12 +40,19 @@ CREATE TABLE notifications (
     events_id BIGINT NOT NULL,
     email VARCHAR(100) NOT NULL,
     format VARCHAR(100) NOT NULL,
-    classification_type VARCHAR(100) NOT NULL,
-    feed_name VARCHAR(2000) NOT NULL,
-    template VARCHAR(100) NOT NULL,
     notification_interval INTERVAL NOT NULL,
     endpoint ip_endpoint NOT NULL,
     sent_at TIMESTAMP WITH TIME ZONE,
+
+    -- Event data to help select the template
+    feed_name VARCHAR(2000) NOT NULL,
+    classification_taxonomy VARCHAR(100) NOT NULL,
+    classification_type VARCHAR(100) NOT NULL,
+    classification_identifier VARCHAR(100),
+    malware_name VARCHAR(100),
+    contact_sector VARCHAR(100),
+    contact_organisation VARCHAR(100),
+    contact_name VARCHAR(100),
 
     FOREIGN KEY (events_id) REFERENCES events(id)
 );
@@ -57,7 +64,39 @@ CREATE INDEX notifications_intelmq_ticket_idx
 
 GRANT SELECT, UPDATE ON notifications TO eventdb_send_notifications;
 
+/*
+ Template
+*/
+CREATE TABLE template (
+    id BIGSERIAL UNIQUE PRIMARY KEY,
 
+    -- feed name
+    feed_name VARCHAR(2000),
+
+    -- Taxonomy
+    classification_taxonomy VARCHAR(100), -- currently not used
+
+    -- The classification type for which this template can be used.
+    classification_type VARCHAR(100),
+
+    -- Classification identifier
+    classification_identifier VARCHAR(100), -- currently not used
+
+    -- Name of the malware or similar
+    malware_name VARCHAR(100), -- currently not used
+
+    -- Contact sector
+    contact_sector VARCHAR(100),
+
+    -- Contact organisation
+    contact_organisation VARCHAR(100),
+
+    -- Contact
+    contact_name VARCHAR(100),
+
+    -- Path of the template
+    path VARCHAR(200) NOT NULL,
+);
 
 CREATE OR REPLACE FUNCTION insert_notification(
     event_id BIGINT,
