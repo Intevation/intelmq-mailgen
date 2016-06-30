@@ -351,6 +351,22 @@ botnet_drone_csv_columns = [
     ("destination.fqdn", "Target Hostname"),
 ]
 
+http_sinkhole_columns = [
+    ('time.source', 'Timestamp (UTC)'),
+    ('source.ip', 'IP'),
+    ('source.port', 'Source Port'),
+    ('source.asn', 'Source ASN'),
+    ('source.geolocation.cc', 'Source Country Code'),
+    ('malware.name', 'Malware Name'),
+    ('source.tor_node', 'Tor Node'),
+    ('source.reverse_dns', 'Hostname'),
+    ('destination.port', 'Destination Port'),
+    ('destination.id', 'Destination IP'),
+    ('destination.asn', 'Destination ASN'),
+    ('destination.geolocation.cc', 'Destination Country Code'),
+    ('classification.type', 'Classification Type'),
+]
+
 most_csv_columns = [
     "classification.identifier",
     "classification.taxonomy",
@@ -523,6 +539,16 @@ def mail_format_botnet_drone_as_csv(cur, notification, config, gpgme_ctx):
                               config, gpgme_ctx, botnet_drone_csv_columns)
 
 
+def mail_format_http_sinkhole_as_csv(cur, notification, config, gpgme_ctx):
+    """Creates one email with csv attachment for botnet_drone
+
+    :returns: list of email objects
+    :rtype: list
+    """
+    return mail_format_as_csv(cur, notification,
+                              config, gpgme_ctx, http_sinkhole_columns)
+
+
 def mail_format_GENERIC_as_csv(cur, notification, config, gpgme_ctx):
     """Creates one email with csv attachment for malware.
 
@@ -534,13 +560,17 @@ def mail_format_GENERIC_as_csv(cur, notification, config, gpgme_ctx):
 
 
 known_formatters = {
-    # ("csv", "malware"):  mail_format_malware_as_csv,  # This formatter is
-    # currently not required
-    ("feed_specific", "SPECIFIC"):  mail_format_feed_specific_as_csv,
-    ("csv", "botnet drone"):  mail_format_botnet_drone_as_csv,
-    ("csv", "GENERIC"):  mail_format_GENERIC_as_csv,
-    # ("xarf", "malware"): mail_format_malware_as_xarf,  # This formatter is
-    # experimental
+    "feed_specific":
+        {
+            ("csv", "Botnet-Drone-Hadoop"):  mail_format_botnet_drone_as_csv,
+            ("csv", "Sinkhole-HTTP-Drone"):  mail_format_http_sinkhole_as_csv,
+            ("csv", "DEFAULT"):  mail_format_feed_specific_as_csv,
+        },
+    'generic':
+        {
+            ("csv", "botnet drone"):  mail_format_botnet_drone_as_csv,
+            ("csv", "GENERIC"):  mail_format_GENERIC_as_csv,
+        }
     }
 
 
@@ -561,16 +591,22 @@ def create_mails(cur, notification, config, gpgme_ctx):
 
     emails = []
     formatter = known_formatters.get((notification["format"],
-                                       notification["classification_type"]))
+                                      notification["classification_type"]))
     if formatter is None:
         # Try Fallback on "GENERIC" type, that is use a standard set
         # of fields to export.
+
+
         if notification["format"] == "feed_specific":
-            formatter = known_formatters.get((notification["format"],
-                                              "SPECIFIC"))
+            formatter = known_formatters['feed_specific'].get((notification["format"],
+                                                               notification["feed_name"]))
+            if formatter is not None:
+                formatter = known_formatters['feed_specific'].get(('csv',
+                                                                   'DEFAULT'))
+
         else:
-            formatter = known_formatters.get((notification["format"],
-                                              "GENERIC"))
+            formatter = known_formatters['generic'].get((notification["format"],
+                                                         "GENERIC"))
 
     if formatter is not None:
         emails = formatter(cur, notification, config, gpgme_ctx)
