@@ -458,12 +458,12 @@ def format_as_csv(columns, events, header):
     :header: Mapping of columns to column titles for the header line
     """
     contents = io.StringIO()
-
     writer = csv.DictWriter(contents, columns, delimiter="|")
-
     writer.writerow(header)
 
     for event in events:
+        if event.get('time.source'):
+            event['time.source'] = event['time.source'].replace(tzinfo=None)
         writer.writerow(event)
 
     return ("events.csv", contents.getvalue(), "text", "csv")
