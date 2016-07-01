@@ -1,3 +1,9 @@
+intelmq-mailgen (0.94~alpha4) unstable; urgency=medium
+
+  * New release
+
+ -- Gernot Schulz <gernot@intevation.de>  Fri, 01 Jul 2016 11:07:30 +0200
+
 intelmq-mailgen (0.94~alpha3) unstable; urgency=medium
 
   * New release (requires reinitialization of the notification table!)
