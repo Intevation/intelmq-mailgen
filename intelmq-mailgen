@@ -687,6 +687,7 @@ def get_pending_notifications(cur):
     cur.execute("""\
         SELECT n.email as email, n.template as template, n.format as format,
                n.classification_type as classification_type,
+               n.feed_name AS feed_name,
                array_agg(n.events_id) as event_ids,
                array_agg(n.id) as notification_ids
           FROM (SELECT * FROM notifications
