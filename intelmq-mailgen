@@ -458,12 +458,12 @@ def format_as_csv(columns, events, header):
     :header: Mapping of columns to column titles for the header line
     """
     contents = io.StringIO()
-
     writer = csv.DictWriter(contents, columns, delimiter="|")
-
     writer.writerow(header)
 
     for event in events:
+        if event.get('time.source'):
+            event['time.source'] = event['time.source'].replace(tzinfo=None)
         writer.writerow(event)
 
     return ("events.csv", contents.getvalue(), "text", "csv")
@@ -596,9 +596,8 @@ def create_mails(cur, notification, config, gpgme_ctx):
         # Try Fallback on "GENERIC" type, that is use a standard set
         # of fields to export.
 
-
         if notification["format"] == "feed_specific":
-            formatter = known_formatters['feed_specific'].get((notification["format"],
+            formatter = known_formatters['feed_specific'].get(('csv',
                                                                notification["feed_name"]))
             if formatter is not None:
                 formatter = known_formatters['feed_specific'].get(('csv',
@@ -687,6 +686,7 @@ def get_pending_notifications(cur):
     cur.execute("""\
         SELECT n.email as email, n.template as template, n.format as format,
                n.classification_type as classification_type,
+               n.feed_name AS feed_name,
                array_agg(n.events_id) as event_ids,
                array_agg(n.id) as notification_ids
           FROM (SELECT * FROM notifications
