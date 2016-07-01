@@ -596,9 +596,8 @@ def create_mails(cur, notification, config, gpgme_ctx):
         # Try Fallback on "GENERIC" type, that is use a standard set
         # of fields to export.
 
-
         if notification["format"] == "feed_specific":
-            formatter = known_formatters['feed_specific'].get((notification["format"],
+            formatter = known_formatters['feed_specific'].get(('csv',
                                                                notification["feed_name"]))
             if formatter is not None:
                 formatter = known_formatters['feed_specific'].get(('csv',
