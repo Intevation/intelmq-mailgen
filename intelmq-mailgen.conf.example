@@ -1,17 +1,17 @@
 {
     "openpgp": {
-	"gnupg_home" : "/etc/intelmq/mailgen/dot.gnupg",
-	"always_sign" : true,
+	"gnupg_home" : "/path/to/gnupg/keyring",
+	"always_sign" : false,
 	"signing_key" : "5F503EFAC8C89323D54C252591B8CD7E15925678"
     },
     "database": {
-	"event": {
-	    "name": "intelmq-events",
-	    "username": "intelmq_mailgen",
-	    "password": "your DB password",
-	    "host": "localhost",
-	    "port": 5432
-	}
+        "event": {
+            "name": "intelmq-events",
+            "username": "intelmq_mailgen",
+            "password": "your DB password",
+            "host": "localhost",
+            "port": 5432
+        }
     },
     "template_dir": "/etc/intelmq/mailgen/templates",
     "sender": "noreply@example.com",
