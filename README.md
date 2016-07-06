@@ -106,10 +106,17 @@ The body text may allow some substitutions, depending on the format. For
 instance, the CSV based formats replace `${events_as_csv}` with the CSV
 formatted event data.
 
-Specific Templates
-------------------
-A template which will be elaborated for more specific templates is called
-`specific.txt` this template has to exist in the template directory.
+
+Feed-Specific Templates
+-----------------------
+
+For the format `feed_specific`, `intelmq-mailgen` ignores the template
+that may have been set by the contact-DB bot and chooses a template
+based on the feed-name, but only for those feeds it supports. The
+template name is of the form `template-FEEDNAME.txt` where `FEEDNAME` is
+replaced by the event's 'feed.name' attribute. The template is looked up
+in the template directory as defined above.
+
 
 
 Security considerations
