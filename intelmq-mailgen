@@ -192,13 +192,12 @@ def escape_sql_identifier(ident):
 def load_events(cur, event_ids, columns=None):
     """Return events for the ids with all or a subset of available columns.
 
-    Use the columns parameter to set the order of the returned columns.
+    Use the columns parameter to specify which columns to return.
 
     :param cur: database connection
     :param event_ids: list of events ids
     :param columns: list of column names, defaults to all if 'None' is given.
-    returns: tuple of (column_names, list of corresponding events)
-    rtype: tuple
+    returns: corresponding events as a list of dictionaries
     """
     if columns is not None:
         sql_columns = ", ".join(escape_sql_identifier(col) for col in columns)
@@ -207,9 +206,7 @@ def load_events(cur, event_ids, columns=None):
     cur.execute("SELECT {} FROM events WHERE id = ANY (%s)".format(
                 sql_columns), (event_ids,))
 
-    returned_columns = [column.name for column in cur.description]
-    log.debug(returned_columns)
-    return (returned_columns, cur.fetchall())
+    return cur.fetchall()
 
 
 def create_mail(sender, recipient, subject, body, attachments):
@@ -283,9 +280,9 @@ def mail_format_as_csv(cur, notification, config, gpgme_ctx, columns):
         column_titles[identifier] = title
 
 
-    rcolumns, events = load_events(cur, notification["event_ids"], column_keys)
+    events = load_events(cur, notification["event_ids"], column_keys)
 
-    events_as_csv = format_as_csv(rcolumns, events, column_titles)[1]
+    events_as_csv = format_as_csv(column_keys, events, column_titles)[1]
 
     subject, body_template = read_template(config["template_dir"],
                                            notification["template"])
