@@ -51,10 +51,6 @@ import gpgme  # developed for pygpgme 0.3
 import psycopg2
 from psycopg2.extras import RealDictConnection
 
-#local application/library specific imports (we depend on our special pyxarf)
-from pyxarf import Xarf
-from xarfmail import XarfMail
-
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
 log = logging.getLogger('intelmq-mailgen')
 log.setLevel(logging.INFO)  # defaults to WARNING
@@ -214,94 +210,6 @@ def load_events(cur, event_ids, columns=None):
     returned_columns = [column.name for column in cur.description]
     log.debug(returned_columns)
     return (returned_columns, cur.fetchall())
-
-
-def create_malware_xarf_report(e, notification, config):
-
-    log.debug("xarf: creating malware report for event {}".format(e))
-    log.warn("xarf, malware: Using experimental mapping.")
-
-    params = {
-        'schema_cache': '/tmp/',
-        'schema_url': 'http://www.x-arf.org/schema/' +
-                       'abuse_malware-attack_0.1.4.json',
-        'reported_from': config["sender"],
-        'report_id': "TODO intelmq ID",  # TODO
-        'category': 'abuse',
-        'report_type': 'malware-attack',
-        'source': e['source.ip'],
-        'source_type': 'ip-address',
-        'attachment': None,
-        }
-
-    if 'time.source' in e and e['time.source']:
-        params['date'] = e['time.source'].isoformat(sep=' ')
-    else:
-        params['date'] = "2016"  # this is just a placeholder TODO
-
-    if 'source.url' in e:
-        params['download_link'] = e['source.url']
-
-    # have to set 'attachment' e.g. 'text/plain', if 'evidence' is supplied
-
-    report = Xarf(
-        **params
-        #schema_cache='/tmp/',
-        #schema_url='http://www.x-arf.org/schema/' +
-        #           'abuse_malware-attack_0.1.4.json',
-        # list of potential parameters (with some examples) for this schema:
-
-        #reported_from=
-        #report_id=
-        #category='abuse',
-        #report_type='malware-attack',
-        #destination_system = "enum":["real-world","honeypot","spamtrap",
-        #                             "honeyd","nepenthes"], optional
-        #date='Jan  1 2014 02:13:35 +0100',
-        #date=
-        #source='83.169.54.26',
-        #source=e['source.ip'],
-        #source_type='ip-address', "enum":["ipv4","ipv6","ip-address"]
-        #download_link= , optional
-        #download_port= , optional
-        #malware-md5= , optional
-        #antivirus-result= , optional
-        #antivirus-vendor= requires":"Antivirus-Result"
-        #feedback-link=, optional
-        #attachment=  "enum":["none","text/plain", "message/rfc822"]
-        #attachement=
-        #version= , number, optional
-        #occurrences= , integer, optional
-        #tlp= "enum":["white","green","amber","red"],optional
-
-        #evidence= , optional would become the additional attachment
-        )
-
-    return report
-
-
-def mail_format_malware_as_xarf(cur, notification, config, gpgme_ctx):
-    emails = []
-
-    columns, events = load_events(cur, notification["event_ids"])
-    for event in events:
-        report = create_malware_xarf_report(event, notification, config)
-
-        subject, text_template = read_template(config["template_dir"],
-                                               notification["template"])
-
-        xarfmail = XarfMail(
-            report,
-            mail_from=config["sender"],
-            mail_to=notification["email"],
-            subject=subject,
-            greeting=text_template.substitute()
-            )
-
-        emails.append(xarfmail._email)
-        # TODO fix pyxarf to be a real email obj
-
-    return emails
 
 
 def create_mail(sender, recipient, subject, body, attachments):
