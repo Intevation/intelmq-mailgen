@@ -46,6 +46,7 @@ import string
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import formatdate
 
 import gpgme  # developed for pygpgme 0.3
 import psycopg2
@@ -225,6 +226,7 @@ def create_mail(sender, recipient, subject, body, attachments):
     msg.add_header("From", sender)
     msg.add_header("To", recipient)
     msg.add_header("Subject", subject)
+    msg.add_header("Date", formatdate(timeval=None, localtime=True))
 
     return msg
 
