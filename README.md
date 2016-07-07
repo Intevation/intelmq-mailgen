@@ -18,20 +18,30 @@ Dependencies
  * pygpgme (v>=0.3)
    * GnuPG (v>=2)
 
+### IntelMQ configuration
+In order to work, mailgen needs events written into a postgresql
+database by the following bots:
+ 1. expert/certbund-contact
+ 2. output/postgresl
+
+You **must follow setup instruction for this bots** before
+setting up mailgen.
+
+
 Database
 --------
 
-Create a new database named `intelmq-events` in the default cluster:
+Additional setup to database that exists because of the intelmq
+configuration above.
 
-    createdb --encoding=UTF8 --template=template0 intelmq-events
 
+As intelmq user (which connects to the intelmq postgresql user)
+add an additional table to the `intelmq-events` database
 
-Initialize the database:
-
-    psql -f sql/events.sql intelmq-events
     psql -f sql/notifications.sql intelmq-events
 
 
+FIXME: still necessary? Or just using intelmq is fine?
 The `notifications.sql` script creates two roles, on for each of the
 main tasks in the event database: inserting new events (usually via
 IntelMQ's postgres output bot) and sending notification mails (via
@@ -42,8 +52,9 @@ in and perform the task:
     createuser --encrypted --pwprompt intelmq_mailgen
     psql -c "GRANT eventdb_send_notifications TO intelmq_mailgen" intelmq-events 
 
+FIXME, still necessary, if then probably should be moved to the doc of the bot:
     # user for postgres output bot:
-    createuser --encrypted --pwprompt intelmq
+    #createuser --encrypted --pwprompt intelmq
     psql -c "GRANT eventdb_insert TO intelmq" intelmq-events
 
 
