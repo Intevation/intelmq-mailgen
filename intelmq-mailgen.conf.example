@@ -1,7 +1,7 @@
 {
     "openpgp": {
-	"gnupg_home" : "/path/to/gnupg/keyring",
-	"always_sign" : false,
+	"gnupg_home" : "/etc/intelmq/mailgen/gnupghome",
+	"always_sign" : true,
 	"signing_key" : "5F503EFAC8C89323D54C252591B8CD7E15925678"
     },
     "database": {

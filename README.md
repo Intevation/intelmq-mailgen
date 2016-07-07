@@ -58,16 +58,15 @@ The format for both files is the same. A complete example can be found
 in `intelmq-mailgen.conf.example`.
 
 ### OpenPGP Signatures
-You need to set ```gnupg_home``` to a directory that is a home directory
-for the version of GnuPG that you are using. It has to contain the
-private and public key parts for the OpenPGP signature without
-password protection.
+```gnupg_home``` has to point to the GnuPG home directory for email signatures.
+It has to contain the private and public key parts for the OpenPGP signature
+without password protection.
 
-For example the following lines will create a directory, 
-check that it is fresh and import the testing key:
+For illustration the following lines will create a directory,
+check that it is fresh and import the testing key.
 
 ```
-mkdir /tmp/gnupghome
+mkdir $GNUPGHOME
 chmod og-rwx /tmp/gnupghome
 GNUPGHOME=/tmp/gnupghome gpg2 --list-secret-keys
 GNUPGHOME=/tmp/gnupghome gpg2 --import src/intelmq-mailgen/tests/keys/test1.sec
