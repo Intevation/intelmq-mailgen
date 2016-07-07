@@ -1,0 +1,36 @@
+Drone Report
+
+EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE
+
+Dear Sir or Madam,
+
+Please find below a list of affected systems on your network. Each
+record includes the IP address of the affected system, a timestamp
+and the name of the related malware family. If available, the record
+also includes the source port, target IP, target port and target
+hostname for the connection most probably triggered by the malware
+to connect to a command-and-control server.
+
+We would like to ask you to check the issues reported and to take
+appropriate steps to get the infected hosts cleaned up or notify
+your customers accordingly.
+
+This message is digitally signed using PGP.
+Details on the signature key used are available on our website at:
+
+example.com
+
+Please note:
+This is an automatically generated message.
+Replying to the sender address is not possible.
+
+
+-----------------------------------------------------------------------
+
+Affected systems on your network:
+
+${events_as_csv}
+
+
+Kind regards
+

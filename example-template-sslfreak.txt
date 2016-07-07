@@ -1,0 +1,36 @@
+Report on vulnerable systems fo SSL FREAK Atack
+
+EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE
+
+Dear Sir or Madam,
+
+Please find below a list of systems on your network which our sources
+identifed as vulnerable to the SSL FREAK Attack
+
+We would like to ask you to check the issues reported and to take
+appropriate steps to repair these vulnerabilities.
+
+
+This message is digitally signed using PGP.
+Details on the signature key used are available on our website at:
+
+example.com
+
+Please note:
+This is an automatically generated message.
+Replying to the sender address is not possible.
+
+More information about the FREAK Attack can be obtained from:
+
+https://mitls.org/pages/attacks/SMACK#freak
+
+########################################################################
+
+Vulnerable systems on your network:
+
+${events_as_csv}
+
+########################################################################
+
+Kind regards
+
