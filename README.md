@@ -24,7 +24,7 @@ database by the following bots:
  1. expert/certbund-contact
  2. output/postgresl
 
-You **must follow setup instruction for this bots** before
+You **must follow setup instruction for these bots** before
 setting up mailgen.
 
 
@@ -35,8 +35,7 @@ Additional setup to database that exists because of the intelmq
 configuration above.
 
 
-As intelmq user (which connects to the intelmq postgresql user)
-add an additional table to the `intelmq-events` database
+As postgresl user perform additional setups to the `intelmq-events` database:
 
     psql -f sql/notifications.sql intelmq-events
 
