@@ -301,15 +301,6 @@ def mail_format_as_csv(cur, notification, config, gpgme_ctx, columns):
     return [mail]
 
 
-def mail_format_malware_as_csv(cur, notification, config, gpgme_ctx):
-    """Creates one email with csv attachment for malware.
-
-    :returns: list of email objects
-    :rtype: list
-    """
-    return mail_format_as_csv(cur, notification,
-                              config, gpgme_ctx, malware_csv_columns)
-
 
 def mail_format_feed_specific_as_csv(cur, notification, config, gpgme_ctx):
     """Creates one email with csv attachment based on feed-name.
