@@ -15,7 +15,7 @@ We would like to ask you to check the issues reported and to take
 appropriate steps to get the infected hosts cleaned up or notify
 your customers accordingly.
 
-This message is digitally signed using PGP.
+This message is digitally signed using OpenPGP.
 Details on the signature key used are available on our website at:
 
 example.com

@@ -11,7 +11,7 @@ We would like to ask you to check the issues reported and to take
 appropriate steps to repair these vulnerabilities.
 
 
-This message is digitally signed using PGP.
+This message is digitally signed using OpenPGP.
 Details on the signature key used are available on our website at:
 
 example.com
