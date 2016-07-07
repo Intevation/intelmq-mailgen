@@ -1,3 +1,15 @@
+intelmq-mailgen (0.94~alpha5) unstable; urgency=medium
+
+  * Add an example template
+
+ -- Gernot Schulz <gernot@intevation.de>  Fri, 01 Jul 2016 18:25:40 +0200
+
+intelmq-mailgen (0.94~alpha4) unstable; urgency=medium
+
+  * New release
+
+ -- Gernot Schulz <gernot@intevation.de>  Fri, 01 Jul 2016 11:07:30 +0200
+
 intelmq-mailgen (0.94~alpha3) unstable; urgency=medium
 
   * New release (requires reinitialization of the notification table!)
