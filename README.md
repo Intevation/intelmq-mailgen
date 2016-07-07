@@ -128,7 +128,7 @@ to us via the database.
  * As our command will be able to run with and witout user interaction, 
 we assume that only users with administration rights 
 have access to the machine and are allowed to start the interactive variant.
- * The privat key material for signing will have 
+ * The private key material for signing will have
 no extra protection by passphrase, thus the system itself 
 needs to be secured adequately. (This can include separating
 to setup intelmq itself on a different machine with only access 
@@ -146,12 +146,20 @@ under some circumstances.
 Column Names
 ------------
 
-It is possible to define Names for the CSV-Columns in code. This can be
-achieved by altering the appropriate formatter. For instance
-`mail_format_botnet_drone_as_csv` calls `mail_format_as_csv` as with a
-list of pairs as the last parameter, one pair for each column. Each pair
-consists of the IntelMQ-internal identifier and the column title.
+It is possible to define names for the CSV-columns in code. This can be
+achieved by altering the `feed_specific_formats` dictionary.
+We already configured some feeds.
+Each pair consists of the IntelMQ-internal identifier and the column title.
 
+
+Transformations
+---------------
+
+Currently data is not transformed when adding it to the CSV-output.
+
+The only alteration which always takes place is a modification of timestamps
+in the time.source field of an event. Each time a time.source field is printed,
+the timezone-information will be stripped off.
 
 
 Testing
