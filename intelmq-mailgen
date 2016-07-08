@@ -391,6 +391,51 @@ class IntelMQColumn(Column):
         return event[self.field_name]
 
 
+class ExtraColumn(Column):
+
+    """CSV Column filled with a value taken from the IntelMQ extra field.
+
+    How to extract the value from the dictionary in the extra field is
+    given by a list of keys (the attribute_chain parameter of the
+    constructor) describing which keys to look up in the extra dict
+    recursively. For instance, say the extra field contains the this
+    JSON value::
+
+        {"shadowserver": {"naics": "12345", "sic": "5678",
+                          "sysdesc": "some system", "version": "2"}}
+
+    The the attribute_chain ["shadowserver", "sysdesc"] will give "some
+    system" as the value in the CSV output.
+    """
+
+    def __init__(self, title, attribute_chain):
+        super(ExtraColumn, self).__init__(title)
+        self.attribute_chain = ["extra"] + attribute_chain
+
+    @property
+    def event_table_column(self):
+        return self.attribute_chain[0]
+
+    @property
+    def csv_column_key(self):
+        return ":".join(self.attribute_chain)
+
+    def csv_value_from_event(self, event):
+        value = event[self.event_table_column]
+        if isinstance(value, str):
+            # With psycopg 2.4.5 values of type JSON in the database are
+            # returned as strings. In newer psycopg version they are
+            # converted automatically, so we may not have to convert the
+            # value.
+            # FIXME: This aspect (not having to convert with newer psycopg
+            # versions) has not been tested.
+            value = json.loads(value)
+        for key in self.attribute_chain[1:]:
+            if value is not None:
+                value = value.get(key)
+        return value
+
+
 # convenience functions for building the format datastructures in a more
 # declarative way.
 
