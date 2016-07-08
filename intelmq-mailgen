@@ -263,7 +263,7 @@ def format_as_csv(columns, events, header):
     return ("events.csv", contents.getvalue(), "text", "csv")
 
 
-def mail_format_as_csv(cur, notification, config, gpgme_ctx, columns):
+def mail_format_as_csv(cur, notification, config, gpgme_ctx, format_spec):
     """Creates one email with csv attachment for given columns.
 
     :returns: list of email objects
@@ -271,20 +271,13 @@ def mail_format_as_csv(cur, notification, config, gpgme_ctx, columns):
     """
     attachments = []
 
-    column_keys = []
-    column_titles = {}
-    for description in columns:
-        if isinstance(description, tuple):
-            identifier, title = description
-        else:
-            identifier = title = description
-        column_keys.append(identifier)
-        column_titles[identifier] = title
+    events = load_events(cur, notification["event_ids"],
+                         format_spec.event_table_columns())
 
-
-    events = load_events(cur, notification["event_ids"], column_keys)
-
-    events_as_csv = format_as_csv(column_keys, events, column_titles)[1]
+    events_as_csv = format_as_csv(format_spec.csv_column_keys(),
+                                  [format_spec.csv_row_from_event(event)
+                                   for event in events],
+                                  format_spec.column_titles())[1]
 
     subject, body_template = read_template(config["template_dir"],
                                            notification["template"])
@@ -312,18 +305,134 @@ def mail_format_feed_specific_as_csv(cur, notification, config, gpgme_ctx):
     :rtype: list
     """
     feed_name = notification["feed_name"]
-    columns = feed_specific_formats.get(feed_name)
-    if columns is None:
+    format_spec = feed_specific_formats.get(feed_name)
+    if format_spec is None:
         # TODO
         raise RuntimeError
     notification["template"] = "template-" + feed_name + ".txt"
 
-    return mail_format_as_csv(cur, notification, config, gpgme_ctx, columns)
+    return mail_format_as_csv(cur, notification, config, gpgme_ctx, format_spec)
 
 
-# Map feed names to CSV column specifications
-feed_specific_formats = {
-    "Botnet-Drone-Hadoop": [
+class FeedSpecificFormat:
+
+    """Describe a feed-specific CSV format.
+    """
+
+    def __init__(self, feed_name, columns):
+        """Initialize the format specification.
+        The columns parameter should be a list of Column instances."""
+        self.feed_name = feed_name
+        self.columns = columns
+
+    def column_titles(self):
+        """Return a dictionary with the column titles for use a CSV header."""
+        return dict((col.csv_column_key, col.title) for col in self.columns)
+
+    def event_table_columns(self):
+        """Return a list with the columns to retrieve from the event table.
+        """
+        return list(set(col.event_table_column for col in self.columns))
+
+    def csv_column_keys(self):
+        """Return a list with the keys used for the CSV rows.
+        The list is to be used with as the field names parameter for the
+        csv.DictWriter class and matches the dictionaries returnd by the
+        csv_row_from_event method.
+        """
+        return [col.csv_column_key for col in self.columns]
+
+    def csv_row_from_event(self, event):
+        """Return the csv row for one given event."""
+        return dict((col.csv_column_key, col.csv_value_from_event(event))
+                    for col in self.columns)
+
+
+
+class Column:
+
+    """Specifies a single column for CSV output.
+
+    This base class only provides a title for the column.
+
+    Derived classes should implement the following attributes and methods:
+
+    :title: the column title
+    :event_table_column: the column of the event table to retrieve
+    :csv_column_key: a key to use for the CSV row dictionary.
+        All columns of a single format must have different
+        csv_column_key values.
+    :csv_value_from_event(event): Return the value of the column for the
+        given event. The event parameter is a dictionary that has at
+        least a value for the event_table_column.
+    """
+
+    def __init__(self, title):
+        self.title = title
+
+
+class IntelMQColumn(Column):
+
+    """CSV Column filled directly from an IntelMQ field."""
+
+    def __init__(self, title, field_name):
+        super(IntelMQColumn, self).__init__(title)
+        self.field_name = field_name
+
+    @property
+    def event_table_column(self):
+        return self.field_name
+
+    @property
+    def csv_column_key(self):
+        return self.field_name
+
+    def csv_value_from_event(self, event):
+        return event[self.field_name]
+
+
+# convenience functions for building the format datastructures in a more
+# declarative way.
+
+def build_feed_specific_formats(formats):
+    """Return a dictionary mapping format names to format specifications.
+    The parameter is a list of (formatname, columns) pairs, where
+    formatname is the name of the format as a string and columns is a
+    list of column specifications. The formatname values are used as the
+    keys in the dictionary and both formatname and columns are passed to
+    build_feed_specific_format to create the corresponding format
+    specification.
+    """
+    return dict((name, build_feed_specific_format(name, columns))
+                for name, columns in formats)
+
+def build_feed_specific_format(feed_name, columns):
+    """Build a FeedSpecificFormat instance for feed_name.
+    The columns parameter should be a list of column specifications
+    which are passed to build_feed_specific_column to create the list of
+    columns for the FeedSpecificFormat instance.
+    """
+    return FeedSpecificFormat(feed_name,
+                              [build_feed_specific_column(col)
+                               for col in columns])
+
+def build_feed_specific_column(col):
+    """Return a Column instance built from a column specification.
+    A column specification may either be a tuple of the form
+    (intelmq_field, column_title) in which case an IntelMQColumn is
+    created from these parameters or an instance of Column which is
+    returned as is.
+    """
+    if isinstance(col, tuple):
+        intelmq_field, column_title = col
+        return IntelMQColumn(column_title, intelmq_field)
+    else:
+        return col
+
+
+# Specifications for the feed_specific formats
+feed_specific_formats = build_feed_specific_formats([
+    ("Botnet-Drone-Hadoop", [
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
@@ -333,8 +442,8 @@ feed_specific_formats = {
         ("destination.port", "Target Port"),
         ("protocol.transport", "Protocol"),
         ("destination.fqdn", "Target Hostname"),
-        ],
-    "Sinkhole-HTTP-Drone": [
+        ]),
+    ("Sinkhole-HTTP-Drone", [
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
@@ -344,13 +453,13 @@ feed_specific_formats = {
         ("destination.port", "Target Port"),
         ("protocol.transport", "Protocol"),
         ("destination.fqdn", "Target Hostname"),
-        ],
-    "Open-Portmapper": [
+        ]),
+    ("Open-Portmapper", [
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
-        ],
-    }
+        ]),
+    ])
 
 
 
