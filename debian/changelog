@@ -1,3 +1,9 @@
+intelmq-mailgen (0.94~alpha6) unstable; urgency=low
+
+  * New release
+
+ -- Bernhard Reiter <bernhard@intevation.de>  Fri, 08 Jul 2016 09:30:00 +0200
+
 intelmq-mailgen (0.94~alpha5) unstable; urgency=medium
 
   * Add an example template
