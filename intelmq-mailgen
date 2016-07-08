@@ -504,6 +504,12 @@ feed_specific_formats = build_feed_specific_formats([
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
         ]),
+    ("Open-SNMP", [
+        ("source.asn", "ASN"),
+        ("source.ip", "IP"),
+        ("time.source", "Timestamp (UTC)"),
+        ExtraColumn("System description", ["shadowserver", "sysdesc"]),
+        ]),
     ])
 
 
