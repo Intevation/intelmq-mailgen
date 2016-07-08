@@ -68,9 +68,10 @@ The format for both files is the same. A complete example can be found
 in `intelmq-mailgen.conf.example`.
 
 ### OpenPGP Signatures
-```gnupg_home``` has to point to the GnuPG home directory for email signatures.
-It has to contain the private and public key parts for the OpenPGP signature
-without password protection.
+```gnupg_home``` has to point to the GnuPG home directory for email signatures,
+which:
+ * contains the private and public key parts for the OpenPGP signature without password protection.
+ * is read/writable for the user running intelmq-mailgen
 
 For illustration the following lines will create a directory,
 check that it is fresh and import the testing key.
