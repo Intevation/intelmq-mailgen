@@ -13,81 +13,92 @@ Dependencies
 ------------
 
  * https://bitbucket.org/bereiter/pyxarf (v==0.0.5bereiter)
- * (intelmq)
- * python3 (v>=3.2)
- * pygpgme (v>=0.3)
+ * (IntelMQ)
+ * Python3 (v>=3.2)
+ * PyGPGME (v>=0.3)
    * GnuPG (v>=2)
 
-### IntelMQ configuration
-In order to work, mailgen needs events written into a postgresql
-database by the following bots:
- 1. expert/certbund-contact
- 2. output/postgresl
+IntelMQ Configuration
+---------------------
 
-You **must follow setup instruction for these bots** before
-setting up mailgen.
+For MailGen to work, the following IntelMQ bots will need to be configured
+first:
+
+ 1. expert/certbund-contact
+ 2. output/postgresql
+
+You **must follow the setup instructions for these bots** before
+setting up MailGen.
 
 
 Database
 --------
 
-Additional setup to database that exists because of the intelmq
-configuration above.
+The `intelmq-events` database should already have been set up during the
+configuration of the certbund-contact expert bot.  For use with MailGen it
+needs to be extended.
 
-
-As postgresl user perform additional setups to the `intelmq-events` database:
+As user postgres, run:
 
     psql -f sql/notifications.sql intelmq-events
 
 
-FIXME: still necessary? Or just using intelmq is fine?
-The `notifications.sql` script creates two roles, on for each of the
-main tasks in the event database: inserting new events (usually via
-IntelMQ's postgres output bot) and sending notification mails (via
-intelmq-mailgen). We need two conrete users that can be used to actually log
-in and perform the task:
+The `notifications.sql` script creates two roles, one for each
+task to be performed in the event database:
+
+ 1. inserting new events (usually via IntelMQ's postgresql output bot) and
+ 2. sending notification mails (via intelmq-mailgen).
+
+We need two user accounts to actually log in and perform the tasks:
 
     # user for intelmq-mailgen:
     createuser --encrypted --pwprompt intelmq_mailgen
-    psql -c "GRANT eventdb_send_notifications TO intelmq_mailgen" intelmq-events 
+    psql -c "GRANT eventdb_send_notifications TO intelmq_mailgen" intelmq-events
 
-FIXME, still necessary, if then probably should be moved to the doc of the bot:
-    # user for postgres output bot:
-    #createuser --encrypted --pwprompt intelmq
+    # user for postgresql output bot:
     psql -c "GRANT eventdb_insert TO intelmq" intelmq-events
 
 
-
 Configuration
--------------
+=============
 
 `intelmq-mailgen` currently searches for configuration files in two places:
-`~/.intelmq/intelmq-mailgen.conf` and `/etc/intelmq/intelmq-mailgen.conf`.
-Settings are read from both files with the one in `~` taking precedence.
-The format for both files is the same. A complete example can be found
-in `intelmq-mailgen.conf.example`.
 
-### OpenPGP Signatures
-```gnupg_home``` has to point to the GnuPG home directory for email signatures,
-which:
- * contains the private and public key parts for the OpenPGP signature without password protection.
- * is read/writable for the user running intelmq-mailgen
+ 1. `$HOME/.intelmq/intelmq-mailgen.conf` and
+ 2. `/etc/intelmq/intelmq-mailgen.conf`.
 
-For illustration the following lines will create a directory,
-check that it is fresh and import the testing key.
+Settings are read from both files with the one in the user's home directory
+taking precedence.
+
+Both files must be in JSON format.  A complete example can be found in
+`intelmq-mailgen.conf.example`.
+
+OpenPGP Signatures
+------------------
+
+`gnupg_home` has to point to the GnuPG home directory for email signatures.
+It must:
+
+ * contains the private and public key parts for the OpenPGP signature without
+   password protection.
+ * is read/writable for the user running intelmq-mailgen.
+
+For example, the following steps will create such a directory
+and import a test signing key.
 
 ```
-mkdir $GNUPGHOME
-chmod og-rwx /tmp/gnupghome
+GNUPGHOME=/tmp/gnupghome mkdir $GNUPGHOME
+chmod og-rwx $GNUPGHOME
 GNUPGHOME=/tmp/gnupghome gpg2 --list-secret-keys
 GNUPGHOME=/tmp/gnupghome gpg2 --import src/intelmq-mailgen/tests/keys/test1.sec
 ```
 
 Depending on your GnuPG version you may want to set additional options
-in the directory. For example the following settings in
-```$GNUPGHOME/gpg.conf``` will set the default digest algorithm,
-not emitting the standard GnuPG version information
-and adding a comment line for signatures:
+by editing `$GNUPGHOME/gpg.conf`.
+
+For example, the following settings will set the default digest algorithm,
+suppress emitting the GnuPG version, and add a comment line for signatures:
+
 ```
 personal-digest-preferences SHA256
 no-emit-version
@@ -95,41 +106,43 @@ comment Key verification <https://example.org/hints-about-verification>
 ```
 (See the GnuPG documentation for details.)
 
-Now signing a file should work for your ```signing_key``` 
-without asking for a passphrase, e.g.
+Now, you should be able to sign using this key withtout being prompted for
+a passphrase.  Try, for example:
+
 ```
 echo Moin moin. | GNUPGHOME=/tmp/gnupghome gpg2 --clearsign --local-user "5F503EFAC8C89323D54C252591B8CD7E15925678"
 ```
 
-
 Templates
 ---------
 
-Templates for the emails should be in the directory named as
-`template_dir` in the configuration file or a sub-directory thereof. The
-first line of a template file is used as the subject line of the mails
-sent by `intelmq-mailgen` and the rest of the lines as the body. The
-body may optionally be separated from the subject line by one or more
-empty lines.
+`template_dir` must contain the email templates you want to use with IntelMQ
+MailGen.  You may organize templates in subdirectories.
+
+The first line of a template file is used as the subject line for mail sent
+by `intelmq-mailgen`; the remaining lines will become the mail body. The body
+may optionally be separated from the subject line by one or more empty lines.
 
 The body text may allow some substitutions, depending on the format. For
-instance, the CSV based formats replace `${events_as_csv}` with the CSV
-formatted event data.
+instance, CSV-based formats replace `${events_as_csv}` with the
+CSV-formatted event data.
 
 
-Feed-Specific Templates
+Feed-specific Templates
 -----------------------
 
-For the format `feed_specific`, `intelmq-mailgen` ignores the template
-that may have been set by the contact-DB bot and chooses a template
-based on the feed-name, but only for those feeds it supports. The
-template name is of the form `template-FEEDNAME.txt` where `FEEDNAME` is
-replaced by the event's 'feed.name' attribute. The template is looked up
-in the template directory as defined above.
+For the format `feed_specific` IntelMQ MailGen ignores the template that may
+have been set by the Contact DB bot and chooses a template based on the feed's
+`feed.name`. Please note that this only works for feeds explicitely supported by
+MailGen.
 
+Feed-specific template file names follow the pattern `template-FEEDNAME.txt`
+where `FEEDNAME` is replaced by the events' `feed.name` attributes.
 
+Developer Information
+=====================
 
-Security considerations
+Security Considerations
 -----------------------
  * It is assumed that we need to protect against malicious external 
 data coming 
@@ -165,26 +178,24 @@ Each pair consists of the IntelMQ-internal identifier and the column title.
 Transformations
 ---------------
 
-Currently data is not transformed when adding it to the CSV-output.
+Currently, data is not transformed when it is being added to the CSV output.
 
-The only alteration which always takes place is a modification of timestamps
-in the time.source field of an event. Each time a time.source field is printed,
-the timezone-information will be stripped off.
-
+MailGen always removes the "UTC" notations from time stamps in `time.source`.
+It ensures that time stamps will always be UTC.
 
 Testing
-=======
+-------
 
-An easy way to test the actual sending of emails, is to use Python's
-`smtpd` module, running the `DebuggingServer`:
+An easy way to test the actual sending of emails is to use Python's
+`smtpd` module running the `DebuggingServer`:
 
     python3 -m smtpd -d -n -c DebuggingServer localhost:8025 
 
 (Don't forget to configure the corresponding
-smtp host and port in your config.)
+SMTP host and port in your config.)
 
-If you want to capture the emails in maildir format you can use
-https://pypi.python.org/pypi/dsmtpd/0.2.2, e.g. like
+If you want to capture emails in Maildir format you can use
+https://pypi.python.org/pypi/dsmtpd/0.2.2:
 ```sh
 git clone https://github.com/bernhardreiter/dsmtpd.git
 cd dsmtpd
@@ -193,21 +204,21 @@ cd dsmtpd
 python3 -c 'from dsmtpd._dsmtpd import *; main()' -i localhost -p 8025 -d /path/to/Maildir
 ```
 
-`Maildir` has to be either an existing email storage directory in 
-[Maildir format](https://en.wikipedia.org/wiki/Maildir) or non-existing,
-it which case it will be created by dsmtpd.
+`/path/to/Maildir` has to be either an existing
+[Maildir](https://en.wikipedia.org/wiki/Maildir) or non-existing,
+in which case it will be created by dsmtpd.
 
-You can access a Maildir storage with several mail clients, e.g for mutt:
+You can access the Maildir with mutt, for example:
 ```
 mutt -f  /path/to/Maildir
 ```
 Hint: By default `Esc P` will trigger mutt's `<check-traditional-pgp>`
 [function](http://www.mutt.org/doc/manual/#reading-misc), in case you
-want to check a no-mime signature.
+want to check a no-MIME signature.
 
 
-Run Test Suite
---------------
+Test Suite
+----------
 
 The test suite is split into two parts because some tests may fail depending on
 hardware specs (execution time) and their failure would not indicate errors per
