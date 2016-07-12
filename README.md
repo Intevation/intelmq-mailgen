@@ -30,6 +30,15 @@ first:
 You **must follow the setup instructions for these bots** before
 setting up MailGen.
 
+Preparing Input Data for MailGen
+--------------------------------
+
+IntelMQ MailGen makes certain assumptions about the input data it receives.
+Currently, it expects `classification.identifier` to be present.  It may
+therefore be necessary to first prepare the data fed to MailGen.
+
+IntelMQ comes with a "modify" expert bot that can be added to the queue to
+enrich feed data.
 
 Database
 --------
