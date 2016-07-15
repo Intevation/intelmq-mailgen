@@ -525,7 +525,7 @@ feed_specific_formats = build_feed_specific_formats([
         ("time.source", "Timestamp (UTC)"),
 
         ExtraColumn("Version", ["shadowserver", "version"]),
-        ExtraColumn("Databases (exerpt)", ["shadowserver", "visible_databases"]),
+        ExtraColumn("Databases (excerpt)", ["shadowserver", "visible_databases"]),
         ]),
     ])
 
