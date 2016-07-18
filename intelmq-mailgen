@@ -508,24 +508,24 @@ feed_specific_formats = build_feed_specific_formats([
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("System description", ["shadowserver", "sysdesc"]),
+        ExtraColumn("System description", ["sysdesc"]),
         ]),
     ("Open-MSSQL", [
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("Version", ["shadowserver", "version"]),
+        ExtraColumn("Version", ["version"]),
         ("source.local_hostname", "Server Name"),
-        ExtraColumn("Instance Name", ["shadowserver", "instance_name"]),
-        ExtraColumn("Amplification", ["shadowserver", "amplification"]),
+        ExtraColumn("Instance Name", ["instance_name"]),
+        ExtraColumn("Amplification", ["amplification"]),
         ]),
     ("Open-Mongo DB", [
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
 
-        ExtraColumn("Version", ["shadowserver", "version"]),
-        ExtraColumn("Databases (excerpt)", ["shadowserver", "visible_databases"]),
+        ExtraColumn("Version", ["version"]),
+        ExtraColumn("Databases (excerpt)", ["visible_databases"]),
         ]),
     ])
 
