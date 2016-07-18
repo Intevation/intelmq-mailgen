@@ -395,30 +395,21 @@ class ExtraColumn(Column):
 
     """CSV Column filled with a value taken from the IntelMQ extra field.
 
-    How to extract the value from the dictionary in the extra field is
-    given by a list of keys (the attribute_chain parameter of the
-    constructor) describing which keys to look up in the extra dict
-    recursively. For instance, say the extra field contains the this
-    JSON value::
-
-        {"shadowserver": {"naics": "12345", "sic": "5678",
-                          "sysdesc": "some system", "version": "2"}}
-
-    The the attribute_chain ["shadowserver", "sysdesc"] will give "some
-    system" as the value in the CSV output.
+    The extra_key parameter of the constructor gives the name key to
+    look up in the JSON dictionary contained in the extra field.
     """
 
-    def __init__(self, title, attribute_chain):
+    def __init__(self, title, extra_key):
         super(ExtraColumn, self).__init__(title)
-        self.attribute_chain = ["extra"] + attribute_chain
+        self.extra_key = extra_key
 
     @property
     def event_table_column(self):
-        return self.attribute_chain[0]
+        return "extra"
 
     @property
     def csv_column_key(self):
-        return ":".join(self.attribute_chain)
+        return "extra:" + self.extra_key
 
     def csv_value_from_event(self, event):
         value = event[self.event_table_column]
@@ -430,10 +421,8 @@ class ExtraColumn(Column):
             # FIXME: This aspect (not having to convert with newer psycopg
             # versions) has not been tested.
             value = json.loads(value)
-        for key in self.attribute_chain[1:]:
-            if value is not None:
-                value = value.get(key)
-        return value
+        return value.get(self.extra_key)
+
 
 
 # convenience functions for building the format datastructures in a more
@@ -508,24 +497,23 @@ feed_specific_formats = build_feed_specific_formats([
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("System description", ["sysdesc"]),
+        ExtraColumn("System description", "sysdesc"),
         ]),
     ("Open-MSSQL", [
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("Version", ["version"]),
+        ExtraColumn("Version", "version"),
         ("source.local_hostname", "Server Name"),
-        ExtraColumn("Instance Name", ["instance_name"]),
-        ExtraColumn("Amplification", ["amplification"]),
+        ExtraColumn("Instance Name", "instance_name"),
+        ExtraColumn("Amplification", "amplification"),
         ]),
     ("Open-Mongo DB", [
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
-
-        ExtraColumn("Version", ["version"]),
-        ExtraColumn("Databases (excerpt)", ["visible_databases"]),
+        ExtraColumn("Version", "version"),
+        ExtraColumn("Databases (excerpt)", "visible_databases"),
         ]),
     ])
 
