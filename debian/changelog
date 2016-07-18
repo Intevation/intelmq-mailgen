@@ -1,3 +1,10 @@
+intelmq-mailgen (0.94~beta2) unstable; urgency=low
+
+  * New release
+  * Add Open-MSSQL and Open-Mongo DB feed formats
+
+ -- Gernot Schulz <gernot@intevation.de>  Mon, 18 Jul 2016 13:40:49 +0200
+
 intelmq-mailgen (0.94~beta1) unstable; urgency=low
 
   * New release
