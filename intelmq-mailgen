@@ -499,17 +499,6 @@ feed_specific_formats = build_feed_specific_formats([
         ("protocol.transport", "Protocol"),
         ("destination.fqdn", "Target Hostname"),
         ]),
-    ("Sinkhole-HTTP-Drone", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ("classification.identifier", "Malware"),
-        ("source.port", "Source Port"),
-        ("destination.ip", "Target IP"),
-        ("destination.port", "Target Port"),
-        ("protocol.transport", "Protocol"),
-        ("destination.fqdn", "Target Hostname"),
-        ]),
     ("Open-Portmapper", [
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
