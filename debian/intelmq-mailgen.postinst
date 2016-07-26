@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "configure" ] ; then
+    if ! getent passwd intelmq-mailgen >/dev/null 2>&1; then
+        useradd --create-home --user-group --shell /bin/bash intelmq-mailgen
+    fi
+fi
+
+#DEBHELPER#
