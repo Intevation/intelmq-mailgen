@@ -1,10 +1,77 @@
 #!/bin/sh
 set -e
 
+export DEBCONF_DEBUG=developer
+
+write_config () {
+cat << EOF > /etc/intelmq/intelmq-mailgen.conf
+{
+    "openpgp": {
+        "gnupg_home" : "$gnupghome",
+        "always_sign" : $alwayssign,
+        "signing_key" : "$signingkey"
+    },
+    "database": {
+        "event": {
+            "name": "$dbname",
+            "username": "$dbuser",
+            "password": "$dbpass",
+            "host": "$dbhost",
+            "port": $dbport
+        }
+    },
+    "template_dir": "$templatedir",
+    "sender": "$mailsender",
+    "smtp": {
+        "host": "$mailhost",
+        "port": $mailport
+    }
+}
+EOF
+}
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
 if [ "$1" = "configure" ] ; then
-    if ! getent passwd intelmq-mailgen >/dev/null 2>&1; then
-        useradd --create-home --user-group --shell /bin/bash intelmq-mailgen
+    db_get intelmq-mailgen/user
+    mailgen_user="$RET"
+    # Assign SMTP-related variables
+    db_get intelmq-mailgen/mailhost
+    mailhost="$RET"
+    db_get intelmq-mailgen/mailport
+    mailport="$RET"
+    db_get intelmq-mailgen/mailsender
+    mailsender="$RET"
+    # Assign database-related variables
+    db_get intelmq-mailgen/dbname
+    dbname="$RET"
+    db_get intelmq-mailgen/dbuser
+    dbuser="$RET"
+    db_get intelmq-mailgen/dbpass
+    dbpass="$RET"
+    db_get intelmq-mailgen/dbhost
+    dbhost="$RET"
+    db_get intelmq-mailgen/dbport
+    dbport="$RET"
+    # Template dir
+    db_get intelmq-mailgen/templatedir
+    templatedir="$RET"
+    # OpenPGP
+    db_get intelmq-mailgen/openpgp-alwayssign
+    alwayssign="$RET"
+    db_get intelmq-mailgen/openpgp-gnupghome
+    gnupghome="$RET"
+    db_get intelmq-mailgen/openpgp-signingkey
+    signingkey="$RET"
+
+    if ! getent passwd "$mailgen_user" >/dev/null 2>&1; then
+        useradd --create-home --user-group --shell /bin/bash "$mailgen_user"
     fi
+
+    mailgen_user_home="/home/$mailgen_user" # XXX
+    write_config
 fi
 
+db_stop
 #DEBHELPER#

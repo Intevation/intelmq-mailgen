@@ -1,0 +1,87 @@
+Template: intelmq-mailgen/user
+Type: string
+Default: intelmq-mailgen
+Description: User account for intelmq-mailgen:
+
+Template: intelmq-mailgen/mailsender
+Type: string
+Description: Configure sender address:
+ This will be the From address of mail sent by intelmq-mailgen.
+
+
+Template: intelmq-mailgen/mailhost
+Type: string
+Default: localhost
+Description: SMTP server host name:
+
+Template: intelmq-mailgen/mailport
+Type: string
+Default: 8025
+Description: SMTP server port:
+
+
+Template: intelmq-mailgen/dbhost
+Type: string
+Description: Hostname of the Database:
+
+Template: intelmq-mailgen/dbport
+Type: string
+Description: Port of the Database:
+
+Template: intelmq-mailgen/dbname
+Type: string
+Default: intelmq-events
+Description: The name of the events database:
+ Please provide the name of the events database (see your IntelMQ
+ configuration).
+
+Template: intelmq-mailgen/dbuser
+Type: string
+Default: intelmq_mailgen
+Description: Database user name for intelmq-mailgen:
+ Database user name and password with which intelmq-mailgen can access the
+ events database.
+
+Template: intelmq-mailgen/dbpass
+Type: password
+Description: Database password for intelmq-mailgen:
+ Database user name and password with which intelmq-mailgen can access the
+ events database.
+
+
+Template: intelmq-mailgen/templatedir
+Type: string
+Default: /etc/intelmq/mailgen/templates
+Description: Template location:
+ intelmq-mailgen will search this location for email templates.
+
+
+Template: intelmq-mailgen/openpgp-alwayssign
+Type: boolean
+Default: false
+Description: OpenPGP-sign all mail sent by intelmq-mailgen?
+ OpenPGP-sign outgoing mail?
+ .
+ If you enable this option, you will be asked for the location of a GnuPG
+ homedir (GNUPGHOME) and the key ID of the signing key to be used.
+ .
+ You probably want to leave this option disabled for now.
+ Consult the documentation on how to create or import a key; then, run
+  dpkg-reconfigure intelmq-mailgen
+
+Template: intelmq-mailgen/openpgp-signingkey
+Type: string
+Default: 5F503EFAC8C89323D54C252591B8CD7E15925678
+Description: Signing key ID:
+ Please provide the key ID of the key that will be used to sign intelmq-mailgen
+ emails.
+ It must not be passphrase-protected.
+
+Template: intelmq-mailgen/openpgp-gnupghome
+Type: string
+Default: /home/intelmq-mailgen/.gnupg
+Description: GNUPGHOME location:
+ In order to be able to use the signing key, intelmq-mailgen needs to access
+ a GnuGPG homedir directory.
+ .
+ Please consult GnuPG's documentation for more information.

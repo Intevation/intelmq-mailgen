@@ -6,9 +6,6 @@ override_dh_install:
 	dh_install
 	dh_installexamples
 	mkdir -p debian/intelmq-mailgen/etc/intelmq/mailgen/templates
-	sed 's@/usr/local/lib/intelmq@/usr/lib/intelmq@' \
-          debian/intelmq-mailgen/usr/share/doc/intelmq-mailgen/examples/intelmq-mailgen.conf.example \
-          > debian/intelmq-mailgen/etc/intelmq/intelmq-mailgen.conf
 	# Fix paths for Debian
 	mkdir -p debian/intelmq-mailgen/usr/share/doc/intelmq-mailgen
 	sed 's@src/\(intelmq-mailgen/tests/keys/test1.sec\)@/usr/share/\1@; s@sql/notifications.sql@/usr/share/intelmq-mailgen/sql/notifications.sql@; s@intelmq-mailgen.conf.example@/usr/share/doc/intelmq-mailgen/examples/intelmq-mailgen.conf.example@' \
