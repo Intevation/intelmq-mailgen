@@ -584,6 +584,23 @@ feed_specific_formats = build_feed_specific_formats([
         ("time.source", "Timestamp (UTC)"),
         ExtraColumn("SSDP server", "server"),
         ]),
+    ("Ssl-Freak-Scan", [
+        ("source.asn", "ASN"),
+        ("source.ip", "IP"),
+        ("time.source", "Timestamp (UTC)"),
+        ("source.reverse_dns", "Hostname"),
+        ExtraColumn("Subject Name", "subject_common_name"),
+        ExtraColumn("Issuer Name", "issuer_common_name"),
+        ExtraColumn("FREAK Cipher", "freak_cipher_suite"),
+        ]),
+    ("Ssl-Scan", [
+        ("source.asn", "ASN"),
+        ("source.ip", "IP"),
+        ("time.source", "Timestamp (UTC)"),
+        ("source.reverse_dns", "Hostname"),
+        ExtraColumn("Subject Name", "subject_common_name"),
+        ExtraColumn("Issuer Name", "issuer_common_name"),
+        ]),
     ])
 
 
