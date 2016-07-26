@@ -557,8 +557,8 @@ feed_specific_formats = build_feed_specific_formats([
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("Elasticsearch version", "lucense_version"),
-        ExtraColumn("Instance name", "cluster_name"),
+        ExtraColumn("Elasticsearch version", "version"),
+        ExtraColumn("Instance name", "name"),
         ]),
     ("Open-m DNS", [
         ("source.asn", "ASN"),
