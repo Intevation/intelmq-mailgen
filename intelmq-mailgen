@@ -499,6 +499,12 @@ feed_specific_formats = build_feed_specific_formats([
         ("protocol.transport", "Protocol"),
         ("destination.fqdn", "Target Hostname"),
         ]),
+    ("DNS-open-resolvers", [
+        ("source.asn", "ASN"),
+        ("source.ip", "IP"),
+        ("time.source", "Timestamp (UTC)"),
+        ExtraColumn("Min. amplification", "min_amplification"),
+        ]),
     ("Open-Portmapper", [
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
