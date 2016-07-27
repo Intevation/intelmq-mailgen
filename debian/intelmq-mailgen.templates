@@ -43,6 +43,14 @@ Description: Database password for intelmq-mailgen:
  Database user name and password with which intelmq-mailgen can access the
  events database.
 
+Template: intelmq-mailgen/dbpass-repeat
+Type: password
+Description: Confirm password:
+
+Template: intelmq-mailgen/dbpass-mismatch
+Type: note
+Description: The password do not match
+
 
 Template: intelmq-mailgen/templatedir
 Type: string
