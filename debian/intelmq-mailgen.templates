@@ -80,3 +80,12 @@ Description: GNUPGHOME location:
  a GnuGPG homedir directory.
  .
  Please consult GnuPG's documentation for more information.
+
+Template: intelmq-mailgen/reconfigure-warning
+Type: note
+Description: Configuration will be overwritten!
+ Please note that intelmq-mailgen's configuration file in
+ /etc/intelmq/intelmq-mailgen.conf will be recreated during this configuration
+ process.  Changes that you made manually will not be kept.
+ .
+ A backup copy will be created as /etc/intelmq/intelmq-mailgen.conf.dpkg-old, however.
