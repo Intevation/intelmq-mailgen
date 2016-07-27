@@ -17,10 +17,12 @@ Description: SMTP server port:
 
 Template: intelmq-mailgen/dbhost
 Type: string
+Default: localhost
 Description: Hostname of the Database:
 
 Template: intelmq-mailgen/dbport
 Type: string
+Default: 5432
 Description: Port of the Database:
 
 Template: intelmq-mailgen/dbname
