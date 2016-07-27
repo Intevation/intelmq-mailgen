@@ -33,9 +33,9 @@ EOF
 # Source debconf library.
 . /usr/share/debconf/confmodule
 
+mailgen_user="intelmq-mailgen"
+
 if [ "$1" = "configure" ] ; then
-    db_get intelmq-mailgen/user
-    mailgen_user="$RET"
     # Assign SMTP-related variables
     db_get intelmq-mailgen/mailhost
     mailhost="$RET"

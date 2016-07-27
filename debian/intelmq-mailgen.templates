@@ -1,8 +1,3 @@
-Template: intelmq-mailgen/user
-Type: string
-Default: intelmq-mailgen
-Description: User account for intelmq-mailgen:
-
 Template: intelmq-mailgen/mailsender
 Type: string
 Description: Configure sender address:
