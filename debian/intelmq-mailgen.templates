@@ -1,5 +1,6 @@
 Template: intelmq-mailgen/mailsender
 Type: string
+Default: intelmq@example.com
 Description: Configure sender address:
  This will be the From address of mail sent by intelmq-mailgen.
 
@@ -8,27 +9,33 @@ Template: intelmq-mailgen/mailhost
 Type: string
 Default: localhost
 Description: SMTP server host name:
+ Mail configuration
 
 Template: intelmq-mailgen/mailport
 Type: string
 Default: 8025
 Description: SMTP server port:
+ Mail configuration
 
 
 Template: intelmq-mailgen/dbhost
 Type: string
 Default: localhost
 Description: Hostname of the Database:
+ PostgreSQL configuration
 
 Template: intelmq-mailgen/dbport
 Type: string
 Default: 5432
 Description: Port of the Database:
+ PostgreSQL configuration
 
 Template: intelmq-mailgen/dbname
 Type: string
 Default: intelmq-events
 Description: The name of the events database:
+ PostgreSQL configuration
+ .
  Please provide the name of the events database (see your IntelMQ
  configuration).
 
@@ -36,12 +43,16 @@ Template: intelmq-mailgen/dbuser
 Type: string
 Default: intelmq_mailgen
 Description: Database user name for intelmq-mailgen:
+ PostgreSQL configuration
+ .
  Database user name and password with which intelmq-mailgen can access the
  events database.
 
 Template: intelmq-mailgen/dbpass
 Type: password
 Description: Database password for intelmq-mailgen:
+ PostgreSQL configuration
+ .
  Database user name and password with which intelmq-mailgen can access the
  events database.
 
@@ -51,7 +62,7 @@ Description: Confirm password:
 
 Template: intelmq-mailgen/dbpass-mismatch
 Type: note
-Description: The password do not match
+Description: The passwords do not match
 
 
 Template: intelmq-mailgen/templatedir
@@ -78,6 +89,8 @@ Template: intelmq-mailgen/openpgp-signingkey
 Type: string
 Default: 5F503EFAC8C89323D54C252591B8CD7E15925678
 Description: Signing key ID:
+ OpenPGP configuration
+ .
  Please provide the key ID of the key that will be used to sign intelmq-mailgen
  emails.
  It must not be passphrase-protected.
@@ -86,6 +99,8 @@ Template: intelmq-mailgen/openpgp-gnupghome
 Type: string
 Default: /home/intelmq-mailgen/.gnupg
 Description: GNUPGHOME location:
+ OpenPGP configuration
+ .
  In order to be able to use the signing key, intelmq-mailgen needs to access
  a GnuGPG homedir directory.
  .
@@ -104,11 +119,13 @@ Description: Configuration will be overwritten!
 
 Template: intelmq-mailgen/pgconfig-ask
 Type: boolean
-Description: Automatically configure postgres for intelmq-mailgen now?
- For intelmq-mailgen to work, the contact expert bot's database needs to be modified.
- Please see intelmq's and intelmq-mailgen's documentation for details.
+Default: false
+Description: Automatically configure PostgreSQL DB for intelmq-mailgen now?
+ For intelmq-mailgen to work, the certbund_contactdb expert bot's database
+ needs to be modified.
+ Please see IntelMQ's and intelmq-mailgen's documentation for details.
  .
- Since you're going to run intelmq-mailgen on the same host as the database
+ Since you're going to run intelmq-mailgen on the same host as the database,
  the necessary steps can be performed now.
 
 Template: intelmq-mailgen/pgconfig-manual
@@ -120,13 +137,15 @@ Description: Please configure PostgreSQL manually
  You may rerun this configuration process
  after having set up the bots (more specifically their PostgreSQL databases).
  .
- Please see intelmq's and intelmq-mailgen's documentation for details.
+ Please see IntelMQ's and intelmq-mailgen's documentation for details.
 
 Template: intelmq-mailgen/pgconfig-configure
 Type: boolean
+Default: false
 Description: PG should be configured automatically
 
 Template: intelmq-mailgen/pgconfig-error-tableexists
 Type: error
-Description: Error: the table to be created already exists!
- It appears that intelmq-mailgen has already been configured.
+Description: The database has already been configured for intelmq-mailgen
+ It appears that the database does not need to be modified.
+ This is probably the case before you have run this configuration step before.
