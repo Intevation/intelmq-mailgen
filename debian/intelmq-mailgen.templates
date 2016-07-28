@@ -49,21 +49,13 @@ Description: Database user name for intelmq-mailgen:
  events database.
 
 Template: intelmq-mailgen/dbpass
-Type: password
+Type: string
+Default: Your DB password
 Description: Database password for intelmq-mailgen:
  PostgreSQL configuration
  .
  Database user name and password with which intelmq-mailgen can access the
  events database.
-
-Template: intelmq-mailgen/dbpass-repeat
-Type: password
-Description: Confirm password:
-
-Template: intelmq-mailgen/dbpass-mismatch
-Type: note
-Description: The passwords do not match
-
 
 Template: intelmq-mailgen/templatedir
 Type: string
