@@ -98,4 +98,35 @@ Description: Configuration will be overwritten!
  /etc/intelmq/intelmq-mailgen.conf will be recreated during this configuration
  process.  Changes that you made manually will not be kept.
  .
- A backup copy will be created as /etc/intelmq/intelmq-mailgen.conf.dpkg-old, however.
+ A backup copy will be created as /etc/intelmq/intelmq-mailgen.conf.dpkg-old,
+ however.
+
+
+Template: intelmq-mailgen/pgconfig-ask
+Type: boolean
+Description: Automatically configure postgres for intelmq-mailgen now?
+ For intelmq-mailgen to work, the contact expert bot's database needs to be modified.
+ Please see intelmq's and intelmq-mailgen's documentation for details.
+ .
+ Since you're going to run intelmq-mailgen on the same host as the database
+ the necessary steps can be performed now.
+
+Template: intelmq-mailgen/pgconfig-manual
+Type: note
+Description: Please configure PostgreSQL manually
+ intelmq-mailgen requires IntelMQ's certbund_contact and postgresql bots to be
+ configured first.
+ .
+ You may rerun this configuration process
+ after having set up the bots (more specifically their PostgreSQL databases).
+ .
+ Please see intelmq's and intelmq-mailgen's documentation for details.
+
+Template: intelmq-mailgen/pgconfig-configure
+Type: boolean
+Description: PG should be configured automatically
+
+Template: intelmq-mailgen/pgconfig-error-tableexists
+Type: error
+Description: Error: the table to be created already exists!
+ It appears that intelmq-mailgen has already been configured.

@@ -28,6 +28,17 @@ cat << EOF > /etc/intelmq/intelmq-mailgen.conf
 EOF
 }
 
+configure_pg () {
+    su --login postgres 2>&1 >/dev/null << EOF
+psql -f /usr/share/intelmq-mailgen/sql/notifications.sql $dbname
+PGPASSWORD=$dbpass createuser --encrypted $dbuser
+psql -c "
+    GRANT eventdb_send_notifications TO $dbuser ;
+    GRANT eventdb_insert TO intelmq ;
+    " $dbname
+EOF
+}
+
 # Source debconf library.
 . /usr/share/debconf/confmodule
 
@@ -69,7 +80,17 @@ if [ "$1" = "configure" ] ; then
 
     mailgen_user_home="/home/$mailgen_user" # XXX
     write_config
+
+    db_get intelmq-mailgen/pgconfig-configure
+    pgconfig="$RET"
+    if [ "$pgconfig" = "true" ]; then
+        configure_pg
+    fi
+
 fi
+
 
 db_stop
 #DEBHELPER#
+
+# vim :set et sw=4 ts=4:
