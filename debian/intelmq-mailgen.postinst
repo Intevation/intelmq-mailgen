@@ -32,7 +32,7 @@ EOF
 }
 
 configure_pg () {
-    su --login postgres 2>&1 >/dev/null << EOF
+    su --login postgres >/dev/null 2>&1 << EOF
 psql -f /usr/share/intelmq-mailgen/sql/notifications.sql $dbname
 PGPASSWORD=$dbpass createuser --encrypted $dbuser
 psql -c "
@@ -84,7 +84,9 @@ if [ "$1" = "configure" ] ; then
     db_get intelmq-mailgen/pgconfig-configure
     pgconfig="$RET"
     if [ "$pgconfig" = "true" ]; then
-        configure_pg
+        configure_pg \
+            && echo "intelmq-mailgen: DB setup successful." >&2 \
+            || echo "intelmq-mailgen: DB setup UNSUCCESSFUL!" >&2
     fi
 
 fi
