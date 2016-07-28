@@ -77,7 +77,8 @@ BEGIN
     IF email IS NOT NULL
        AND format IS NOT NULL
        AND template IS NOT NULL
-       AND notification_interval IS NOT NULL
+       AND notification_interval IS NOT NULL	
+       AND notification_interval != interval '-1 second'
     THEN
         INSERT INTO notifications (events_id,
                                    email,
