@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
 
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
 write_config () {
 cat << EOF > /etc/intelmq/intelmq-mailgen.conf
 {
@@ -38,9 +41,6 @@ psql -c "
     " $dbname
 EOF
 }
-
-# Source debconf library.
-. /usr/share/debconf/confmodule
 
 mailgen_user="intelmq-mailgen"
 
