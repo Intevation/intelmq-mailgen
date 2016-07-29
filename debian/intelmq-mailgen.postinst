@@ -42,6 +42,15 @@ psql -c "
 EOF
 }
 
+import_test_openpgp_key () {
+    su --login "$mailgen_user" >/dev/null 2>&1 << EOF
+mkdir --mode=700 --parents "$gnupghome"
+gpg2 --homedir "$gnupghome" --import \
+    /usr/share/intelmq-mailgen/tests/keys/test1.pub \
+    /usr/share/intelmq-mailgen/tests/keys/test1.sec
+EOF
+}
+
 mailgen_user="intelmq-mailgen"
 
 if [ "$1" = "configure" ] ; then
@@ -76,6 +85,13 @@ if [ "$1" = "configure" ] ; then
 
     if ! getent passwd "$mailgen_user" >/dev/null 2>&1; then
         useradd --create-home --user-group --shell /bin/bash "$mailgen_user"
+    fi
+
+    db_get intelmq-mailgen/import-test-openpgp-key
+    if [ "$RET" = "true" ]; then
+        import_test_openpgp_key \
+            && echo "intelmq-mailgen: OpenPGP key import successful." >&2 \
+            || echo "intelmq-mailgen: OpenPGP key import UNSUCCESSFUL!" >&2
     fi
 
     db_get intelmq-mailgen/write-config

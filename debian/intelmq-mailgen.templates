@@ -158,3 +158,14 @@ Type: error
 Description: The database has already been configured for intelmq-mailgen
  It appears that the database does not need to be modified.
  This is probably the case before you have run this configuration step before.
+
+
+Template: intelmq-mailgen/import-test-openpgp-key
+Type: boolean
+Default: no
+Description: Install a test OpenPGP key?
+ You have selected to install an example configuration.
+ To fully test intelmq-mailgen's functionality, you can also import an example
+ OpenPGP signing key.
+ .
+ WARNING: THIS KEY IS INSECURE AND MUST ONLY BE USED FOR TESTING PURPOSES!
