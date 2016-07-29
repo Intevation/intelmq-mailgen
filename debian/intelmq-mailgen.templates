@@ -153,6 +153,11 @@ Type: boolean
 Default: false
 Description: Internal use flag: configure DB?
 
+Template: intelmq-mailgen/pgconfig-configure-success
+Type: boolean
+Default: false
+Description: Internal use flag: DB has been configured
+
 Template: intelmq-mailgen/pgconfig-error-tableexists
 Type: error
 Description: The database has already been configured for intelmq-mailgen

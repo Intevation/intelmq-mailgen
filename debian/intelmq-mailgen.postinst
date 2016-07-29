@@ -103,8 +103,11 @@ if [ "$1" = "configure" ] ; then
     pgconfig="$RET"
     if [ "$pgconfig" = "true" ]; then
         configure_pg \
-            && echo "intelmq-mailgen: DB setup successful." >&2 \
-            || echo "intelmq-mailgen: DB setup UNSUCCESSFUL!" >&2
+        && (echo "intelmq-mailgen: DB setup successful.";
+            # Mark DB config as successful, so the config script can skip a few
+            # steps on upgrades
+            db_set intelmq-mailgen/pgconfig-configure-success true) >&2 \
+        || echo "intelmq-mailgen: DB setup UNSUCCESSFUL!" >&2
     fi
 
 fi
