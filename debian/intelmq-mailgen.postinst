@@ -78,13 +78,10 @@ if [ "$1" = "configure" ] ; then
         useradd --create-home --user-group --shell /bin/bash "$mailgen_user"
     fi
 
-    db_get intelmq-mailgen/config-choice
-    # Choices: Configure now, Install example configuration, Do not configure
-    case "$RET" in
-        "Configure now" | "Install example configuration")
-            write_config
-            ;;
-    esac
+    db_get intelmq-mailgen/write-config
+    if [ "$RET" = "true" ]; then
+        write_config
+    fi
 
     db_get intelmq-mailgen/pgconfig-configure
     pgconfig="$RET"

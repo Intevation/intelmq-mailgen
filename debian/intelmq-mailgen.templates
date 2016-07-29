@@ -2,8 +2,18 @@ Template: intelmq-mailgen/config-choice
 Type: select
 Choices: Configure now, Install example configuration, Do not configure
 Default: Do not configure
+Description: Configure intelmq-mailgen configuration file now?
+
+Template: intelmq-mailgen/config-choice-reconf
+Type: select
+Choices: Configure now, Do not configure
+Default: Configure now
 Description: Configure or reconfigure intelmq-mailgen configuration file now?
 
+Template: intelmq-mailgen/write-config
+Type: boolean
+Default: false
+Description: Internal use flag: write out config file?
 
 Template: intelmq-mailgen/mailsender
 Type: string
@@ -141,7 +151,7 @@ Description: Please configure PostgreSQL manually
 Template: intelmq-mailgen/pgconfig-configure
 Type: boolean
 Default: false
-Description: PG should be configured automatically
+Description: Internal use flag: configure DB?
 
 Template: intelmq-mailgen/pgconfig-error-tableexists
 Type: error
