@@ -6,9 +6,6 @@
 -- notification information added to events by the certbund_contact bot
 -- and inserts it into notifications.
 
-BEGIN;
-
-
 CREATE ROLE eventdb_owner
     NOLOGIN NOSUPERUSER NOINHERIT NOCREATEDB CREATEROLE;
 CREATE ROLE eventdb_insert
@@ -146,6 +143,3 @@ CREATE TRIGGER events_insert_notification_trigger
 AFTER INSERT ON events
 FOR EACH ROW
 EXECUTE PROCEDURE events_insert_notifications_for_row();
-
-
-COMMIT;

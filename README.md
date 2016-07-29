@@ -49,7 +49,7 @@ needs to be extended.
 
 As user postgres, run:
 
-    psql -f sql/notifications.sql intelmq-events
+    psql --single-transaction --file=sql/notifications.sql intelmq-events
 
 
 The `notifications.sql` script creates two roles, one for each
