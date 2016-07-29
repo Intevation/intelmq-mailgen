@@ -33,12 +33,14 @@ EOF
 
 configure_pg () {
     su --login postgres >/dev/null 2>&1 << EOF
-psql -f /usr/share/intelmq-mailgen/sql/notifications.sql $dbname
-PGPASSWORD=$dbpass createuser --encrypted $dbuser
+psql -f "/usr/share/intelmq-mailgen/sql/notifications.sql" "$dbname"
 psql -c "
+    BEGIN;
+    CREATE ROLE $dbuser WITH ENCRYPTED PASSWORD '$dbpass';
     GRANT eventdb_send_notifications TO $dbuser ;
     GRANT eventdb_insert TO intelmq ;
-    " $dbname
+    COMMIT;
+" $dbname
 EOF
 }
 
