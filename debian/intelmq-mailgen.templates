@@ -130,8 +130,7 @@ Template: intelmq-mailgen/pgconfig-ask
 Type: boolean
 Default: false
 Description: Automatically configure PostgreSQL DB for intelmq-mailgen now?
- For intelmq-mailgen to work, the certbund_contactdb expert bot's database
- needs to be modified.
+ For intelmq-mailgen to work, IntelMQ's event database needs to be modified.
  Please see IntelMQ's and intelmq-mailgen's documentation for details.
  .
  Since you're going to run intelmq-mailgen on the same host as the database,
