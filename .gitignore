@@ -8,3 +8,4 @@ tests/__pycache__/
 debian/files
 debian/intelmq-mailgen.substvars
 debian/intelmq-mailgen/
+debian/intelmq-mailgen.*.debhelper
