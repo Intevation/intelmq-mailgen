@@ -48,6 +48,15 @@ mkdir --mode=700 --parents "$gnupghome"
 gpg2 --homedir "$gnupghome" --import \
     /usr/share/intelmq-mailgen/tests/keys/test1.pub \
     /usr/share/intelmq-mailgen/tests/keys/test1.sec
+# Explicitely check if key is present because --import may return 2 if key was
+# already present which is actually fine:
+gpg --homedir "$gnupghome" --list-secret-keys \
+    --with-colons --fingerprint "$signingkey" |
+awk -F: -v signingkey="$signingkey" '\$1 == "fpr" {
+    if (\$10 == signingkey)
+        exit 0
+        else exit 1
+}'
 EOF
 }
 
