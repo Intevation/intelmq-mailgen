@@ -43,29 +43,23 @@ enrich feed data.
 Database
 --------
 
-The `intelmq-events` database should already have been set up during the
-configuration of the certbund-contact expert bot.  For use with MailGen it
-needs to be extended.
+The `intelmq-events` database and the `intelmq` database-user
+should already have set up by the configuration of the output/postgresql bot.  
+For use with MailGen it needs to be extended:
 
-As user postgres, run:
+As user postgres:
+1. Create a new database-user:
+    createuser --encrypted --pwprompt intelmq_mailgen
 
+As user intelmq:
+1. Extend the database:
     psql -f sql/notifications.sql intelmq-events
 
-
-The `notifications.sql` script creates two roles, one for each
-task to be performed in the event database:
-
- 1. inserting new events (usually via IntelMQ's postgresql output bot) and
- 2. sending notification mails (via intelmq-mailgen).
-
-We need two user accounts to actually log in and perform the tasks:
-
-    # user for intelmq-mailgen:
-    createuser --encrypted --pwprompt intelmq_mailgen
-    psql -c "GRANT eventdb_send_notifications TO intelmq_mailgen" intelmq-events
-
-    # user for postgresql output bot:
+2. Grant `intelmq` the right to insert new events via a trigger:
     psql -c "GRANT eventdb_insert TO intelmq" intelmq-events
+
+3. Grant the new user the right to send out notifications:
+    psql -c "GRANT eventdb_send_notifications TO intelmq_mailgen" intelmq-events
 
 
 Configuration
