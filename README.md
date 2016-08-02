@@ -1,4 +1,4 @@
-IntelMQ MailGen
+IntelMQ Mailgen
 ===============
 
 IntelMQ command line tool to process events.
@@ -21,21 +21,21 @@ Dependencies
 IntelMQ Configuration
 ---------------------
 
-For MailGen to work, the following IntelMQ bots will need to be configured
+For Mailgen to work, the following IntelMQ bots will need to be configured
 first:
 
  1. expert/certbund-contact
  2. output/postgresql
 
 You **must follow the setup instructions for these bots** before
-setting up MailGen.
+setting up Mailgen.
 
-Preparing Input Data for MailGen
+Preparing Input Data for Mailgen
 --------------------------------
 
-IntelMQ MailGen makes certain assumptions about the input data it receives.
+IntelMQ Mailgen makes certain assumptions about the input data it receives.
 Currently, it expects `classification.identifier` to be present.  It may
-therefore be necessary to first prepare the data fed to MailGen.
+therefore be necessary to first prepare the data fed to Mailgen.
 
 IntelMQ comes with a "modify" expert bot that can be added to the queue to
 enrich feed data.
@@ -45,7 +45,7 @@ Database
 
 The `intelmq-events` database and the `intelmq` database-user
 should already have set up by the configuration of the output/postgresql bot.  
-For use with MailGen it needs to be extended:
+For use with Mailgen it needs to be extended:
 
 As user postgres:
 1. Create a new database-user:
@@ -120,7 +120,7 @@ Templates
 ---------
 
 `template_dir` must contain the email templates you want to use with IntelMQ
-MailGen.  You may organize templates in subdirectories.
+Mailgen.  You may organize templates in subdirectories.
 
 The first line of a template file is used as the subject line for mail sent
 by `intelmq-mailgen`; the remaining lines will become the mail body. The body
@@ -134,10 +134,10 @@ CSV-formatted event data.
 Feed-specific Templates
 -----------------------
 
-For the format `feed_specific` IntelMQ MailGen ignores the template that may
+For the format `feed_specific` IntelMQ Mailgen ignores the template that may
 have been set by the Contact DB bot and chooses a template based on the feed's
 `feed.name`. Please note that this only works for feeds explicitely supported by
-MailGen.
+Mailgen.
 
 Feed-specific template file names follow the pattern `template-FEEDNAME.txt`
 where `FEEDNAME` is replaced by the events' `feed.name` attributes.
@@ -183,7 +183,7 @@ Transformations
 
 Currently, data is not transformed when it is being added to the CSV output.
 
-MailGen always removes the "UTC" notations from time stamps in `time.source`.
+Mailgen always removes the "UTC" notations from time stamps in `time.source`.
 It ensures that time stamps will always be UTC.
 
 Testing
