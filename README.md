@@ -47,18 +47,18 @@ The `intelmq-events` database and the `intelmq` database-user
 should already have set up by the configuration of the output/postgresql bot.  
 For use with Mailgen it needs to be extended:
 
-As user postgres:
+As database-superuser (usually via system user postgres):
+
 1. Create a new database-user:
     createuser --encrypted --pwprompt intelmq_mailgen
 
-As user intelmq:
-1. Extend the database:
+2. Extend the database:
     psql -f sql/notifications.sql intelmq-events
 
-2. Grant `intelmq` the right to insert new events via a trigger:
+3. Grant `intelmq` the right to insert new events via a trigger:
     psql -c "GRANT eventdb_insert TO intelmq" intelmq-events
 
-3. Grant the new user the right to send out notifications:
+4. Grant the new user the right to send out notifications:
     psql -c "GRANT eventdb_send_notifications TO intelmq_mailgen" intelmq-events
 
 
