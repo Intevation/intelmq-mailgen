@@ -560,7 +560,7 @@ feed_specific_formats = build_feed_specific_formats([
         ExtraColumn("Elasticsearch version", "version"),
         ExtraColumn("Instance name", "name"),
         ]),
-    ("Open-m DNS", [
+    ("Open-mDNS", [
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
