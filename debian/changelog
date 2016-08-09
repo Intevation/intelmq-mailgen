@@ -1,3 +1,9 @@
+intelmq-mailgen (0.94~beta5) unstable; urgency=low
+
+  * New release
+
+ -- Gernot Schulz <gernot@intevation.de>  Tue, 09 Aug 2016 16:26:15 +0200
+
 intelmq-mailgen (0.94~beta4) unstable; urgency=low
 
   * New release
