@@ -33,7 +33,7 @@ EOF
 
 configure_pg () {
     su --login postgres >/dev/null 2>&1 << EOF
-psql --single-transaction "$dbname" << PG_EOF
+psql --single-transaction --set ON_ERROR_STOP=1 "$dbname" << PG_EOF
 \include '/usr/share/intelmq-mailgen/sql/notifications.sql';
 CREATE ROLE $dbuser WITH LOGIN ENCRYPTED PASSWORD '$dbpass';
 GRANT eventdb_send_notifications TO $dbuser ;
