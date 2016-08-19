@@ -122,13 +122,19 @@ Templates
 `template_dir` must contain the email templates you want to use with IntelMQ
 Mailgen.  You may organize templates in subdirectories.
 
-The first line of a template file is used as the subject line for mail sent
-by `intelmq-mailgen`; the remaining lines will become the mail body. The body
-may optionally be separated from the subject line by one or more empty lines.
+The first line of a template file is used as the subject line 
+for mail sent by `intelmq-mailgen`. The remaining lines will become 
+the mail body. The body may optionally be separated from the subject line 
+by one or more empty lines.
 
-The body text may allow some substitutions, depending on the format. For
-instance, CSV-based formats replace `${events_as_csv}` with the
-CSV-formatted event data.
+Both subject and body text will be interpreted as 
+[Python3 Template strings](https://docs.python.org/3/library/string.html#template-strings)
+and may allow some substitutions depending on the format.
+
+The subject line allows for `${asn}` for emails grouped by as-number.
+
+For instance, CSV-based formats replace `${events_as_csv}` in the body 
+with the CSV-formatted event data.
 
 
 Feed-specific Templates
