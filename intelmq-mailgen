@@ -336,8 +336,8 @@ class FeedSpecificFormat:
 
     def csv_column_keys(self):
         """Return a list with the keys used for the CSV rows.
-        The list is to be used with as the field names parameter for the
-        csv.DictWriter class and matches the dictionaries returnd by the
+        The list is to be used as the field names parameter for the
+        csv.DictWriter class and matches the dictionaries returned by the
         csv_row_from_event method.
         """
         return [col.csv_column_key for col in self.columns]
@@ -415,7 +415,7 @@ class ExtraColumn(Column):
         value = event[self.event_table_column]
         if isinstance(value, str):
             # With psycopg 2.4.5 values of type JSON in the database are
-            # returned as strings. In newer psycopg version they are
+            # returned as strings. In newer psycopg versions they are
             # converted automatically, so we may not have to convert the
             # value.
             # FIXME: This aspect (not having to convert with newer psycopg
@@ -640,6 +640,7 @@ def create_mails(cur, notification, config, gpgme_ctx):
 
 
 def mark_as_sent(cur, notification):
+    "Mark ids of the given notifaction as send and set the same ticket number."
     cur.execute("""WITH ticket AS (SELECT nextval('intelmq_ticket_seq'))
                  UPDATE notifications
                     SET sent_at = now(),
