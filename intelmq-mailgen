@@ -703,6 +703,9 @@ def get_pending_notifications(cur):
     Notifications are grouped by recipient, template and format so that
     the information about the events for which the notifications are
     sent can be aggregated.
+
+    :returns: list of aggreated notifications
+    :rtype: list
     """
     cur.execute("""\
         SELECT n.email as email, n.template as template, n.format as format,
@@ -767,22 +770,23 @@ def generate_notifications_interactively(config, cur, notifications):
             print("%d mails sent. " % (sent_mails,))
 
 
-def generate_notifications(args, config):
+def mailgen(args, config):
     cur = None
     conn = open_db_connection(config)
     try:
         cur = conn.cursor()
         cur.execute("SET TIME ZONE 'UTC';")
-        notifications = get_pending_notifications(cur)
-        if not notifications:
+        agg_notifications = get_pending_notifications(cur)
+        if not agg_notifications:
             print("No pending notifications to be sent")
             return
 
         if args.all:
-            sent_mails = send_notifications(config, notifications, cur)
+            sent_mails = send_notifications(config, agg_notifications, cur)
             log.info("{:d} mails sent.".format(sent_mails))
         else:
-            generate_notifications_interactively(config, cur, notifications)
+            generate_notifications_interactively(config, cur,
+                                                 agg_notifications)
 
     finally:
         if cur is not None:
@@ -818,4 +822,4 @@ if __name__ == '__main__':
     # setting up gnupg
     os.environ['GNUPGHOME'] = config["openpgp"]["gnupg_home"]
 
-    generate_notifications(args, config)
+    mailgen(args, config)
