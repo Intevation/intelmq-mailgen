@@ -154,7 +154,7 @@ def read_template(template_dir, template_name):
     File Format:
 
       - The first non-empty line of the file is assumed to be the
-        subject line of the email.
+        template string for the subject line of the email.
 
       - The rest of the lines are the email body. Leading and trailing
         white space is removed from the body and a newline added at the
@@ -166,13 +166,14 @@ def read_template(template_dir, template_name):
         the different formatter implementations for the substitions they
         support.
 
-    The return value is a pair of the subject and the body where the
-    body is an instance of string.Template.
+    The return value is a pair of the subject and the body where both
+    are an instances of string.Template.
     """
     with open(full_template_filename(template_dir, template_name)) as infile:
         subject = None
         while not subject:
             subject = infile.readline().strip()
+        subject = string.Template(subject)
         body = string.Template(infile.read().strip() + "\n")
         return subject, body
 
@@ -198,14 +199,18 @@ def load_events(cur, event_ids, columns=None):
     :param cur: database connection
     :param event_ids: list of events ids
     :param columns: list of column names, defaults to all if 'None' is given.
-    returns: corresponding events as a list of dictionaries
+    returns: corresponding events as a list of dictionaries including an
+             extra array "notification_ids" holding the n_ids of the event
     """
     if columns is not None:
         sql_columns = ", ".join(escape_sql_identifier(col) for col in columns)
     else:
         sql_columns = "*"
-    cur.execute("SELECT {} FROM events WHERE id = ANY (%s)".format(
-                sql_columns), (event_ids,))
+    cur.execute("SELECT {},"
+                "       ARRAY(SELECT id from notifications"
+                "             WHERE events_id = events.id) as notification_ids"
+                "  FROM events WHERE id = ANY (%s)".format(sql_columns),
+                (event_ids,))
 
     return cur.fetchall()
 
@@ -263,55 +268,80 @@ def format_as_csv(columns, events, header):
     return ("events.csv", contents.getvalue(), "text", "csv")
 
 
-def mail_format_as_csv(cur, notification, config, gpgme_ctx, format_spec):
-    """Creates one email with csv attachment for given columns.
+def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
+    """Creates emails with csv attachment for given columns.
 
-    :returns: list of email objects
+    Groups the events by 'source.asn' and creates an email for each.
+    TODO: Assumes that all events have such a value.
+
+    :returns: list of tuples (email object, list of notification ids)
     :rtype: list
     """
     attachments = []
 
-    events = load_events(cur, notification["event_ids"],
+    events = load_events(cur, agg_notification["event_ids"],
                          format_spec.event_table_columns())
 
-    events_as_csv = format_as_csv(format_spec.csv_column_keys(),
-                                  [format_spec.csv_row_from_event(event)
-                                   for event in events],
-                                  format_spec.column_titles())[1]
 
-    subject, body_template = read_template(config["template_dir"],
-                                           notification["template"])
+    # grouping the events by asn, so we have a list of events for each
+    events_per_asn = {}
+    asnk = "source.asn"
+    for event in events:
+        if not asnk in event or not event[asnk]:
+            raise RuntimeError(
+                    "Missing '{%s}' in event {}".format(asnk, event))
+        asn = event[asnk]
+        events_per_asn.setdefault(asn, []).append(event)
 
-    body = body_template.substitute(events_as_csv=events_as_csv)
+    email_tuples = []
+    log.debug("Found {} ASN(s) in batch.".format(len(events_per_asn)))
+    for asn in events_per_asn:
+        events_as_csv = format_as_csv(format_spec.csv_column_keys(),
+                                      [format_spec.csv_row_from_event(event)
+                                       for event in events_per_asn[asn]],
+                                      format_spec.column_titles())[1]
 
-    if gpgme_ctx:
-        body = clearsign(gpgme_ctx, body)
+        n_ids = [] #ids of the affected notifications
+        for event in events_per_asn[asn]:
+            n_ids.extend(event["notification_ids"])
 
-    mail = create_mail(sender=config["sender"],
-                       recipient=notification["email"],
-                       subject=subject, body=body,
-                       attachments=attachments)
-    return [mail]
+        subject_template, body_template = read_template(
+                                            config["template_dir"],
+                                            agg_notification["template"])
+
+        subject = subject_template.substitute(asn=asn)
+        body = body_template.substitute(events_as_csv=events_as_csv)
+
+        if gpgme_ctx:
+            body = clearsign(gpgme_ctx, body)
+
+        mail = create_mail(sender=config["sender"],
+                           recipient=agg_notification["email"],
+                           subject=subject, body=body,
+                           attachments=attachments)
+
+        email_tuples.append((mail, n_ids))
+    return email_tuples
 
 
-
-def mail_format_feed_specific_as_csv(cur, notification, config, gpgme_ctx):
-    """Creates one email with csv attachment based on feed-name.
+def mail_format_feed_specific_as_csv(cur, agg_notification, config, gpgme_ctx):
+    """Creates emails with csv attachment based on feed-name.
 
     This function assumes that notification["feed_name"] is actually one
     of the feed names used as key in feed_specific_formats.
 
-    :returns: list of email objects
+    :returns: list of tuples (email object, list of ids)
     :rtype: list
     """
-    feed_name = notification["feed_name"]
+    feed_name = agg_notification["feed_name"]
     format_spec = feed_specific_formats.get(feed_name)
     if format_spec is None:
         # TODO
         raise RuntimeError
-    notification["template"] = "template-" + feed_name + ".txt"
+    agg_notification["template"] = "template-" + feed_name + ".txt"
 
-    return mail_format_as_csv(cur, notification, config, gpgme_ctx, format_spec)
+    return mail_format_as_csv(cur, agg_notification,
+                              config, gpgme_ctx, format_spec)
 
 
 class FeedSpecificFormat:
@@ -605,47 +635,49 @@ feed_specific_formats = build_feed_specific_formats([
 
 
 
-def create_mails(cur, notification, config, gpgme_ctx):
-    """Create one or several email objects for a notification.
+def create_mails(cur, agg_notification, config, gpgme_ctx):
+    """Create one or several email objects for an aggregated notification.
 
     Depending on the classification_type and format
-    does the formatting and returns one or several email objects.
+    does the formatting and returns one or several emails with ids.
 
     :param config: script configuration
-    :param notification: the notification to create mails for
+    :param agg_notification: the aggregated notification to create mails for
     :param cur: database cursor to use when loading event information
 
-    :returns: list of email objects with len >=1
+    :returns: list of tuples (email object, list of ids) with len >=1
     :rtype: list
 
     """
 
-    emails = []
+    email_tuples = []
 
     formatter = None
 
-    if (notification["format"] == "feed_specific"
-        and notification["feed_name"] in feed_specific_formats):
+    if (agg_notification["format"] == "feed_specific"
+        and agg_notification["feed_name"] in feed_specific_formats):
         formatter = mail_format_feed_specific_as_csv
 
     if formatter is not None:
-        emails = formatter(cur, notification, config, gpgme_ctx)
+        email_tuples = formatter(cur, agg_notification, config, gpgme_ctx)
     else:
         msg = ("Cannot generate emails for combination (%r, %r)"
-               % (notification["format"], notification["feed_name"]))
+               % (agg_notification["format"], agg_notification["feed_name"]))
         print(msg, file=sys.stderr)
         raise NotImplementedError(msg)
 
-    return emails
+    return email_tuples
 
 
-def mark_as_sent(cur, notification):
+def mark_as_sent(cur, notification_ids):
+    "Mark notifactions with given ids as sent and set the same ticket number."
+    log.debug("Marking notifications_ids {} as send.".format(notification_ids))
     cur.execute("""WITH ticket AS (SELECT nextval('intelmq_ticket_seq'))
                  UPDATE notifications
                     SET sent_at = now(),
                         intelmq_ticket = (SELECT * FROM ticket)
                   WHERE id = ANY (%s);""",
-                (notification["notification_ids"],))
+                (notification_ids,))
 
 
 def send_notifications(config, notifications, cur):
@@ -660,7 +692,7 @@ def send_notifications(config, notifications, cur):
     commit the transaction.
 
     :param config script configuration
-    :param notifications a list of notifications
+    :param notifications a list of aggregated_notifications
     :param cur database cursor to use when loading event information
 
     :returns: number of send mails
@@ -679,16 +711,17 @@ def send_notifications(config, notifications, cur):
         for notification in notifications:
             cur.execute("SAVEPOINT sendmail;")
             try:
-                emails = create_mails(cur, notification, config, gpgme_ctx)
+                email_tuples = create_mails(cur, notification,
+                                            config, gpgme_ctx)
 
-                if len(emails) < 1:
+                if len(email_tuples) < 1:
                     # TODO maybe use a user defined exception here?
                     raise RuntimeError("No emails for sending were generated!")
-                for email in emails:
-                    smtp.send_message(email)
+                for email_tuple in email_tuples:
+                    smtp.send_message(email_tuple[0])
+                    mark_as_sent(cur, email_tuple[1])
                     sent_mails += 1
 
-                mark_as_sent(cur, notification)
             except:
                 cur.execute("ROLLBACK TO SAVEPOINT sendmail;")
                 raise
