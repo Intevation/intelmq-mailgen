@@ -832,7 +832,7 @@ def mailgen(args, config):
         conn.close()
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(
         prog=APPNAME,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -856,3 +856,7 @@ if __name__ == '__main__':
     os.environ['GNUPGHOME'] = config["openpgp"]["gnupg_home"]
 
     mailgen(args, config)
+
+
+if __name__ == '__main__':
+    main()

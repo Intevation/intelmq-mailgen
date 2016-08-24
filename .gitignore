@@ -2,9 +2,11 @@
 *.swp
 *.log
 *.*~
+intelmqmail/__pycache__/
 tests/__pycache__/
 
 # packaging-related
+intelmqmail.egg-info/
 debian/files
 debian/intelmq-mailgen.substvars
 debian/intelmq-mailgen/
