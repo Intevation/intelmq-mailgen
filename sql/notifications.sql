@@ -33,10 +33,14 @@ CREATE TYPE ip_endpoint AS ENUM ('source', 'destination');
 CREATE SEQUENCE intelmq_ticket_seq;
 GRANT USAGE ON intelmq_ticket_seq TO eventdb_send_notifications;
 
+-- a single row table to save which day we currently use for intelmq_ticket
+CREATE TABLE ticket_day (
+	initialized_for_day DATE
+);
 
 CREATE TABLE notifications (
     id BIGSERIAL UNIQUE PRIMARY KEY,
-    intelmq_ticket BIGINT,
+    intelmq_ticket VARCHAR(18),	-- format 'YYYYMMDD-XXXXXXXX' (8*X) (1 reserve)
     events_id BIGINT NOT NULL,
     email VARCHAR(100) NOT NULL,
     format VARCHAR(100) NOT NULL,
