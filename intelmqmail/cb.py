@@ -274,7 +274,7 @@ def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
     Groups the events by 'source.asn' and creates an email for each.
     TODO: Assumes that all events have such a value.
 
-    :returns: list of tuples (email object, list of notification ids)
+    :returns: list of tuples (email object, list of notification ids, ticket)
     :rtype: list
     """
     attachments = []
@@ -305,12 +305,15 @@ def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
         for event in events_per_asn[asn]:
             n_ids.extend(event["notification_ids"])
 
+        ticket = new_ticket_number(cur)
+
         subject_template, body_template = read_template(
                                             config["template_dir"],
                                             agg_notification["template"])
 
-        subject = subject_template.substitute(asn=asn)
-        body = body_template.substitute(events_as_csv=events_as_csv)
+        subject = subject_template.substitute(asn=asn, ticket_number=ticket)
+        body = body_template.substitute(events_as_csv=events_as_csv,
+                                        asn=asn, ticket_number=ticket)
 
         if gpgme_ctx:
             body = clearsign(gpgme_ctx, body)
@@ -320,7 +323,7 @@ def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
                            subject=subject, body=body,
                            attachments=attachments)
 
-        email_tuples.append((mail, n_ids))
+        email_tuples.append((mail, n_ids, ticket))
     return email_tuples
 
 
@@ -330,7 +333,7 @@ def mail_format_feed_specific_as_csv(cur, agg_notification, config, gpgme_ctx):
     This function assumes that notification["feed_name"] is actually one
     of the feed names used as key in feed_specific_formats.
 
-    :returns: list of tuples (email object, list of ids)
+    :returns: list of tuples (email object, list of ids, ticket)
     :rtype: list
     """
     feed_name = agg_notification["feed_name"]
@@ -645,7 +648,7 @@ def create_mails(cur, agg_notification, config, gpgme_ctx):
     :param agg_notification: the aggregated notification to create mails for
     :param cur: database cursor to use when loading event information
 
-    :returns: list of tuples (email object, list of ids) with len >=1
+    :returns: list of tuples (email object, list of ids, ticket) with len >=1
     :rtype: list
 
     """
@@ -668,16 +671,58 @@ def create_mails(cur, agg_notification, config, gpgme_ctx):
 
     return email_tuples
 
+def new_ticket_number(cur):
+    """Draw a new unique ticket number.
 
-def mark_as_sent(cur, notification_ids):
-    "Mark notifactions with given ids as sent and set the same ticket number."
-    log.debug("Marking notifications_ids {} as send.".format(notification_ids))
-    cur.execute("""WITH ticket AS (SELECT nextval('intelmq_ticket_seq'))
-                 UPDATE notifications
+    Check the database and reset the ticket counter if
+    our day is past the last initialisation day.
+    Raise RuntimeError if last initialisation is in the future, because
+    we may potentially reuse ticket numbers if we get to this day.
+
+    :returns: a unique ticket-number string in format YYYYMMDD-XXXXXXXX
+    :rtype: string
+    """
+    sqlQuery = """SELECT to_char(now(), 'YYYYMMDD') AS date,
+                         (SELECT to_char(initialized_for_day, 'YYYYMMDD')
+                              FROM ticket_day) AS init_date,
+                         nextval('intelmq_ticket_seq');"""
+    cur.execute(sqlQuery)
+    result = cur.fetchall()
+    #log.debug(result)
+
+    date_str = result[0]["date"]
+    if date_str != result[0]["init_date"]:
+        if date_str < result[0]["init_date"]:
+            raise RuntimeError(
+                    "initialized_for_day='{}' is in the future from now(). "
+                    "Stopping to avoid reusing "
+                    "ticket numbers".format(result[0]["init_date"]))
+
+        log.debug("We have a new day, reseting the ticket generator.")
+        cur.execute("ALTER SEQUENCE intelmq_ticket_seq RESTART;")
+        cur.execute("UPDATE ticket_day SET initialized_for_day=%s;",
+                    (date_str,));
+
+        cur.execute(sqlQuery)
+        result = cur.fetchall()
+        log.debug(result)
+
+    # create from integer: fill with 0s and cut out 8 chars from the right
+    num_str = "{:08d}".format(result[0]["nextval"])[-8:]
+    ticket = "{:s}-{:s}".format(date_str, num_str)
+    log.debug('New ticket number "{}".'.format(ticket,))
+
+    return ticket
+
+
+def mark_as_sent(cur, notification_ids, ticket):
+    "Mark notifactions with given ids as sent and set the ticket number."
+    log.debug("Marking notifications_ids {} as sent.".format(notification_ids))
+    cur.execute(""" UPDATE notifications
                     SET sent_at = now(),
-                        intelmq_ticket = (SELECT * FROM ticket)
+                        intelmq_ticket = %s
                   WHERE id = ANY (%s);""",
-                (notification_ids,))
+                (ticket, notification_ids,))
 
 
 def send_notifications(config, notifications, cur):
@@ -719,7 +764,7 @@ def send_notifications(config, notifications, cur):
                     raise RuntimeError("No emails for sending were generated!")
                 for email_tuple in email_tuples:
                     smtp.send_message(email_tuple[0])
-                    mark_as_sent(cur, email_tuple[1])
+                    mark_as_sent(cur, email_tuple[1], email_tuple[2])
                     sent_mails += 1
 
             except:
