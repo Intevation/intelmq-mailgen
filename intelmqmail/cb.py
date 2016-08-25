@@ -674,15 +674,38 @@ def create_mails(cur, agg_notification, config, gpgme_ctx):
 def new_ticket_number(cur):
     """Draw a new unique ticket number.
 
+    Check the database and reset the ticket counter if
+    our day is past the last initialisation day.
+    Raise RuntimeError if last initialisation is in the future, because
+    we may potentially reuse ticket numbers if we get to this day.
+
     :returns: a unique ticket-number string in format YYYYMMDD-XXXXXXXX
     :rtype: string
     """
-    cur.execute("""SELECT to_char(now(), 'YYYYMMDD') as date,
-                          nextval('intelmq_ticket_seq');""")
+    sqlQuery = """SELECT to_char(now(), 'YYYYMMDD') AS date,
+                         (SELECT to_char(initialized_for_day, 'YYYYMMDD')
+                              FROM ticket_day) AS init_date,
+                         nextval('intelmq_ticket_seq');"""
+    cur.execute(sqlQuery)
     result = cur.fetchall()
     log.debug(result)
 
     date_str = result[0]["date"]
+    if date_str != result[0]["init_date"]:
+        if date_str < result[0]["init_date"]:
+            raise RuntimeError(
+                    "initialized_for_day='{}' is in the future from now()."
+                    "Stopping to avoid reusing "
+                    "ticket numbers".format(result[0]["init_date"]))
+
+        log.debug("We have a new day, reseting the ticket generator.")
+        cur.execute("ALTER SEQUENCE intelmq_ticket_seq RESTART;"
+                    "UPDATE ticket_day SET initialized_for_day=%s;", date_str);
+
+        cur.execute(sqlQuery)
+        result = cur.fetchall()
+        log.debug(result)
+
     # create from integer: fill with 0s and cut out 8 chars from the right
     num_str = "{:08d}".format(result[0]["nextval"])[-8:]
     ticket = "{:s}-{:s}".format(date_str, num_str)

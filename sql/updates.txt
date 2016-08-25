@@ -5,10 +5,20 @@
 CREATE TABLE ticket_day (
 	initialized_for_day DATE
 );
+GRANT SELECT, UPDATE ON ticket_day TO eventdb_send_notifications;
 
 ALTER TABLE notifications ALTER COLUMN intelmq_ticket TYPE VARCHAR(18);
 
+DROP SEQUENCE intelmq_ticket_seq;
+CREATE SEQUENCE intelmq_ticket_seq MINVALUE 10000001;
+GRANT USAGE, UPDATE ON intelmq_ticket_seq TO eventdb_send_notifications;
+
+
 === backwards
+DROP SEQUENCE intelmq_ticket_seq;
+CREATE SEQUENCE intelmq_ticket_seq;
+GRANT USAGE ON intelmq_ticket_seq TO eventdb_send_notifications;
+
 DROP TABLE ticket_day;
 
 -- will only work if all old entries can still be converted
