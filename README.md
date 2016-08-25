@@ -124,9 +124,12 @@ Both subject and body text will be interpreted as
 [Python3 Template strings](https://docs.python.org/3/library/string.html#template-strings)
 and may allow some substitutions depending on the format.
 
-The subject line allows for `${asn}` for emails grouped by as-number.
+The subject line allows for 
+ * `${ticket_number}`
+ * `${asn}` for emails grouped by as-number.
 
-For instance, CSV-based formats replace `${events_as_csv}` in the body 
+For instance, CSV-based formats replace the above two 
+values and `${events_as_csv}` in the body 
 with the CSV-formatted event data.
 
 

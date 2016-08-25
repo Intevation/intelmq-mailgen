@@ -1,4 +1,4 @@
-Botnet Report
+CB-Report#${ticket_number} Botnet Report about AS${asn}
 
 EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE 
 

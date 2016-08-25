@@ -1,0 +1,16 @@
+== adding ticket_number #28
+
+=== forward
+
+CREATE TABLE ticket_day (
+	initialized_for_day DATE
+);
+
+ALTER TABLE notifications ALTER COLUMN intelmq_ticket TYPE VARCHAR(18);
+
+=== backwards
+DROP TABLE ticket_day;
+
+-- will only work if all old entries can still be converted
+ALTER TABLE notifications ALTER COLUMN intelmq_ticket TYPE BIGINT;
+
