@@ -31,7 +31,7 @@ CREATE TYPE ip_endpoint AS ENUM ('source', 'destination');
 
 
 CREATE SEQUENCE intelmq_ticket_seq MINVALUE 10000001;
-GRANT USAGE ON intelmq_ticket_seq TO eventdb_send_notifications;
+GRANT USAGE, UPDATE ON intelmq_ticket_seq TO eventdb_send_notifications;
 
 -- a single row table to save which day we currently use for intelmq_ticket
 CREATE TABLE ticket_day (
