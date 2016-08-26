@@ -9,7 +9,15 @@ Installation
 Dependencies
 ------------
 
-As a Python3 application, see setup.py for its dependencies.
+As a Python3 application, see the `install_requires` section
+in setup.py for its dependencies.
+
+If you use setuptools, it will check the hard requirements
+and install a runable script. For an installation from source:
+```
+pip install -v e .
+```
+
 
 IntelMQ Configuration
 ---------------------
