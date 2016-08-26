@@ -857,6 +857,10 @@ def main():
 
     mailgen(args, config)
 
+# to lower the chance of problems like
+# http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html#the-double-import-trap
+# we discourage calling this file directly as a "script", instead use
+# the entry-point script by the temporary install or
+# go to the right toplevel directory and use a full import like
+#  python3 -c "from intelmqmail import cb; cb.main()"
 
-if __name__ == '__main__':
-    main()
