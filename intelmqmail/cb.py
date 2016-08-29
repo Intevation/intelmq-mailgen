@@ -688,19 +688,20 @@ def new_ticket_number(cur):
                          nextval('intelmq_ticket_seq');"""
     cur.execute(sqlQuery)
     result = cur.fetchall()
-    log.debug(result)
+    #log.debug(result)
 
     date_str = result[0]["date"]
     if date_str != result[0]["init_date"]:
         if date_str < result[0]["init_date"]:
             raise RuntimeError(
-                    "initialized_for_day='{}' is in the future from now()."
+                    "initialized_for_day='{}' is in the future from now(). "
                     "Stopping to avoid reusing "
                     "ticket numbers".format(result[0]["init_date"]))
 
         log.debug("We have a new day, reseting the ticket generator.")
-        cur.execute("ALTER SEQUENCE intelmq_ticket_seq RESTART;"
-                    "UPDATE ticket_day SET initialized_for_day=%s;", date_str);
+        cur.execute("ALTER SEQUENCE intelmq_ticket_seq RESTART;")
+        cur.execute("UPDATE ticket_day SET initialized_for_day=%s;",
+                    (date_str,));
 
         cur.execute(sqlQuery)
         result = cur.fetchall()

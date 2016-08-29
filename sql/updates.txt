@@ -11,8 +11,7 @@ ALTER TABLE notifications ALTER COLUMN intelmq_ticket TYPE VARCHAR(18);
 
 DROP SEQUENCE intelmq_ticket_seq;
 CREATE SEQUENCE intelmq_ticket_seq MINVALUE 10000001;
-GRANT USAGE, UPDATE ON intelmq_ticket_seq TO eventdb_send_notifications;
-
+ALTER SEQUENCE intelmq_ticket_seq OWNER TO eventdb_send_notifications;
 
 === backwards
 DROP SEQUENCE intelmq_ticket_seq;
