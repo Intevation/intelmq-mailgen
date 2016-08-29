@@ -4,6 +4,9 @@
 *.*~
 intelmqmail/__pycache__/
 tests/__pycache__/
+dist
+build
+.pybuild
 
 # packaging-related
 intelmqmail.egg-info/
