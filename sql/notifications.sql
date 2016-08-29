@@ -33,7 +33,6 @@ GRANT SELECT ON events TO eventdb_send_notifications;
 CREATE TYPE ip_endpoint AS ENUM ('source', 'destination');
 
 
-
 -- a single row table to save which day we currently use for intelmq_ticket
 CREATE TABLE ticket_day (
 	initialized_for_day DATE
