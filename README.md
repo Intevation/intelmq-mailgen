@@ -3,20 +3,21 @@ IntelMQ Mailgen
 
 IntelMQ command line tool to process events.
 
-The intelmq-mailgen file was initially copied from
-https://github.com/certat/intelmq/blob/a29da5d798bd114535326ffdd2f5000c4b6a21e7/intelmq/bin/intelmqcli (revision from 2016-03-08).
-
 Installation
 ============
 
 Dependencies
 ------------
 
- * https://bitbucket.org/bereiter/pyxarf (v==0.0.5bereiter)
- * (IntelMQ)
- * Python3 (v>=3.2)
- * PyGPGME (v>=0.3)
-   * GnuPG (v>=2)
+As a Python3 application, see the `install_requires` section
+in setup.py for its dependencies.
+
+If you use setuptools, it will check the hard requirements
+and install a runable script. For an installation from source:
+```
+pip install -v e .
+```
+
 
 IntelMQ Configuration
 ---------------------
@@ -236,3 +237,9 @@ se.
 The regular unit tests which must succeed can be started with ``make check``;
 to run the complete test suite, use ``make check_all``.
 
+
+History
+=======
+
+The intelmq-mailgen file was initially copied from
+https://github.com/certat/intelmq/blob/a29da5d798bd114535326ffdd2f5000c4b6a21e7/intelmq/bin/intelmqcli (revision from 2016-03-08).

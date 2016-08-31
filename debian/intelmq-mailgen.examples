@@ -1,4 +1,4 @@
 intelmq-mailgen.conf.example
-example-template-dronereport.txt
-example-template-sslfreak.txt
-example-template.txt
+templates/example-template-dronereport.txt
+templates/example-template-sslfreak.txt
+templates/example-template.txt

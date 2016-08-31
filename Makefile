@@ -3,9 +3,9 @@ all:
 	@/bin/echo " Available: check, check_all"
 
 check:
-	cd tests && python3 -m unittest -v
+	python3 -m unittest discover --start-directory tests -v
 
 check_all:
-	cd tests && ALLTESTS=1 python3 -m unittest -v
+	ALLTESTS=1 python3 -m unittest discover --start-directory tests -v
 
 .PHONY: all check check_all
