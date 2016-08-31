@@ -20,6 +20,9 @@ ALTER DATABASE :"DBNAME" OWNER TO eventdb_owner;
 
 ALTER TABLE events OWNER TO eventdb_owner;
 
+CREATE SEQUENCE intelmq_ticket_seq MINVALUE 10000001;
+ALTER SEQUENCE intelmq_ticket_seq OWNER TO eventdb_send_notifications;
+
 SET ROLE eventdb_owner;
 
 GRANT INSERT ON events TO eventdb_insert;
@@ -30,13 +33,16 @@ GRANT SELECT ON events TO eventdb_send_notifications;
 CREATE TYPE ip_endpoint AS ENUM ('source', 'destination');
 
 
-CREATE SEQUENCE intelmq_ticket_seq;
-GRANT USAGE ON intelmq_ticket_seq TO eventdb_send_notifications;
-
+-- a single row table to save which day we currently use for intelmq_ticket
+CREATE TABLE ticket_day (
+	initialized_for_day DATE
+);
+INSERT INTO ticket_day (initialized_for_day) VALUES('20160101');
+GRANT SELECT, UPDATE ON ticket_day TO eventdb_send_notifications;
 
 CREATE TABLE notifications (
     id BIGSERIAL UNIQUE PRIMARY KEY,
-    intelmq_ticket BIGINT,
+    intelmq_ticket VARCHAR(18),	-- format 'YYYYMMDD-XXXXXXXX' (8*X) (1 reserve)
     events_id BIGINT NOT NULL,
     email VARCHAR(100) NOT NULL,
     format VARCHAR(100) NOT NULL,

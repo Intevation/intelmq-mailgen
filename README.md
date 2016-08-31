@@ -3,6 +3,8 @@ IntelMQ Mailgen
 
 IntelMQ command line tool to process events.
 
+Call `intelmqcbmail --help` to see the current usage. 
+
 Installation
 ============
 
@@ -15,9 +17,8 @@ in setup.py for its dependencies.
 If you use setuptools, it will check the hard requirements
 and install a runable script. For an installation from source:
 ```
-pip install -v e .
+pip3 install -v e .
 ```
-
 
 IntelMQ Configuration
 ---------------------
@@ -132,9 +133,12 @@ Both subject and body text will be interpreted as
 [Python3 Template strings](https://docs.python.org/3/library/string.html#template-strings)
 and may allow some substitutions depending on the format.
 
-The subject line allows for `${asn}` for emails grouped by as-number.
+The subject line allows for 
+ * `${ticket_number}`
+ * `${asn}` for emails grouped by as-number.
 
-For instance, CSV-based formats replace `${events_as_csv}` in the body 
+For instance, CSV-based formats replace the above two 
+values and `${events_as_csv}` in the body 
 with the CSV-formatted event data.
 
 
