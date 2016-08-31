@@ -4,8 +4,8 @@ EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE
 
 Dear Sir or Madam,
 
-Please find below a list of affected systems on your network. Each
-record includes the IP address of the affected system, a timestamp
+Please find below a list of affected systems on your network AS${asn}.
+Each record includes the IP address of the affected system, a timestamp
 and the name of the related malware family. If available, the record
 also includes the source port, target IP, target port and target
 hostname for the connection most probably triggered by the malware
@@ -21,7 +21,7 @@ Details on the signature key used are available on our website at:
 example.com
 
 Please note:
-This is an automatically generated message.
+This is the automatically generated message CB-Report#${ticket_number}.
 Replying to the sender address is not possible.
 
 
