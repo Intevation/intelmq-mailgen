@@ -63,7 +63,7 @@ if locale.getpreferredencoding() != 'UTF-8':
         ' but "{}". Exiting.'.format(locale.getpreferredencoding()))
     exit(1)
 
-APPNAME = "intelmq-mailgen"
+APPNAME = "intelmqcbmail"
 DESCRIPTION = """
 """
 
@@ -72,9 +72,9 @@ Searches for all unprocessed notifications and sends them.
 """
 
 USAGE = """
-    intelmq-mailgen
-    intelmq-mailgen --all
-"""
+    {appname}
+    {appname} --all
+""".format(appname=APPNAME)
 
 
 def read_configuration():
