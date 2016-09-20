@@ -499,29 +499,13 @@ def build_feed_specific_column(col):
 
 # Specifications for the feed_specific formats
 feed_specific_formats = build_feed_specific_formats([
-    ("Botnet-Drone-Hadoop", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ("classification.identifier", "Malware"),
-        ("source.port", "Source Port"),
-        ("destination.ip", "Target IP"),
-        ("destination.port", "Target Port"),
-        ("protocol.transport", "Protocol"),
-        ("destination.fqdn", "Target Hostname"),
-        ]),
-    ("Sinkhole-HTTP-Drone", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ("classification.identifier", "Malware"),
-        ("source.port", "Source Port"),
-        ("destination.ip", "Target IP"),
-        ("destination.port", "Target Port"),
-        ("protocol.transport", "Protocol"),
-        ("destination.fqdn", "Target Hostname"),
-        ]),
-    ("Microsoft-Sinkhole", [
+
+    ("generic_malware", [
+        # this is used for the following feeds:
+        #   "Botnet-Drone-Hadoop", "Sinkhole-HTTP-Drone",
+        #   "Microsoft-Sinkhole"
+        # These names are all mapped to "generic_malware" in
+        # get_pending_notifications before the grouping
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
@@ -778,9 +762,13 @@ def send_notifications(config, notifications, cur):
 def get_pending_notifications(cur):
     """Retrieve all pending notifications from the database.
     Notifications are pending if they haven't been sent yet.
-    Notifications are grouped by recipient, template and format so that
-    the information about the events for which the notifications are
-    sent can be aggregated.
+    Notifications are grouped by recipient, template, format,
+    classification type and feed name so that the information about the
+    events for which the notifications are sent can be aggregated.
+
+    Also, the feed names 'Botnet-Drone-Hadoop', 'Sinkhole-HTTP-Drone'
+    and 'Microsoft-Sinkhole' are replaced by 'generic_malware' before
+    grouping so that event from those feeds are aggregated.
 
     :returns: list of aggreated notifications
     :rtype: list
@@ -791,8 +779,16 @@ def get_pending_notifications(cur):
                n.feed_name AS feed_name,
                array_agg(n.events_id) as event_ids,
                array_agg(n.id) as notification_ids
-          FROM (SELECT * FROM notifications
-                WHERE intelmq_ticket IS NULL
+          FROM (SELECT id, events_id, email, template, format,
+                       classification_type, notification_interval,
+                       CASE WHEN feed_name IN ('Botnet-Drone-Hadoop',
+                                               'Sinkhole-HTTP-Drone',
+                                               'Microsoft-Sinkhole')
+                            THEN 'generic_malware'
+                            ELSE feed_name
+                       END AS feed_name
+                  FROM notifications
+                 WHERE intelmq_ticket IS NULL
                 FOR UPDATE NOWAIT) n
       GROUP BY n.email, n.template, n.format, n.classification_type, n.feed_name
         HAVING coalesce((SELECT max(sent_at) FROM notifications n2
