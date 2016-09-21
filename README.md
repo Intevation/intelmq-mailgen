@@ -153,6 +153,13 @@ Mailgen.
 Feed-specific template file names follow the pattern `template-FEEDNAME.txt`
 where `FEEDNAME` is replaced by the events' `feed.name` attributes.
 
+
+Mailgen is capable of aggregating data from different feeds into one email which.
+Currently this is done for Shadowservers "Sinkhole-HTTP-Drone",
+"Botnet-Drone-Hadoop" and ""Microsoft-Sinkhole" feeds. Use a template named
+"template-generic_malware.txt" in oder to address these feeds. 
+
+
 Developer Information
 =====================
 
