@@ -60,6 +60,8 @@ CREATE INDEX notifications_grouping_idx
           ON notifications (email, template, format);
 CREATE INDEX notifications_intelmq_ticket_idx
           ON notifications (intelmq_ticket);
+CREATE INDEX notifications_events_id_idx
+          ON notifications (events_id);
 
 GRANT SELECT, UPDATE ON notifications TO eventdb_send_notifications;
 
