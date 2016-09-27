@@ -792,8 +792,11 @@ def get_pending_notifications(cur):
                 FOR UPDATE NOWAIT) n
       GROUP BY n.email, n.template, n.format, n.classification_type, n.feed_name
         HAVING coalesce((SELECT max(sent_at) FROM notifications n2
-                         WHERE n2.email = n.email AND n2.template = n.template
-                         AND n2.format = n.format)
+                         WHERE n2.email = n.email
+                           AND n2.template = n.template
+                           AND n2.format = n.format
+                           AND n2.classification_type = n.classification_type
+                           AND n2.feed_name = n.feed_name)
                         + max(n.notification_interval)
                         < CURRENT_TIMESTAMP,
                         TRUE);""")
