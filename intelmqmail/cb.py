@@ -650,7 +650,6 @@ def create_mails(cur, agg_notification, config, gpgme_ctx):
     else:
         msg = ("Cannot generate emails for combination (%r, %r)"
                % (agg_notification["format"], agg_notification["feed_name"]))
-        print(msg, file=sys.stderr)
         raise NotImplementedError(msg)
 
     return email_tuples
