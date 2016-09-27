@@ -739,16 +739,22 @@ def send_notifications(config, notifications, cur):
         for notification in notifications:
             cur.execute("SAVEPOINT sendmail;")
             try:
-                email_tuples = create_mails(cur, notification,
-                                            config, gpgme_ctx)
+                try:
+                    email_tuples = create_mails(cur, notification,
+                                                config, gpgme_ctx)
 
-                if len(email_tuples) < 1:
-                    # TODO maybe use a user defined exception here?
-                    raise RuntimeError("No emails for sending were generated!")
-                for email_tuple in email_tuples:
-                    smtp.send_message(email_tuple[0])
-                    mark_as_sent(cur, email_tuple[1], email_tuple[2])
-                    sent_mails += 1
+                    if len(email_tuples) < 1:
+                        # TODO maybe use a user defined exception here?
+                        raise RuntimeError("No emails for sending were generated!")
+                except Exception:
+                    log.exception("Could not create mails for %r."
+                                  " Continuing with other notifications.",
+                                  notification)
+                else:
+                    for email_tuple in email_tuples:
+                        smtp.send_message(email_tuple[0])
+                        mark_as_sent(cur, email_tuple[1], email_tuple[2])
+                        sent_mails += 1
 
             except:
                 cur.execute("ROLLBACK TO SAVEPOINT sendmail;")
