@@ -854,7 +854,7 @@ def mailgen(args, config):
         cur.execute("SET TIME ZONE 'UTC';")
         agg_notifications = get_pending_notifications(cur)
         if not agg_notifications:
-            print("No pending notifications to be sent")
+            log.info("No pending notifications to be sent")
             return
 
         if args.all:
