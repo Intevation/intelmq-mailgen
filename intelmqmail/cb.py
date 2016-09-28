@@ -275,18 +275,20 @@ def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
     """
     attachments = []
 
+    asnk = "source.asn"
+
+    event_columns = ["id"] + format_spec.event_table_columns()
+    if asnk not in event_columns:
+        raise RuntimeError("Missing {!r} in event columns for feed {!r}"
+                           .format(asnk, format_spec.feed_name))
+
     events = load_events(cur, list(agg_notification["idmap"].keys()),
-                         ["id"] + format_spec.event_table_columns())
+                         event_columns)
 
     # grouping the events by asn, so we have a list of events for each
     events_per_asn = {}
-    asnk = "source.asn"
     for event in events:
-        if not asnk in event or not event[asnk]:
-            raise RuntimeError(
-                    "Missing '{%s}' in event {}".format(asnk, event))
-        asn = event[asnk]
-        events_per_asn.setdefault(asn, []).append(event)
+        events_per_asn.setdefault(event[asnk], []).append(event)
 
     email_tuples = []
     log.debug("Found {} ASN(s) in batch.".format(len(events_per_asn)))
