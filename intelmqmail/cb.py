@@ -199,17 +199,13 @@ def load_events(cur, event_ids, columns=None):
     :param cur: database connection
     :param event_ids: list of events ids
     :param columns: list of column names, defaults to all if 'None' is given.
-    returns: corresponding events as a list of dictionaries including an
-             extra array "notification_ids" holding the n_ids of the event
+    returns: corresponding events as a list of dictionaries
     """
     if columns is not None:
         sql_columns = ", ".join(escape_sql_identifier(col) for col in columns)
     else:
         sql_columns = "*"
-    cur.execute("SELECT {},"
-                "       ARRAY(SELECT id from notifications"
-                "             WHERE events_id = events.id) as notification_ids"
-                "  FROM events WHERE id = ANY (%s)".format(sql_columns),
+    cur.execute("SELECT {} FROM events WHERE id = ANY (%s)".format(sql_columns),
                 (event_ids,))
 
     return cur.fetchall()
@@ -279,9 +275,8 @@ def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
     """
     attachments = []
 
-    events = load_events(cur, agg_notification["event_ids"],
-                         format_spec.event_table_columns())
-
+    events = load_events(cur, list(agg_notification["idmap"].keys()),
+                         ["id"] + format_spec.event_table_columns())
 
     # grouping the events by asn, so we have a list of events for each
     events_per_asn = {}
@@ -303,7 +298,7 @@ def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
 
         n_ids = [] #ids of the affected notifications
         for event in events_per_asn[asn]:
-            n_ids.extend(event["notification_ids"])
+            n_ids.extend(agg_notification["idmap"][event["id"]])
 
         ticket = new_ticket_number(cur)
 
@@ -764,6 +759,21 @@ def send_notifications(config, notifications, cur):
     return sent_mails
 
 
+def json_array_to_mapping(jsonarray):
+    """Return a json(-string) representation of a list of pairs into a mapping.
+    The parameter may either be a list of key/value pairs or a JSON
+    string encoding a list of pairs. This function is used for the value
+    describing which notifications belong to which events returned from
+    the database query
+    """
+    if isinstance(jsonarray, str):
+        jsonarray = json.loads(jsonarray)
+    mapping = {}
+    for key, value in jsonarray:
+        mapping.setdefault(key, []).append(value)
+    return mapping
+
+
 def get_pending_notifications(cur):
     """Retrieve all pending notifications from the database.
     Notifications are pending if they haven't been sent yet.
@@ -778,12 +788,16 @@ def get_pending_notifications(cur):
     :returns: list of aggreated notifications
     :rtype: list
     """
+    # The query uses json_agg for the idmap result column instead of the
+    # more obvious array_agg because the latter cannot create
+    # multidimensional arrays. Arrays of ROWs might be an alternative
+    # but psycopg does not support that out of the box (the array is
+    # returned as a string).
     cur.execute("""\
         SELECT n.email as email, n.template as template, n.format as format,
                n.classification_type as classification_type,
                n.feed_name AS feed_name,
-               array_agg(n.events_id) as event_ids,
-               array_agg(n.id) as notification_ids
+               json_agg(ARRAY[n.events_id, n.id]) as idmap
           FROM (SELECT id, events_id, email, template, format,
                        classification_type, notification_interval,
                        CASE WHEN feed_name IN ('Botnet-Drone-Hadoop',
@@ -805,7 +819,11 @@ def get_pending_notifications(cur):
                         + max(n.notification_interval)
                         < CURRENT_TIMESTAMP,
                         TRUE);""")
-    return cur.fetchall()
+    rows = []
+    for row in cur.fetchall():
+        row["idmap"] = json_array_to_mapping(row["idmap"])
+        rows.append(row)
+    return rows
 
 
 def generate_notifications_interactively(config, cur, notifications):
@@ -822,7 +840,7 @@ def generate_notifications_interactively(config, cur, notifications):
                   i["template"],
                   i["format"],
                   i["feed_name"],
-                  len(i["event_ids"]))
+                  len(i["idmap"]))
                   )
         valid_answers = ("c", "s", "a", "q")
         while True:
