@@ -190,6 +190,18 @@ Currently this is done for Shadowservers "Sinkhole-HTTP-Drone",
 "template-generic_malware.txt" in oder to address these feeds.
 
 
+Errors
+======
+
+Mailgen tries to be as robust as possible, in order to keep sending emails
+whenever possible.
+If it can't find templates, for instance, it will continue with the next e-mail
+and log an error message and the stacktrace.
+
+The errormessages also contain information about the email that could not be
+sent.
+
+
 Developer Information
 =====================
 
