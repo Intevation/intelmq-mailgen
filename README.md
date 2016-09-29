@@ -20,6 +20,10 @@ and install a runable script. For an installation from source:
 pip3 install -v e .
 ```
 
+**In order to use IntelMQ Mailgen, you require a working certbund-contact-expert
+in IntelMQ, as Mailgen makes use of information and data which is not available
+in the IntelMQs default fields.**
+
 IntelMQ Configuration
 ---------------------
 
@@ -62,6 +66,32 @@ As database-superuser (usually via system user postgres):
 
 4. Grant the new user the right to send out notifications:
     psql -c "GRANT eventdb_send_notifications TO intelmq_mailgen" intelmq-events
+
+
+Interaction with IntelMQ and the events database
+------------------------------------------------
+
+Once you applied `sql/notifications.sql` a trigger called
+`events_insert_notification_trigger` was added to you events-table.
+This trigger calls an sql-procedure `events_insert_notifications_for_row`,
+which extracts data from an event which is relevant to create a notification,
+everytime an event is inserted into the events table.
+
+This data contains:
+ - E-Mail address
+ - Classification Type of the event
+ - Feedname of the event
+ - Data-Format the contact prefers
+ - ID of the event
+ - Source IP-address of the event
+
+
+Ticket Numbers
+--------------
+
+For every email sent by Mailgen a ticket number is generated. If a mail
+was successfully sent, this number is stored in the notifications table,
+together with a timestamp when the mail was sent.
 
 
 Configuration
@@ -124,21 +154,21 @@ Templates
 `template_dir` must contain the email templates you want to use with IntelMQ
 Mailgen.  You may organize templates in subdirectories.
 
-The first line of a template file is used as the subject line 
-for mail sent by `intelmq-mailgen`. The remaining lines will become 
-the mail body. The body may optionally be separated from the subject line 
+The first line of a template file is used as the subject line
+for mail sent by `intelmq-mailgen`. The remaining lines will become
+the mail body. The body may optionally be separated from the subject line
 by one or more empty lines.
 
-Both subject and body text will be interpreted as 
+Both subject and body text will be interpreted as
 [Python3 Template strings](https://docs.python.org/3/library/string.html#template-strings)
 and may allow some substitutions depending on the format.
 
-The subject line allows for 
+The subject line allows for
  * `${ticket_number}`
  * `${asn}` for emails grouped by as-number.
 
-For instance, CSV-based formats replace the above two 
-values and `${events_as_csv}` in the body 
+For instance, CSV-based formats replace the above two
+values and `${events_as_csv}` in the body
 with the CSV-formatted event data.
 
 
@@ -157,7 +187,7 @@ where `FEEDNAME` is replaced by the events' `feed.name` attributes.
 Mailgen is capable of aggregating data from different feeds into one email which.
 Currently this is done for Shadowservers "Sinkhole-HTTP-Drone",
 "Botnet-Drone-Hadoop" and ""Microsoft-Sinkhole" feeds. Use a template named
-"template-generic_malware.txt" in oder to address these feeds. 
+"template-generic_malware.txt" in oder to address these feeds.
 
 
 Developer Information
