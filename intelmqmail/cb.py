@@ -539,7 +539,7 @@ feed_specific_formats = build_feed_specific_formats([
         ExtraColumn("Instance Name", "instance_name"),
         ExtraColumn("Amplification", "amplification"),
         ]),
-    ("Open-Mongo DB", [
+    ("Open-MongoDB", [
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
@@ -556,7 +556,7 @@ feed_specific_formats = build_feed_specific_formats([
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
         ]),
-    ("Open-Net BIOS", [
+    ("Open-NetBIOS", [
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
