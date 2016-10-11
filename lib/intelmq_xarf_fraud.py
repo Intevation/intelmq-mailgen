@@ -8,7 +8,7 @@ import intelmq_xarf_common as ixc
 
 keys = ixc.common_keys + [
     ("Category", None), # Cannot be mapped, is always "abuse"
-    ("Report-Type", None), # Cannot be mapped, is always "phishing|infected|defacement|scam|spam"
+    ("Report-Type", None), # TODO needs to be derived, see below. always "phishing|infected|defacement|scam|spam"
     ("Schema-URL", None), # has to be set to http://x-arf.org/schema/fraud_0.1.4.json
     ("Source", None), # This can be multiple things: source.ip or source.url
     ("Source-Type", None), # Needs to be determined if ipv4 or ipv6 depending on source.ip
