@@ -50,6 +50,7 @@ from email.utils import formatdate
 
 import gpgme  # developed for pygpgme 0.3
 import psycopg2
+import psycopg2.errorcodes
 from psycopg2.extras import RealDictConnection
 
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
@@ -795,7 +796,7 @@ def get_pending_notifications(cur):
     # multidimensional arrays. Arrays of ROWs might be an alternative
     # but psycopg does not support that out of the box (the array is
     # returned as a string).
-    cur.execute("""\
+    operation_str = """\
         SELECT n.email as email, n.template as template, n.format as format,
                n.classification_type as classification_type,
                n.feed_name AS feed_name,
@@ -820,7 +821,17 @@ def get_pending_notifications(cur):
                            AND n2.feed_name = n.feed_name)
                         + max(n.notification_interval)
                         < CURRENT_TIMESTAMP,
-                        TRUE);""")
+                        TRUE);"""
+    try:
+        cur.execute(operation_str)
+    except psycopg2.OperationalError as e:
+        if e.pgcode == psycopg2.errorcodes.LOCK_NOT_AVAILABLE:
+            log.info("Could not get db lock for pending notifications. "
+                     "Probably another instance of myself is running.")
+            return None
+        else:
+            raise
+
     rows = []
     for row in cur.fetchall():
         row["idmap"] = json_array_to_mapping(row["idmap"])
@@ -879,7 +890,9 @@ def mailgen(args, config):
         cur = conn.cursor()
         cur.execute("SET TIME ZONE 'UTC';")
         agg_notifications = get_pending_notifications(cur)
-        if not agg_notifications:
+        if agg_notifications == None:
+            return
+        if len(agg_notifications) == 0:
             log.info("No pending notifications to be sent")
             return
 

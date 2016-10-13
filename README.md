@@ -195,14 +195,17 @@ Errors
 
 Mailgen tries to be as robust as possible, in order to keep sending emails
 whenever possible.
+
 If it can't find templates, for instance, it will continue with the next e-mail
 and log an error message and the stacktrace.
-
 The error message contains information about the emails
 that could not be sent. The `idmap` within the json part is a json dict
 of database ids for events in the `events` table.
 Each with a list of database ids for the corresponding rows of
 the `notifications` table.
+
+Mailgen stops (with an INFO log entry) if a different instance of it is
+already running.
 
 
 Developer Information
