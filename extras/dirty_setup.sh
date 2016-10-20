@@ -60,7 +60,7 @@ maildbuser=intelmq_mailgen
 maildbpasswd=`tr -dc A-Za-z0-9_ < /dev/urandom | head -c 14`
 
 sudo -u postgres bash -x << EOF
-  psql -c "CREATE USER $maildbuser WITH PASSWORD '$intelmqdbpasswd';"
+  psql -c "CREATE USER $maildbuser WITH PASSWORD '$maildbpasswd';"
   psql -f /usr/share/intelmq-mailgen/sql/notifications.sql intelmq-events
   psql -c "GRANT eventdb_insert TO $maildbuser" intelmq-events  
   psql -c "GRANT eventdb_send_notifications TO $maildbuser" intelmq-events
@@ -87,8 +87,8 @@ sudo -u intelmq bash -x <<EOF
 FOF
 EOF
 
-cp /usr/share/doc/intelmq-mailgen/examples/example-template-dronereport.txt \
-   /etc/intelmq/mailgen/templates/template-Botnet-Drone-Hadoop.txt
+cp /usr/share/doc/intelmq-mailgen/examples/example-template.txt \
+   /etc/intelmq/mailgen/templates/template-generic_malware.txt
 
 
 # intelmq overall setup
@@ -141,7 +141,7 @@ cat - >$etcdir/runtime.conf <<FOF
         "user": "$dbuser"
     },
     "shadowserver-parser": {
-        "feedname": "Botnet-Done-Hadoop",
+        "feedname": "Botnet-Drone-Hadoop",
         "override": true
     },
     "fileinput-collector": {
