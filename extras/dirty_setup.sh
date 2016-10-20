@@ -181,3 +181,6 @@ cat - >$etcdir/pipeline.conf <<FOF
 }
 FOF
 EOF
+
+echo TODO: import contact database, e.g. follow the ripe import readme
+echo TODO: as intelmq: copy shadowdsrv_botnet_droneTESTDATA.csv in /tmp/
