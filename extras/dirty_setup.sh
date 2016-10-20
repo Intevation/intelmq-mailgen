@@ -92,4 +92,92 @@ cp /usr/share/doc/intelmq-mailgen/examples/example-template-dronereport.txt \
 
 
 # intelmq overall setup
-echo TODO
+etcdir=/opt/intelmq/etc
+
+sudo -u intelmq bash -x <<EOF
+cat - >$etcdir/startup.conf <<FOF
+{
+    "postgresql-output": {
+        "group": "Output",
+        "name": "PostgreSQL",
+        "module": "intelmq.bots.outputs.postgresql.output"
+    },
+    "cert-bund-contact-database-expert": {
+        "group": "Expert",
+        "name": "CERT-bund Contact Database",
+        "module": "intelmq.bots.experts.certbund_contact.expert",
+   },
+    "shadowserver-parser": {
+        "group": "Parser",
+        "name": "ShadowServer",
+        "module": "intelmq.bots.parsers.shadowserver.parser",
+    },
+    "fileinput-collector": {
+        "group": "Collector",
+        "name": "Fileinput",
+        "module": "intelmq.bots.collectors.file.collector_file",
+    }
+}
+FOF
+
+cat - >$etcdir/runtime.conf <<FOF
+{
+    "postgresql-output": {
+        "autocommit": true,
+        "database": "intelmq-events",
+        "host": "localhost",
+        "password": "$intelmqdbpasswd",
+        "port": 5432,
+        "sslmode": "require",
+        "table": "events",
+        "user": "$dbuser"
+    },
+    "cert-bund-contact-database-expert": {
+        "database": "contactdb",
+        "host": "localhost",
+        "password": "$intelmqdbpasswd",
+        "port": 5432,
+        "sslmode": "require",
+        "user": "$dbuser"
+    },
+    "shadowserver-parser": {
+        "feedname": "Botnet-Done-Hadoop",
+        "override": true
+    },
+    "fileinput-collector": {
+        "chunk_replicate_header": true,
+        "chunk_size": null,
+        "delete_file": true,
+        "feed": "FileCollector",
+        "path": "/tmp/",
+        "postfix": ".csv",
+        "rate_limit": 300
+    }
+}
+FOF
+
+cat - >$etcdir/pipeline.conf <<FOF
+{
+    "fileinput-collector": {
+        "destination-queues": [
+            "shadowserver-parser-queue"
+        ]
+    },
+    "shadowserver-parser": {
+        "source-queue": "shadowserver-parser-queue",
+        "destination-queues": [
+            "cert-bund-contact-database-expert-queue"
+        ]
+    },
+    "cert-bund-contact-database-expert": {
+        "source-queue": "cert-bund-contact-database-expert-queue",
+        "destination-queues": [
+            "postgresql-output-queue"
+        ]
+    },
+    "postgresql-output": {
+        "source-queue": "postgresql-output-queue"
+    }
+}
+FOF
+EOF
