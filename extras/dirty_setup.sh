@@ -180,6 +180,14 @@ cat - >$etcdir/pipeline.conf <<FOF
     }
 }
 FOF
+
+# necessary because of https://github.com/certtools/intelmq/issues/754
+cat - >$etcdir/system.conf <<FOF
+{
+    "logging_level": "INFO",
+    "logging_path": "/opt/intelmq/var/log/"
+}
+FOF
 EOF
 
 echo TODO: import contact database, e.g. follow the ripe import readme
