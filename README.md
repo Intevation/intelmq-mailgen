@@ -141,7 +141,7 @@ comment Key verification <https://example.org/hints-about-verification>
 ```
 (See the GnuPG documentation for details.)
 
-Now, you should be able to sign using this key withtout being prompted for
+Now, you should be able to sign using this key without being prompted for
 a passphrase.  Try, for example:
 
 ```
