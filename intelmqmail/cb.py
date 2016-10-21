@@ -214,6 +214,11 @@ def load_events(cur, event_ids, columns=None):
 
 def create_mail(sender, recipient, subject, body, attachments):
     """Create an email either as single or multi-part with attachments."""
+
+    # Encode utf-8 content QP (not base64) for better human
+    # readability:
+    email.charset.add_charset('utf-8', email.charset.QP, email.charset.QP, 'utf-8')
+
     if len(attachments) == 0:
         msg = MIMEText(body, _charset="utf-8")
     else:
