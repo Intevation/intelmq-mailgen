@@ -38,8 +38,7 @@ conn = None
 cur = None
 
 @hug.startup()
-def setup():
-#def setup(api):
+def setup(api):
     global config, conn, cur
     config = cb.read_configuration()
 
@@ -47,6 +46,7 @@ def setup():
     cur = conn.cursor()
 
 
+@hug.get()
 @hug.cli()
 def getEventIDsForTicket(ticket:hug.types.length(17, 18)):
     event_ids = []
@@ -80,7 +80,7 @@ def getEvents(ids:hug.types.multiple):
 #print(getEventIDsForTicket('20100101-10000001'))
 
 if __name__ == '__main__':
-    setup()
+    setup(hug.API('cli'))
     getEventIDsForTicket.interface.cli()
 
     cur.close()
