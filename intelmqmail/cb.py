@@ -259,7 +259,8 @@ def format_as_csv(columns, events, header):
     :header: Mapping of columns to column titles for the header line
     """
     contents = io.StringIO()
-    writer = csv.DictWriter(contents, columns, delimiter="|")
+    writer = csv.DictWriter(contents, columns, delimiter=",",
+                            quotechar='"', quoting=csv.QUOTE_ALL)
     writer.writerow(header)
 
     for event in events:
