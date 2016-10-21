@@ -34,7 +34,9 @@ config = cb.read_configuration()
 cur = None
 conn = cb.open_db_connection(config)
 
-def getEventIDsForTicket(ticket = None):
+
+def getEventIDsForTicket(ticket=None):
+    event_ids = []
     try:
         cur = conn.cursor()
         cur.execute("SELECT array_agg(events_id) as a FROM notifications "
@@ -45,12 +47,26 @@ def getEventIDsForTicket(ticket = None):
 
     return event_ids
 
-#TODO def getEvents(ids):
 
-print(getEventIDsForTicket('20161020-10000004'))
+def getEvents(ids):
+    events = []
+
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM events WHERE id = ANY(%s)", (ids,))
+        rows = cur.fetchall()
+        for row in rows:
+            # remove None entries from the resulting dict
+            event = {k:v for k,v in row.items() if v != None}
+            events.append(event)
+    finally:
+        cur.close()
+
+    return events
+
+print(getEvents(getEventIDsForTicket('20161020-10000004')))
 print(getEventIDsForTicket('20100101-10000001'))
 
 
 #TODO place within proper function
 conn.close()
-
