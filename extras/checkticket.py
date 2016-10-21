@@ -3,6 +3,9 @@
 
 Reuses the database configuration of intelmqmail.cb.
 
+Requires hug (http://www.hug.rest/)
+
+
 Copyright (C) 2016 by Bundesamt für Sicherheit in der Informationstechnik
 Software engineering by Intevation GmbH
 
@@ -24,35 +27,44 @@ Author(s):
 """
 #import json
 
+import hug
+
 import intelmqmail.cb as cb
 
 log = cb.log
 
-#TODO place within proper functions
-config = cb.read_configuration()
-
+config = None
+conn = None
 cur = None
-conn = cb.open_db_connection(config)
+
+@hug.startup()
+def setup():
+#def setup(api):
+    global config, conn, cur
+    config = cb.read_configuration()
+
+    conn = cb.open_db_connection(config)
+    cur = conn.cursor()
 
 
-def getEventIDsForTicket(ticket=None):
+@hug.cli()
+def getEventIDsForTicket(ticket:hug.types.length(17, 18)):
     event_ids = []
     try:
-        cur = conn.cursor()
         cur.execute("SELECT array_agg(events_id) as a FROM notifications "
                     "   WHERE intelmq_ticket = %s;", (ticket,))
         event_ids = cur.fetchone()["a"]
     finally:
-        cur.close()
+        pass
 
     return event_ids
 
 
-def getEvents(ids):
+@hug.cli()
+def getEvents(ids:hug.types.multiple):
     events = []
 
     try:
-        cur = conn.cursor()
         cur.execute("SELECT * FROM events WHERE id = ANY(%s)", (ids,))
         rows = cur.fetchall()
         for row in rows:
@@ -60,13 +72,16 @@ def getEvents(ids):
             event = {k:v for k,v in row.items() if v != None}
             events.append(event)
     finally:
-        cur.close()
+        pass
 
     return events
 
-print(getEvents(getEventIDsForTicket('20161020-10000004')))
-print(getEventIDsForTicket('20100101-10000001'))
+#print(getEvents(getEventIDsForTicket('20161020-10000004')))
+#print(getEventIDsForTicket('20100101-10000001'))
 
+if __name__ == '__main__':
+    setup()
+    getEventIDsForTicket.interface.cli()
 
-#TODO place within proper function
-conn.close()
+    cur.close()
+    conn.close()
