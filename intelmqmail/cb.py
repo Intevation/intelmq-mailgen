@@ -43,6 +43,7 @@ import sys
 import io
 import csv
 import string
+import email.charset
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
