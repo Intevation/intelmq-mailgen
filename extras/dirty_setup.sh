@@ -62,7 +62,7 @@ maildbpasswd=`tr -dc A-Za-z0-9_ < /dev/urandom | head -c 14`
 sudo -u postgres bash -x << EOF
   psql -c "CREATE USER $maildbuser WITH PASSWORD '$maildbpasswd';"
   psql -f /usr/share/intelmq-mailgen/sql/notifications.sql intelmq-events
-  psql -c "GRANT eventdb_insert TO $maildbuser" intelmq-events  
+  psql -c "GRANT eventdb_insert TO $dbuser" intelmq-events
   psql -c "GRANT eventdb_send_notifications TO $maildbuser" intelmq-events
 EOF
 
