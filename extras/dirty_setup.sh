@@ -164,13 +164,13 @@ cat - >$etcdir/pipeline.conf <<FOF
         ]
     },
     "shadowserver-parser": {
-        "source-queue": "shadowserver-parser-queue",
+        "source-queue": "shadowserver-parser-queue"
         "destination-queues": [
             "cert-bund-contact-database-expert-queue"
         ]
     },
     "cert-bund-contact-database-expert": {
-        "source-queue": "cert-bund-contact-database-expert-queue",
+        "source-queue": "cert-bund-contact-database-expert-queue"
         "destination-queues": [
             "postgresql-output-queue"
         ]
