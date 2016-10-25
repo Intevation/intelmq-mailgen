@@ -46,8 +46,8 @@ def setup(api):
     cur = conn.cursor()
 
 
-@hug.get()
 @hug.cli()
+@hug.get()
 def getEventIDsForTicket(ticket:hug.types.length(17, 18)):
     event_ids = []
     try:
@@ -59,9 +59,17 @@ def getEventIDsForTicket(ticket:hug.types.length(17, 18)):
 
     return event_ids
 
+class ListOfIds(hug.types.Multiple):
+    """Only accept a list of numbers."""
+
+    def __call__(self, value):
+        value = super().__call__(value)
+        return [int(i) for i in value]
+
 
 @hug.cli()
-def getEvents(ids:hug.types.multiple):
+@hug.get()
+def getEvents(ids:ListOfIds()):
     events = []
 
     try:
