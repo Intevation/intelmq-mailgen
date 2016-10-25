@@ -5,6 +5,10 @@ Reuses the database configuration of intelmqmail.cb.
 
 Requires hug (http://www.hug.rest/)
 
+Development call like
+  hug -f checkticket.py
+  connect to http://localhost:8000/
+
 
 Copyright (C) 2016 by Bundesamt für Sicherheit in der Informationstechnik
 Software engineering by Intevation GmbH
