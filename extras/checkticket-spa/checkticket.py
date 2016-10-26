@@ -88,6 +88,24 @@ def getEvents(ids:ListOfIds()):
 
     return events
 
+#
+# serving the static files for the single page web application
+# (in a simple manner)
+#
+
+@hug.get('/index.html', output=hug.output_format.file)
+def index():
+    return("./checkticket.html")
+
+@hug.get('/vue.js', output=hug.output_format.file)
+def vue():
+    return("./vue.js")
+
+@hug.get('/vue-resource.min.js', output=hug.output_format.file)
+def vue():
+    return("./vue-resource.min.js")
+
+
 #print(getEvents(getEventIDsForTicket('20161020-10000004')))
 #print(getEventIDsForTicket('20100101-10000001'))
 
