@@ -9,6 +9,8 @@ make sure that the websocket port can be accessed from the browser.
 
 Derived from remi/examples/simple_app.py
 """
+from datetime import datetime
+
 import remi.gui as gui
 from remi import start, App
 
@@ -47,7 +49,7 @@ class MyApp(App):
 
             rows = self.cur.fetchall()
 
-            # try to eliminate emptry rows and raw (TODO do it more elegant)
+            # try to eliminate emptry rows and raw (TODO: do it more elegant)
             #
             # description_row=['a','b','c','d']
             # rows = [ [1,None,3,None], [2,None, 4,None], [None, None, 1, None]]
@@ -70,7 +72,10 @@ class MyApp(App):
             for i in list_of_filled_colums:
                 events[0].append(description_row[i])
                 for j in range(len(rows)):
-                    events[j+1].append(rows[j][i])
+                    value = rows[j][i]
+                    if isinstance(value, datetime):
+                        value = str(value)
+                    events[j+1].append(value)
 
         finally:
             pass
