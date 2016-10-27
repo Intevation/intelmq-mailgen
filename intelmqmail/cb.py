@@ -115,7 +115,7 @@ def read_configuration():
     return combined
 
 
-def open_db_connection(config):
+def open_db_connection(config, connection_factory=None):
     params = config['database']['event']
     return psycopg2.connect(database=params['name'],
                             user=params['username'],
@@ -123,7 +123,7 @@ def open_db_connection(config):
                             host=params['host'],
                             port=params['port'],
                             # sslmode=params['sslmode'],
-                            connection_factory=RealDictConnection)
+                            connection_factory=connection_factory)
 
 
 def full_template_filename(template_dir, template_name):
@@ -892,7 +892,7 @@ def generate_notifications_interactively(config, cur, notifications):
 
 def mailgen(args, config):
     cur = None
-    conn = open_db_connection(config)
+    conn = open_db_connection(config, connection_factory=RealDictConnection)
     try:
         cur = conn.cursor()
         cur.execute("SET TIME ZONE 'UTC';")
