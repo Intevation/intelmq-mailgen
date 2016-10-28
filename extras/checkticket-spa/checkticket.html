@@ -20,25 +20,60 @@ sha256sum vue-resource.min.js
   <input v-model:title="ticketID" placeholder="20161020-10000004">
   <button v-on:click="lookupIDs">go</button>
   <p>Event IDs:
-  <span>{{ result }}</span>
+  <span>{{ eventIDs }}
+  <button v-on:click="loadDetails">details</button>
+  </span>
+  <p>
+  Event Details:
+  <span>{{ events }}</span>
+  <p>
+  <h4>developers log</h4>
+  <div id='log'></div>
 </div>
 
 <script type="text/javascript">
+'use strict';
+
+function log(html) {
+   var logElement = document.getElementById('log');
+   logElement.insertAdjacentHTML('beforeend', '<p>' + html);
+}
+
 var ticketid = new Vue({
   el: '#checkticket',
   data: {
-    ticketID: '',
-    result: [],
-    queryURL: 'http://localhost:8000/'
-
+    queryURL: 'http://localhost:8000/',
+    ticketID: '20161020-10000004', // TODO remove example
+    eventIDs: [],
+    events: []
   },
   methods: {
     lookupIDs : function () {
       var url = this.queryURL + '/getEventIDsForTicket?ticket=' + this.ticketID;
       this.$http.get(url).then((response) => {
-	this.result = response.body;
+        response.json().then((value) => {
+	  this.eventIDs = value;
+	});
       }, (response) => {
-        this.result = []
+        this.eventIDs = []
+      });
+    },
+    loadDetails : function () {
+      var url = this.queryURL + '/getEvents?';
+      for(var i = 0, size = this.eventIDs.length; i < size ; i++){
+        url += 'ids=' + this.eventIDs[i] + '&';
+      }
+      log('Trying to load ' + url);
+
+      this.$http.get(url).then((response) => {
+        // success
+	log('Result: ' + response.body);
+	response.json().then((value) => {
+	  this.events = value;
+	});
+      }, (response) => {
+        // failure
+        this.events = []
       });
     }
   }
