@@ -252,8 +252,8 @@ def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
     email_tuples = []
     log.debug("Found {} ASN(s) in batch.".format(len(events_per_asn)))
     for asn in events_per_asn:
-        events_as_csv = format_as_csv(format_spec.csv_column_keys(),
-                                      [format_spec.csv_row_from_event(event)
+        events_as_csv = format_as_csv(format_spec.column_keys(),
+                                      [format_spec.row_from_event(event)
                                        for event in events_per_asn[asn]],
                                       format_spec.column_titles())[1]
 

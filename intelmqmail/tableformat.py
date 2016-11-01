@@ -22,7 +22,7 @@ import json
 
 class TableFormat:
 
-    """Describe a CSV format.
+    """Describe a table format.
     """
 
     def __init__(self, name, columns):
@@ -32,32 +32,37 @@ class TableFormat:
         self.columns = columns
 
     def column_titles(self):
-        """Return a dictionary with the column titles for use a CSV header."""
-        return dict((col.csv_column_key, col.title) for col in self.columns)
+        """Return a dictionary with the column titles for use as a header.
+        This could be the header line in a CSV file, for instance.
+        The keys of the dictionary are the same that row_from_event also
+        uses.
+        """
+        return dict((col.column_key, col.title) for col in self.columns)
 
     def event_table_columns(self):
         """Return a list with the columns to retrieve from the event table.
         """
         return list(set(col.event_table_column for col in self.columns))
 
-    def csv_column_keys(self):
-        """Return a list with the keys used for the CSV rows.
-        The list is to be used as the field names parameter for the
-        csv.DictWriter class and matches the dictionaries returned by the
-        csv_row_from_event method.
+    def column_keys(self):
+        """Return a list with the keys used for the rows.
+        The list is intended to be used as the field names parameter for
+        e.g. the csv.DictWriter class and matches the dictionaries
+        returned by the row_from_event method.
         """
-        return [col.csv_column_key for col in self.columns]
+        return [col.column_key for col in self.columns]
 
-    def csv_row_from_event(self, event):
-        """Return the csv row for one given event."""
-        return dict((col.csv_column_key, col.csv_value_from_event(event))
+    def row_from_event(self, event):
+        """Return the row for the given event as a dictionary.
+        """
+        return dict((col.column_key, col.value_from_event(event))
                     for col in self.columns)
 
 
 
 class Column:
 
-    """Specifies a single column for CSV output.
+    """Specifies a single column for a TableFormat.
 
     This base class only provides a title for the column.
 
@@ -65,10 +70,10 @@ class Column:
 
     :title: the column title
     :event_table_column: the column of the event table to retrieve
-    :csv_column_key: a key to use for the CSV row dictionary.
+    :column_key: a key to use for the row dictionary.
         All columns of a single format must have different
-        csv_column_key values.
-    :csv_value_from_event(event): Return the value of the column for the
+        column_key values.
+    :value_from_event(event): Return the value of the column for the
         given event. The event parameter is a dictionary that has at
         least a value for the event_table_column.
     """
@@ -79,7 +84,7 @@ class Column:
 
 class IntelMQColumn(Column):
 
-    """CSV Column filled directly from an IntelMQ field."""
+    """Column filled directly from an IntelMQ field."""
 
     def __init__(self, title, field_name):
         super(IntelMQColumn, self).__init__(title)
@@ -90,16 +95,16 @@ class IntelMQColumn(Column):
         return self.field_name
 
     @property
-    def csv_column_key(self):
+    def column_key(self):
         return self.field_name
 
-    def csv_value_from_event(self, event):
+    def value_from_event(self, event):
         return event[self.field_name]
 
 
 class ExtraColumn(Column):
 
-    """CSV Column filled with a value taken from the IntelMQ extra field.
+    """Column filled with a value taken from the IntelMQ extra field.
 
     The extra_key parameter of the constructor gives the name key to
     look up in the JSON dictionary contained in the extra field.
@@ -114,10 +119,10 @@ class ExtraColumn(Column):
         return "extra"
 
     @property
-    def csv_column_key(self):
+    def column_key(self):
         return "extra:" + self.extra_key
 
-    def csv_value_from_event(self, event):
+    def value_from_event(self, event):
         value = event[self.event_table_column]
         if isinstance(value, str):
             # With psycopg 2.4.5 values of type JSON in the database are
