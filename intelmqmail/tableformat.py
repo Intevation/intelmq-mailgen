@@ -20,15 +20,15 @@
 import json
 
 
-class FeedSpecificFormat:
+class TableFormat:
 
-    """Describe a feed-specific CSV format.
+    """Describe a CSV format.
     """
 
-    def __init__(self, feed_name, columns):
+    def __init__(self, name, columns):
         """Initialize the format specification.
         The columns parameter should be a list of Column instances."""
-        self.feed_name = feed_name
+        self.name = name
         self.columns = columns
 
     def column_titles(self):
@@ -134,29 +134,27 @@ class ExtraColumn(Column):
 # convenience functions for building the format datastructures in a more
 # declarative way.
 
-def build_feed_specific_formats(formats):
+def build_table_formats(formats):
     """Return a dictionary mapping format names to format specifications.
     The parameter is a list of (formatname, columns) pairs, where
     formatname is the name of the format as a string and columns is a
     list of column specifications. The formatname values are used as the
     keys in the dictionary and both formatname and columns are passed to
-    build_feed_specific_format to create the corresponding format
-    specification.
+    build_table_format to create the corresponding format specification.
     """
-    return dict((name, build_feed_specific_format(name, columns))
+    return dict((name, build_table_format(name, columns))
                 for name, columns in formats)
 
-def build_feed_specific_format(feed_name, columns):
-    """Build a FeedSpecificFormat instance for feed_name.
+def build_table_format(name, columns):
+    """Build a TableFormat instance for name.
     The columns parameter should be a list of column specifications
-    which are passed to build_feed_specific_column to create the list of
-    columns for the FeedSpecificFormat instance.
+    which are passed to build_table_column to create the list of columns
+    for the TableFormat instance.
     """
-    return FeedSpecificFormat(feed_name,
-                              [build_feed_specific_column(col)
-                               for col in columns])
+    return TableFormat(name, [build_table_column(col)
+                              for col in columns])
 
-def build_feed_specific_column(col):
+def build_table_column(col):
     """Return a Column instance built from a column specification.
     A column specification may either be a tuple of the form
     (intelmq_field, column_title) in which case an IntelMQColumn is

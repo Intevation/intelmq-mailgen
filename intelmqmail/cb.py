@@ -55,8 +55,7 @@ import psycopg2.errorcodes
 from psycopg2.extras import RealDictConnection
 
 from intelmqmail.templates import read_template
-from intelmqmail.tableformat import build_feed_specific_formats, \
-     ExtraColumn
+from intelmqmail.tableformat import build_table_formats, ExtraColumn
 
 
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
@@ -239,8 +238,8 @@ def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
 
     event_columns = ["id"] + format_spec.event_table_columns()
     if asnk not in event_columns:
-        raise RuntimeError("Missing {!r} in event columns for feed {!r}"
-                           .format(asnk, format_spec.feed_name))
+        raise RuntimeError("Missing {!r} in event columns for format {!r}"
+                           .format(asnk, format_spec.name))
 
     events = load_events(cur, list(agg_notification["idmap"].keys()),
                          event_columns)
@@ -307,7 +306,7 @@ def mail_format_feed_specific_as_csv(cur, agg_notification, config, gpgme_ctx):
 
 
 # Specifications for the feed_specific formats
-feed_specific_formats = build_feed_specific_formats([
+feed_specific_formats = build_table_formats([
 
     ("generic_malware", [
         # this is used for the following feeds:
