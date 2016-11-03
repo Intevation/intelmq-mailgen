@@ -204,21 +204,21 @@ def clearsign(gpgme_ctx, text):
     return(signature.read().decode())
 
 
-def format_as_csv(columns, events, header):
-    """ Creates an events.csv
-    :columns: a list of columns
-    :events: an array containing the events as dicts
-    :header: Mapping of columns to column titles for the header line
+def format_as_csv(table_format, events):
+    """Return a list of event dictionaries as a CSV formatted string.
+    :table_format: The table format, assumed to be a TableFormat instance.
+    :events: list of event dictionaries
     """
     contents = io.StringIO()
-    writer = csv.DictWriter(contents, columns, delimiter=",",
+    writer = csv.DictWriter(contents, table_format.column_keys(), delimiter=",",
                             quotechar='"', quoting=csv.QUOTE_ALL)
-    writer.writerow(header)
+    writer.writerow(table_format.column_titles())
 
     for event in events:
-        if event.get('time.source'):
-            event['time.source'] = event['time.source'].replace(tzinfo=None)
-        writer.writerow(event)
+        row = table_format.row_from_event(event)
+        if row.get('time.source'):
+            row['time.source'] = row['time.source'].replace(tzinfo=None)
+        writer.writerow(row)
 
     return contents.getvalue()
 
@@ -252,10 +252,7 @@ def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
     email_tuples = []
     log.debug("Found {} ASN(s) in batch.".format(len(events_per_asn)))
     for asn in events_per_asn:
-        events_as_csv = format_as_csv(format_spec.column_keys(),
-                                      [format_spec.row_from_event(event)
-                                       for event in events_per_asn[asn]],
-                                      format_spec.column_titles())
+        events_as_csv = format_as_csv(format_spec, events_per_asn[asn])
 
         n_ids = [] #ids of the affected notifications
         for event in events_per_asn[asn]:
