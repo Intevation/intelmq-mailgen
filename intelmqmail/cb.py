@@ -220,7 +220,7 @@ def format_as_csv(columns, events, header):
             event['time.source'] = event['time.source'].replace(tzinfo=None)
         writer.writerow(event)
 
-    return ("events.csv", contents.getvalue(), "text", "csv")
+    return contents.getvalue()
 
 
 def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
@@ -255,7 +255,7 @@ def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
         events_as_csv = format_as_csv(format_spec.column_keys(),
                                       [format_spec.row_from_event(event)
                                        for event in events_per_asn[asn]],
-                                      format_spec.column_titles())[1]
+                                      format_spec.column_titles())
 
         n_ids = [] #ids of the affected notifications
         for event in events_per_asn[asn]:
