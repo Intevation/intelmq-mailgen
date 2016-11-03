@@ -18,6 +18,8 @@
 
 
 import json
+import io
+import csv
 
 
 class TableFormat:
@@ -171,3 +173,23 @@ def build_table_column(col):
         return IntelMQColumn(column_title, intelmq_field)
     else:
         return col
+
+
+
+def format_as_csv(table_format, events):
+    """Return a list of event dictionaries as a CSV formatted string.
+    :table_format: The table format, assumed to be a TableFormat instance.
+    :events: list of event dictionaries
+    """
+    contents = io.StringIO()
+    writer = csv.DictWriter(contents, table_format.column_keys(), delimiter=",",
+                            quotechar='"', quoting=csv.QUOTE_ALL)
+    writer.writerow(table_format.column_titles())
+
+    for event in events:
+        row = table_format.row_from_event(event)
+        if row.get('time.source'):
+            row['time.source'] = row['time.source'].replace(tzinfo=None)
+        writer.writerow(row)
+
+    return contents.getvalue()

@@ -41,7 +41,6 @@ import logging
 import os
 import sys
 import io
-import csv
 import string
 import email.charset
 from email.mime.base import MIMEBase
@@ -55,7 +54,8 @@ import psycopg2.errorcodes
 from psycopg2.extras import RealDictConnection
 
 from intelmqmail.templates import read_template
-from intelmqmail.tableformat import build_table_formats, ExtraColumn
+from intelmqmail.tableformat import build_table_formats, ExtraColumn, \
+     format_as_csv
 
 
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
@@ -202,25 +202,6 @@ def clearsign(gpgme_ctx, text):
 
     signature.seek(0)
     return(signature.read().decode())
-
-
-def format_as_csv(table_format, events):
-    """Return a list of event dictionaries as a CSV formatted string.
-    :table_format: The table format, assumed to be a TableFormat instance.
-    :events: list of event dictionaries
-    """
-    contents = io.StringIO()
-    writer = csv.DictWriter(contents, table_format.column_keys(), delimiter=",",
-                            quotechar='"', quoting=csv.QUOTE_ALL)
-    writer.writerow(table_format.column_titles())
-
-    for event in events:
-        row = table_format.row_from_event(event)
-        if row.get('time.source'):
-            row['time.source'] = row['time.source'].replace(tzinfo=None)
-        writer.writerow(row)
-
-    return contents.getvalue()
 
 
 def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
