@@ -18,5 +18,6 @@
     "smtp": {
 	"host": "localhost",
 	"port": 25
-    }
+    },
+    "logging_level": "INFO"
 }

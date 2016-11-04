@@ -53,9 +53,8 @@ from intelmqmail.mail import create_mail, clearsign
 
 
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
-log = logging.getLogger('intelmq-mailgen')
-log.setLevel(logging.INFO)  # defaults to WARNING
-#log.setLevel(logging.DEBUG)  # defaults to WARNING
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)  # using INFO as default, otherwise it's WARNING
 
 if locale.getpreferredencoding() != 'UTF-8':
     log.critical(
@@ -495,6 +494,9 @@ def main():
     args = parser.parse_args()
 
     config = read_configuration()
+
+    if "logging_level" in config:
+        log.setLevel(config["logging_level"])
 
     # checking openpgp config
     if "openpgp" not in config or {
