@@ -31,6 +31,7 @@ Author(s):
 """
 #import json
 
+from psycopg2.extras import RealDictConnection
 import hug
 
 import intelmqmail.cb as cb
@@ -46,7 +47,7 @@ def setup(api):
     global config, conn, cur
     config = cb.read_configuration()
 
-    conn = cb.open_db_connection(config)
+    conn = cb.open_db_connection(config, connection_factory=RealDictConnection)
     cur = conn.cursor()
 
 
