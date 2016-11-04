@@ -39,17 +39,17 @@ import json
 import locale
 import logging
 import os
-import sys
 
 import gpgme  # developed for pygpgme 0.3
 from psycopg2.extras import RealDictConnection
 
+
 from intelmqmail.templates import read_template
-from intelmqmail.tableformat import build_table_formats, ExtraColumn, \
-     format_as_csv
+from intelmqmail.tableformat import format_as_csv
 from intelmqmail.db import open_db_connection, get_pending_notifications, \
      load_events, new_ticket_number, mark_as_sent
 from intelmqmail.mail import create_mail, clearsign
+from intelmqmail.script import load_scripts
 
 
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
@@ -113,7 +113,15 @@ def read_configuration():
     return combined
 
 
-def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
+def load_formats(config):
+    formats = {}
+    entry_points = load_scripts(config["script_directory"], "list_csv_formats")
+    for entry in entry_points:
+        formats.update(entry())
+    return formats
+
+
+def mail_format_as_csv(cur, directive, config, gpgme_ctx, format_spec):
     """Creates emails with csv attachment for given columns.
 
     Groups the events by 'source.asn' and creates an email for each.
@@ -122,238 +130,50 @@ def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
     :returns: list of tuples (email object, list of notification ids, ticket)
     :rtype: list
     """
-    attachments = []
+    events = load_events(cur, directive["event_ids"],
+                         ["id"] + format_spec.event_table_columns())
 
-    asnk = "source.asn"
+    events_as_csv = format_as_csv(format_spec, events)
 
-    event_columns = ["id"] + format_spec.event_table_columns()
-    if asnk not in event_columns:
-        raise RuntimeError("Missing {!r} in event columns for format {!r}"
-                           .format(asnk, format_spec.name))
+    subject_template, body_template = read_template(config["template_dir"],
+                                                    directive["template_name"])
 
-    events = load_events(cur, list(agg_notification["idmap"].keys()),
-                         event_columns)
+    asn = events[0]["source.asn"]
+    ticket = new_ticket_number(cur)
 
-    # grouping the events by asn, so we have a list of events for each
-    events_per_asn = {}
-    for event in events:
-        events_per_asn.setdefault(event[asnk], []).append(event)
+    subject = subject_template.substitute(asn=asn, ticket_number=ticket)
+    body = body_template.substitute(events_as_csv=events_as_csv,
+                                    asn=asn, ticket_number=ticket)
 
-    email_tuples = []
-    log.debug("Found {} ASN(s) in batch.".format(len(events_per_asn)))
-    for asn in events_per_asn:
-        events_as_csv = format_as_csv(format_spec, events_per_asn[asn])
+    if gpgme_ctx:
+        body = clearsign(gpgme_ctx, body)
 
-        n_ids = [] #ids of the affected notifications
-        for event in events_per_asn[asn]:
-            n_ids.extend(agg_notification["idmap"][event["id"]])
-
-        ticket = new_ticket_number(cur)
-
-        subject_template, body_template = read_template(
-                                            config["template_dir"],
-                                            agg_notification["template"])
-
-        subject = subject_template.substitute(asn=asn, ticket_number=ticket)
-        body = body_template.substitute(events_as_csv=events_as_csv,
-                                        asn=asn, ticket_number=ticket)
-
-        if gpgme_ctx:
-            body = clearsign(gpgme_ctx, body)
-
-        mail = create_mail(sender=config["sender"],
-                           recipient=agg_notification["email"],
-                           subject=subject, body=body,
-                           attachments=attachments)
-
-        email_tuples.append((mail, n_ids, ticket))
-    return email_tuples
+    mail = create_mail(sender=config["sender"],
+                       recipient=directive["recipient_address"],
+                       subject=subject, body=body,
+                       attachments=[])
+    return [(mail, directive["directive_ids"], ticket)]
 
 
-def mail_format_feed_specific_as_csv(cur, agg_notification, config, gpgme_ctx):
-    """Creates emails with csv attachment based on feed-name.
-
-    This function assumes that notification["feed_name"] is actually one
-    of the feed names used as key in feed_specific_formats.
+def create_mails(cur, directive, config, formats, gpgme_ctx):
+    """Creates emails with events data in CSV format.
 
     :returns: list of tuples (email object, list of ids, ticket)
     :rtype: list
     """
-    feed_name = agg_notification["feed_name"]
-    format_spec = feed_specific_formats.get(feed_name)
+    format_spec = formats.get(directive["event_data_format"])
     if format_spec is None:
-        # TODO
-        raise RuntimeError
-    agg_notification["template"] = "template-" + feed_name + ".txt"
-
-    return mail_format_as_csv(cur, agg_notification,
-                              config, gpgme_ctx, format_spec)
-
-
-
-
-# Specifications for the feed_specific formats
-feed_specific_formats = build_table_formats([
-
-    ("generic_malware", [
-        # this is used for the following feeds:
-        #   "Botnet-Drone-Hadoop", "Sinkhole-HTTP-Drone",
-        #   "Microsoft-Sinkhole"
-        # These names are all mapped to "generic_malware" in
-        # get_pending_notifications before the grouping
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ("classification.identifier", "Malware"),
-        ("source.port", "Source Port"),
-        ("destination.ip", "Target IP"),
-        ("destination.port", "Target Port"),
-        ("protocol.transport", "Protocol"),
-        ("destination.fqdn", "Target Hostname"),
-        ]),
-    ("DNS-open-resolvers", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("Min. amplification", "min_amplification"),
-        ]),
-    ("Open-Portmapper", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ]),
-    ("Open-SNMP", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("System description", "sysdesc"),
-        ]),
-    ("Open-MSSQL", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("Version", "version"),
-        ("source.local_hostname", "Server Name"),
-        ExtraColumn("Instance Name", "instance_name"),
-        ExtraColumn("Amplification", "amplification"),
-        ]),
-    ("Open-MongoDB", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("Version", "version"),
-        ExtraColumn("Databases (excerpt)", "visible_databases"),
-        ]),
-    ("Open-Chargen", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ]),
-    ("Open-IPMI", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ]),
-    ("Open-NetBIOS", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ]),
-    ("NTP-Monitor", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("Response size", "size"),
-        ]),
-    ("Open-Elasticsearch", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("Elasticsearch version", "version"),
-        ExtraColumn("Instance name", "name"),
-        ]),
-    ("Open-mDNS", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("Services", "services"),
-        ]),
-    ("Open-Memcached", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("Memcached version", "version"),
-        ]),
-    ("Open-Redis", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("Redis version", "version"),
-        ]),
-    ("Open-SSDP", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("SSDP server", "server"),
-        ]),
-    ("Ssl-Freak-Scan", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ("source.reverse_dns", "Hostname"),
-        ExtraColumn("Subject Name", "subject_common_name"),
-        ExtraColumn("Issuer Name", "issuer_common_name"),
-        ExtraColumn("FREAK Cipher", "freak_cipher_suite"),
-        ]),
-    ("Ssl-Scan", [
-        ("source.asn", "ASN"),
-        ("source.ip", "IP"),
-        ("time.source", "Timestamp (UTC)"),
-        ("source.reverse_dns", "Hostname"),
-        ExtraColumn("Subject Name", "subject_common_name"),
-        ExtraColumn("Issuer Name", "issuer_common_name"),
-        ]),
-    ])
-
-
-
-def create_mails(cur, agg_notification, config, gpgme_ctx):
-    """Create one or several email objects for an aggregated notification.
-
-    Depending on the classification_type and format
-    does the formatting and returns one or several emails with ids.
-
-    :param config: script configuration
-    :param agg_notification: the aggregated notification to create mails for
-    :param cur: database cursor to use when loading event information
-
-    :returns: list of tuples (email object, list of ids, ticket) with len >=1
-    :rtype: list
-
-    """
-
-    email_tuples = []
-
-    formatter = None
-
-    if (agg_notification["format"] == "feed_specific"
-        and agg_notification["feed_name"] in feed_specific_formats):
-        formatter = mail_format_feed_specific_as_csv
-
-    if formatter is not None:
-        email_tuples = formatter(cur, agg_notification, config, gpgme_ctx)
-    else:
-        msg = ("Cannot generate emails for combination (%r, %r)"
-               % (agg_notification["format"], agg_notification["feed_name"]))
+        msg = ("Cannot generate emails for format %r"
+               % (agg_notification["event_data_format"]))
         raise NotImplementedError(msg)
 
-    return email_tuples
+    return mail_format_as_csv(cur, directive, config, gpgme_ctx, format_spec)
 
 
 
-def send_notifications(config, notifications, cur):
+def send_notifications(config, directives, cur, formats):
     """
-    Create and send notification mails for all items in notifications.
+    Create and send notification mails for all items in directives.
 
     All notifications that were successfully sent are marked as sent in
     the database. This function tries to make sure that this information
@@ -363,7 +183,7 @@ def send_notifications(config, notifications, cur):
     commit the transaction.
 
     :param config script configuration
-    :param notifications a list of aggregated_notifications
+    :param directives a list of aggregated_directives
     :param cur database cursor to use when loading event information
 
     :returns: number of send mails
@@ -379,12 +199,12 @@ def send_notifications(config, notifications, cur):
 
     with smtplib.SMTP(host=config["smtp"]["host"],
                       port=config["smtp"]["port"]) as smtp:
-        for notification in notifications:
+        for directive in directives:
             cur.execute("SAVEPOINT sendmail;")
             try:
                 try:
-                    email_tuples = create_mails(cur, notification,
-                                                config, gpgme_ctx)
+                    email_tuples = create_mails(cur, directive, config, formats,
+                                                gpgme_ctx)
 
                     if len(email_tuples) < 1:
                         # TODO maybe use a user defined exception here?
@@ -392,7 +212,7 @@ def send_notifications(config, notifications, cur):
                 except Exception:
                     log.exception("Could not create mails for %r."
                                   " Continuing with other notifications.",
-                                  notification)
+                                  directive)
                 else:
                     for email_tuple in email_tuples:
                         smtp.send_message(email_tuple[0])
@@ -407,22 +227,20 @@ def send_notifications(config, notifications, cur):
     return sent_mails
 
 
-def generate_notifications_interactively(config, cur, notifications):
+def generate_notifications_interactively(config, cur, directives, formats):
     batch_size = 10
 
-    pending = notifications[:]
+    pending = directives[:]
     while pending:
         batch, pending = pending[:batch_size], pending[batch_size:]
         print('Current batch (%d of %d total):'
               % (len(batch), len(batch) + len(pending)))
         for i in batch:
-            print('    * {0} {1} ({2}, {3}): {4} events'.format(
-                  i["email"],
-                  i["template"],
-                  i["format"],
-                  i["feed_name"],
-                  len(i["idmap"]))
-                  )
+            print('    * {0} {1} ({2}): {3} events'
+                  .format(i["recipient_address"],
+                          i["template_name"],
+                          i["event_data_format"],
+                          len(i["event_ids"])))
         valid_answers = ("c", "s", "a", "q")
         while True:
             answer = input("Options: [c]ontinue, "
@@ -447,29 +265,29 @@ def generate_notifications_interactively(config, cur, notifications):
                 pending = []
 
             print("Sending mails for %d entries... " % (len(to_send),))
-            sent_mails = send_notifications(config, to_send, cur)
+            sent_mails = send_notifications(config, to_send, cur, formats)
             print("%d mails sent. " % (sent_mails,))
 
 
-def mailgen(args, config):
+def mailgen(args, config, formats):
     cur = None
     conn = open_db_connection(config, connection_factory=RealDictConnection)
     try:
         cur = conn.cursor()
         cur.execute("SET TIME ZONE 'UTC';")
-        agg_notifications = get_pending_notifications(cur)
-        if agg_notifications == None:
+        directives = get_pending_notifications(cur)
+        if directives == None:
             return
-        if len(agg_notifications) == 0:
+        if len(directives) == 0:
             log.info("No pending notifications to be sent")
             return
 
         if args.all:
-            sent_mails = send_notifications(config, agg_notifications, cur)
+            sent_mails = send_notifications(config, directives, cur, formats)
             log.info("{:d} mails sent.".format(sent_mails))
         else:
-            generate_notifications_interactively(config, cur,
-                                                 agg_notifications)
+            generate_notifications_interactively(config, cur, directives,
+                                                 formats)
 
     finally:
         if cur is not None:
@@ -505,7 +323,10 @@ def main():
     # setting up gnupg
     os.environ['GNUPGHOME'] = config["openpgp"]["gnupg_home"]
 
-    mailgen(args, config)
+
+    formats = load_formats(config)
+
+    mailgen(args, config, formats)
 
 # to lower the chance of problems like
 # http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html#the-double-import-trap

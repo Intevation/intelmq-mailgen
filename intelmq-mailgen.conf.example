@@ -14,6 +14,7 @@
         }
     },
     "template_dir": "/etc/intelmq/mailgen/templates",
+    "script_directory": "/etc/intelmq/mailgen/formats",
     "sender": "noreply@example.com",
     "smtp": {
 	"host": "localhost",

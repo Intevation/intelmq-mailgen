@@ -35,125 +35,130 @@ CREATE TYPE ip_endpoint AS ENUM ('source', 'destination');
 
 -- a single row table to save which day we currently use for intelmq_ticket
 CREATE TABLE ticket_day (
-	initialized_for_day DATE
+        initialized_for_day DATE
 );
 INSERT INTO ticket_day (initialized_for_day) VALUES('20160101');
 GRANT SELECT, UPDATE ON ticket_day TO eventdb_send_notifications;
 
-CREATE TABLE notifications (
-    id BIGSERIAL UNIQUE PRIMARY KEY,
-    intelmq_ticket VARCHAR(18),	-- format 'YYYYMMDD-XXXXXXXX' (8*X) (1 reserve)
-    events_id BIGINT NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    format VARCHAR(100) NOT NULL,
-    classification_type VARCHAR(100) NOT NULL,
-    feed_name VARCHAR(2000) NOT NULL,
-    template VARCHAR(100) NOT NULL,
-    notification_interval INTERVAL NOT NULL,
-    endpoint ip_endpoint NOT NULL,
-    sent_at TIMESTAMP WITH TIME ZONE,
 
-    FOREIGN KEY (events_id) REFERENCES events(id)
+CREATE TABLE sent (
+    id BIGSERIAL UNIQUE PRIMARY KEY,
+    intelmq_ticket VARCHAR(18) UNIQUE NOT NULL,
+    sent_at TIMESTAMP WITH TIME ZONE
 );
 
-CREATE INDEX notifications_grouping_idx
-          ON notifications (email, template, format);
-CREATE INDEX notifications_intelmq_ticket_idx
-          ON notifications (intelmq_ticket);
-CREATE INDEX notifications_events_id_idx
-          ON notifications (events_id);
 
-GRANT SELECT, UPDATE ON notifications TO eventdb_send_notifications;
+GRANT SELECT, INSERT ON sent TO eventdb_send_notifications;
+GRANT USAGE ON sent_id_seq TO eventdb_send_notifications;
 
 
+CREATE TABLE directives (
+    id BIGSERIAL UNIQUE PRIMARY KEY,
+    events_id BIGINT NOT NULL,
+    sent_id BIGINT,
 
-CREATE OR REPLACE FUNCTION insert_notification(
+    medium VARCHAR(100) NOT NULL,
+    recipient_address VARCHAR(100) NOT NULL,
+    template_name VARCHAR(100) NOT NULL,
+    event_data_format VARCHAR(100) NOT NULL,
+    aggregate_identifier TEXT,
+    notification_interval INTERVAL NOT NULL,
+    endpoint ip_endpoint NOT NULL,
+
+    FOREIGN KEY (events_id) REFERENCES events(id),
+    FOREIGN KEY (sent_id) REFERENCES sent(id)
+);
+
+
+CREATE INDEX directives_grouping_idx
+          ON directives (medium, recipient_address, template_name,
+                         event_data_format, aggregate_identifier, endpoint);
+CREATE INDEX directives_events_id_idx
+          ON directives (events_id);
+CREATE INDEX directives_sent_id_idx
+          ON directives (sent_id);
+
+GRANT SELECT, UPDATE ON directives TO eventdb_send_notifications;
+
+
+CREATE OR REPLACE FUNCTION insert_directive(
     event_id BIGINT,
-    notification JSON,
-    notification_endpoint ip_endpoint,
-    classification_type VARCHAR(100),
-    feed_name VARCHAR(2000)
+    directive JSON,
+    endpoint ip_endpoint
 ) RETURNS VOID
 AS $$
 DECLARE
-    email TEXT := notification ->> 'email';
-    format TEXT := notification ->> 'format';
-    template TEXT := notification ->> 'template_path';
+    medium TEXT := directive ->> 'medium';
+    recipient_address TEXT := directive ->> 'recipient_address';
+    template_name TEXT := directive ->> 'template_name';
+    event_data_format TEXT := directive ->> 'event_data_format';
     notification_interval interval
-        := ((notification ->> 'ttl') :: INT) * interval '1 second';
+        := coalesce(((directive ->> 'notification_interval') :: INT)
+                    * interval '1 second',
+                    interval '0 second');
 BEGIN
-    IF email IS NOT NULL
-       AND format IS NOT NULL
-       AND template IS NOT NULL
-       AND notification_interval IS NOT NULL	
+    IF medium IS NOT NULL
+       AND recipient_address IS NOT NULL
+       AND template_name IS NOT NULL
+       AND event_data_format IS NOT NULL
+       AND notification_interval IS NOT NULL    
        AND notification_interval != interval '-1 second'
     THEN
-        INSERT INTO notifications (events_id,
-                                   email,
-                                   format,
-                                   template,
-                                   classification_type,
-                                   feed_name,
-                                   notification_interval,
-                                   endpoint)
+        INSERT INTO directives (events_id,
+                                medium,
+                                recipient_address,
+                                template_name,
+                                event_data_format,
+                                notification_interval,
+                                endpoint)
         VALUES (event_id,
-                email,
-                format,
-                template,
-                classification_type,
-                feed_name,
+                medium,
+                recipient_address,
+                template_name,
+                event_data_format,
                 notification_interval,
-                notification_endpoint);
+                endpoint);
     END IF;
 END
 $$ LANGUAGE plpgsql VOLATILE;
 
 
-CREATE OR REPLACE FUNCTION notifications_from_extra(
+CREATE OR REPLACE FUNCTION directives_from_extra(
     event_id BIGINT,
-    extra JSON,
-    classification_type VARCHAR(100),
-    feed_name VARCHAR(2000)
+    extra JSON
 ) RETURNS VOID
 AS $$
 DECLARE
-    json_notifications JSON := extra -> 'certbund' -> 'notify_source';
-    notification JSON;
+    json_directives JSON := extra -> 'certbund' -> 'source_directives';
+    directive JSON;
 BEGIN
-    IF json_notifications IS NOT NULL THEN
-        FOR notification
-         IN SELECT * FROM json_array_elements(json_notifications) LOOP
-            PERFORM insert_notification(event_id,
-                                        notification,
-                                        'source',
-	                                    classification_type,
-	                                    feed_name);
+    IF json_directives IS NOT NULL THEN
+        FOR directive
+         IN SELECT * FROM json_array_elements(json_directives) LOOP
+            PERFORM insert_directive(event_id, directive, 'source');
         END LOOP;
     END IF;
 END
 $$ LANGUAGE plpgsql VOLATILE;
 
 
-CREATE OR REPLACE FUNCTION events_insert_notifications_for_row()
+CREATE OR REPLACE FUNCTION events_insert_directives_for_row()
 RETURNS TRIGGER
 AS $$
 BEGIN
-    PERFORM notifications_from_extra(NEW.id,
-                                     NEW.extra,
-                                     NEW."classification.type",
-                                     NEW."feed.name");
+    PERFORM directives_from_extra(NEW.id, NEW.extra);
     RETURN NEW;
 END
 $$ LANGUAGE plpgsql VOLATILE EXTERNAL SECURITY DEFINER;
 
-GRANT EXECUTE ON FUNCTION events_insert_notifications_for_row()
+GRANT EXECUTE ON FUNCTION events_insert_directives_for_row()
 TO eventdb_insert;
 
 
-CREATE TRIGGER events_insert_notification_trigger
+CREATE TRIGGER events_insert_directive_trigger
 AFTER INSERT ON events
 FOR EACH ROW
-EXECUTE PROCEDURE events_insert_notifications_for_row();
+EXECUTE PROCEDURE events_insert_directives_for_row();
 
 
 COMMIT;
