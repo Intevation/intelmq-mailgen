@@ -496,7 +496,10 @@ def main():
     config = read_configuration()
 
     if "logging_level" in config:
-        log.setLevel(config["logging_level"])
+        # trying to set the logLevel for all submodules
+        module_logger = logging.getLogger(
+                                    __name__.rsplit(sep=".", maxsplit=1)[0])
+        module_logger.setLevel(config["logging_level"])
 
     # checking openpgp config
     if "openpgp" not in config or {
