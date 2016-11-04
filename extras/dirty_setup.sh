@@ -105,17 +105,17 @@ cat - >$etcdir/startup.conf <<FOF
     "cert-bund-contact-database-expert": {
         "group": "Expert",
         "name": "CERT-bund Contact Database",
-        "module": "intelmq.bots.experts.certbund_contact.expert",
+        "module": "intelmq.bots.experts.certbund_contact.expert"
    },
     "shadowserver-parser": {
         "group": "Parser",
         "name": "ShadowServer",
-        "module": "intelmq.bots.parsers.shadowserver.parser",
+        "module": "intelmq.bots.parsers.shadowserver.parser"
     },
     "fileinput-collector": {
         "group": "Collector",
         "name": "Fileinput",
-        "module": "intelmq.bots.collectors.file.collector_file",
+        "module": "intelmq.bots.collectors.file.collector_file"
     }
 }
 FOF
@@ -164,13 +164,13 @@ cat - >$etcdir/pipeline.conf <<FOF
         ]
     },
     "shadowserver-parser": {
-        "source-queue": "shadowserver-parser-queue"
+        "source-queue": "shadowserver-parser-queue",
         "destination-queues": [
             "cert-bund-contact-database-expert-queue"
         ]
     },
     "cert-bund-contact-database-expert": {
-        "source-queue": "cert-bund-contact-database-expert-queue"
+        "source-queue": "cert-bund-contact-database-expert-queue",
         "destination-queues": [
             "postgresql-output-queue"
         ]
