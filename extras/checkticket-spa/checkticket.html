@@ -41,6 +41,13 @@ sha256sum vue-resource.min.js
 -->
 <script src="./vue-resource.min.js" type="text/javascript"></script>
 
+<!--
+curl -O https://cdn.jsdelivr.net/semantic-ui/2.2.6/semantic.min.css
+sha256sum semantic.min.css
+88aec064ced76b8da2b9445d31da35b29dfc95dfc92777c3b52d39db718aa9d9  semantic.min.css
+-->
+<link rel="stylesheet" href="./semantic.min.css">
+
 <h1>Checking an intelmq CERT-Bund Ticket</h1>
 <div id="checkticket">
   Ticket#
@@ -62,9 +69,22 @@ sha256sum vue-resource.min.js
   <button v-on:click="loadDetails">details</button>
   </span>
   </br>
-  <span>Raw {{ events }}</span>
-  </p>
 
+  <table
+      class="ui celled very compact striped table" 
+      v-if="eventIDs.length > 0"
+  >
+    <tr>
+    <th v-for='column in Object.keys(events[0])' v-if='column !== "raw"'>
+      {{ column }}
+    </th>
+    <tr v-for='event in events'>
+      <td v-for="field in Object.keys(events[0])" v-if='column !== "raw"'>
+      {{ event[field] }}
+      </td>
+    </tr>
+    </table>
+  </p>
 
 </div>
 
@@ -94,6 +114,7 @@ var ticketid = new Vue({
         this.events = [];
         // directly load events, if we only have a few
         if (this.eventIDs.length < 50) {
+            console.log("less than 50 events, triggering loading directly");
             this.loadDetails();
         }
       } else {

@@ -31,7 +31,7 @@ Author(s):
 """
 #import json
 
-from psycopg2.extras import RealDictConnection
+from psycopg2.extras import DictConnection
 import hug
 
 import intelmqmail.cb as cb
@@ -47,7 +47,7 @@ def setup(api):
     global config, conn, cur
     config = cb.read_configuration()
 
-    conn = cb.open_db_connection(config, connection_factory=RealDictConnection)
+    conn = cb.open_db_connection(config, connection_factory=DictConnection)
     cur = conn.cursor()
 
 
@@ -105,6 +105,10 @@ def vue():
 @hug.get('/vue-resource.min.js', output=hug.output_format.file)
 def vue():
     return("./vue-resource.min.js")
+
+@hug.get('/semantic.min.css', output=hug.output_format.file)
+def vue():
+    return("./semantic.min.css")
 
 
 #print(getEvents(getEventIDsForTicket('20161020-10000004')))
