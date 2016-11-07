@@ -89,17 +89,17 @@ var ticketid = new Vue({
       var url = this.queryURL + '/getEventIDsForTicket?ticket=' + this.ticketID;
       this.$http.get(url).then((response) => {
         response.json().then((value) => {
-	  if(value) {
-	    this.eventIDs = value;
-	    this.events = [];
-	  } else {
-	    this.eventIDs = [];
-	    this.events = [];
-	  }
-	});
+      if(value) {
+        this.eventIDs = value;
+        this.events = [];
+      } else {
+        this.eventIDs = [];
+        this.events = [];
+      }
+    });
       }, (response) => {
         this.eventIDs = []
-	this.events = [];
+    this.events = [];
       });
     },
     loadDetails : function () {
@@ -111,10 +111,10 @@ var ticketid = new Vue({
 
       this.$http.get(url).then((response) => {
         // success
-	log('Result: ' + response.body);
-	response.json().then((value) => {
-	  this.events = value;
-	});
+    log('Result: ' + response.body);
+    response.json().then((value) => {
+      this.events = value;
+    });
       }, (response) => {
         // failure
         this.events = []
