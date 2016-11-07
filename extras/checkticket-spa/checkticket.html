@@ -17,26 +17,36 @@ sha256sum vue-resource.min.js
 <h1>Checking an intelmq CERT-Bund Ticket</h1>
 <div id="checkticket">
   Ticket#
-  <input v-model:title="ticketID" placeholder="20161020-10000004">
+  <input
+    v-model:title="ticketID"
+    v-on:keyup.enter="lookupIDs"
+    placeholder="20161020-10000004"
+  >
   <button v-on:click="lookupIDs">go</button>
-  <p>Event IDs:
+
+
+  <p v-if="eventIDs.length === 0">
+    Not found.
+  </p>
+
+  <p v-if="eventIDs.length > 0">
+  Event IDs:
   <span>{{ eventIDs }}
   <button v-on:click="loadDetails">details</button>
   </span>
-  <p>
-  Event Details:
+  </br>
   <span>{{ events }}</span>
-  <p>
-  <h4>developers log</h4>
-  <div id='log'></div>
+  </p>
+
+
 </div>
 
 <script type="text/javascript">
 'use strict';
 
-function log(html) {
+function log(text) {
    var logElement = document.getElementById('log');
-   logElement.insertAdjacentHTML('beforeend', '<p>' + html);
+   console.log(text);
 }
 
 var ticketid = new Vue({
@@ -52,10 +62,17 @@ var ticketid = new Vue({
       var url = this.queryURL + '/getEventIDsForTicket?ticket=' + this.ticketID;
       this.$http.get(url).then((response) => {
         response.json().then((value) => {
-	  this.eventIDs = value;
+	  if(value) {
+	    this.eventIDs = value;
+	    this.events = [];
+	  } else {
+	    this.eventIDs = [];
+	    this.events = [];
+	  }
 	});
       }, (response) => {
         this.eventIDs = []
+	this.events = [];
       });
     },
     loadDetails : function () {
