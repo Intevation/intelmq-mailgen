@@ -1,5 +1,32 @@
 <meta charset="UTF-8">
 <!--
+This is a vuejs.org v2 application.
+See below for needed javascript libraries.
+Also needs a modern browser (that implements the promise interface).
+
+
+Copyright (C) 2016 by Bundesamt für Sicherheit in der Informationstechnik
+Software engineering by Intevation GmbH
+
+This program is Free Software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Author(s):
+    Bernhard E. Reiter <bernhard@intevation.de>
+-->
+
+
+<!--
 curl -O https://vuejs.org/js/vue.js
 head -2 vue.js | tail -1
 # * Vue.js v2.0.3
@@ -35,7 +62,7 @@ sha256sum vue-resource.min.js
   <button v-on:click="loadDetails">details</button>
   </span>
   </br>
-  <span>{{ events }}</span>
+  <span>Raw {{ events }}</span>
   </p>
 
 
