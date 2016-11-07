@@ -275,7 +275,7 @@ feed_specific_formats = build_table_formats([
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("Services", "services"),
+        ExtraColumn("Workstation info", "workstation_info"),
         ]),
     ("Open-Memcached", [
         ("source.asn", "ASN"),
