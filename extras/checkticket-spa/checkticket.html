@@ -79,10 +79,10 @@ function log(text) {
 var ticketid = new Vue({
   el: '#checkticket',
   data: {
-    queryURL: 'http://localhost:8000/',
-    ticketID: '20161020-10000004', // TODO remove example
-    eventIDs: [],
-    events: []
+    queryURL: 'http://localhost:8000/',  // base url for checkticket.py service
+    ticketID: '20161020-10000004',  // TODO remove example
+    eventIDs: [],  // list of corresponding ids for the ticket
+    events: []  // list of events details
   },
   methods: {
     lookupIDs : function () {
