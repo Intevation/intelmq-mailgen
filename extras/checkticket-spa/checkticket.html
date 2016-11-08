@@ -57,7 +57,11 @@ echo 88aec064ced76b8da2b9445d31da35b29dfc95dfc92777c3b52d39db718aa9d9
     v-on:keyup.enter="lookupIDs"
     placeholder="20161020-10000004"
   >
-  <button v-on:click="lookupIDs">go</button>
+
+  <span v-if='lastTicketNumber'>
+    a recent ticket#:
+    {{ lastTicketNumber }}
+  </span>
   </p>
 
 
@@ -65,16 +69,22 @@ echo 88aec064ced76b8da2b9445d31da35b29dfc95dfc92777c3b52d39db718aa9d9
     Not found.
   </p>
 
-  <p v-if="eventIDs.length > 0">
-  Event IDs:
-  <span>{{ eventIDs }}
-  <button v-on:click="loadDetails">details</button>
-  </span>
-  </br>
+  <p v-if="eventIDs.length === 1">
+    Found one event:
+  </p>
+
+  <p v-if="eventIDs.length > 1">
+  Found {{ eventIDs.length }} events:
+      <button
+       v-if="eventIDs.length >= 50 && events.length === 0"
+       v-on:click="loadDetails"
+          >...
+     </button>
+  </p>
 
   <table
-      class="ui celled very compact striped table" 
-      v-if="eventIDs.length > 0"
+      class="ui celled very compact striped table"
+      v-if="eventIDs.length > 0 && events.length > 0"
   >
     <tr>
     <th v-for='column in Object.keys(events[0])' v-if='column !== "raw"'>
@@ -102,13 +112,15 @@ var ticketid = new Vue({
   el: '#checkticket',
   data: {
     queryURL: 'http://localhost:8000/',  // base url for checkticket.py service
-    ticketID: '20161020-10000004',  // TODO remove example
+    ticketID: '',  // ticket to be examined
     eventIDs: [],  // list of corresponding ids for the ticket
-    events: []  // list of events details
+    events: [],  // list of events details
+    lastTicketNumber: '' // (approximately) the most recent server ticket#
   },
   methods: {
     lookupIDs : function () {
-      var url = this.queryURL + '/getEventIDsForTicket?ticket=' + this.ticketID;
+      this.ticketID = this.ticketID.trim();
+      var url = this.queryURL + 'getEventIDsForTicket?ticket=' + this.ticketID;
       this.$http.get(url).then((response) => {
         response.json().then((value) => {
       if(value) {
@@ -130,7 +142,7 @@ var ticketid = new Vue({
       });
     },
     loadDetails : function () {
-      var url = this.queryURL + '/getEvents?';
+      var url = this.queryURL + 'getEvents?';
       for(var i = 0, size = this.eventIDs.length; i < size ; i++){
         url += 'ids=' + this.eventIDs[i] + '&';
       }
@@ -146,7 +158,23 @@ var ticketid = new Vue({
         // failure
         this.events = []
       });
+    },
+    getLastTicketNumber : function () {
+      var url = this.queryURL + 'getLastTicketNumber';
+      this.$http.get(url).then((response) => {
+        // success
+        response.json().then((value) => {
+          this.lastTicketNumber = value;
+        });
+      }, (response) => {
+        // failure
+        this.events = []
+      });
     }
+  }, // methods
+  created: function () {
+      log('calling lastTicket on created');
+      this.getLastTicketNumber();
   }
 })
 </script>

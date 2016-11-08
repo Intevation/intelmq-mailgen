@@ -35,6 +35,7 @@ from psycopg2.extras import DictConnection
 import hug
 
 import intelmqmail.cb as cb
+import intelmqmail.db as db
 
 log = cb.log
 
@@ -88,6 +89,10 @@ def getEvents(ids:ListOfIds()):
         pass
 
     return events
+
+@hug.get()
+def getLastTicketNumber():
+    return db.last_ticket_number(cur)
 
 #
 # serving the static files for the single page web application
