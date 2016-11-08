@@ -50,6 +50,7 @@ echo 88aec064ced76b8da2b9445d31da35b29dfc95dfc92777c3b52d39db718aa9d9
 
 <h1>Checking an intelmq CERT-Bund Ticket</h1>
 <div id="checkticket">
+  <p>
   Ticket#
   <input
     v-model:title="ticketID"
@@ -57,6 +58,7 @@ echo 88aec064ced76b8da2b9445d31da35b29dfc95dfc92777c3b52d39db718aa9d9
     placeholder="20161020-10000004"
   >
   <button v-on:click="lookupIDs">go</button>
+  </p>
 
 
   <p v-if="eventIDs.length === 0">
@@ -79,8 +81,8 @@ echo 88aec064ced76b8da2b9445d31da35b29dfc95dfc92777c3b52d39db718aa9d9
       {{ column }}
     </th>
     <tr v-for='event in events'>
-      <td v-for="field in Object.keys(events[0])" v-if='column !== "raw"'>
-      {{ event[field] }}
+      <td v-for="column in Object.keys(events[0])" v-if='column !== "raw"'>
+      {{ event[column] }}
       </td>
     </tr>
     </table>
