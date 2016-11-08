@@ -50,19 +50,24 @@ echo 88aec064ced76b8da2b9445d31da35b29dfc95dfc92777c3b52d39db718aa9d9
 
 <h1>Checking an intelmq CERT-Bund Ticket</h1>
 <div id="checkticket">
-  <p>
-  Ticket#
-  <input
-    v-model:title="ticketID"
-    v-on:keyup.enter="lookupIDs"
-    placeholder="20161020-10000004"
-  >
+  <div class="ui labled input">
+    <div class="ui label">
+        Search for</br>
+        Ticket#
+    </div>
+      <input
+        v-model:title="ticketID"
+        v-on:keyup.enter="lookupIDs"
+        placeholder="20161020-10000004"
+      >
+  </div>
 
-  <span v-if='lastTicketNumber'>
-    a recent ticket#:
+  <div class="ui padded message" v-if='lastTicketNumber'>
+    <div class="header">
+      A recent ticket#:
+    </div>
     {{ lastTicketNumber }}
-  </span>
-  </p>
+  </div>
 
 
   <p v-if="eventIDs.length === 0">
