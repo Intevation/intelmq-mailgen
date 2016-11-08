@@ -169,12 +169,34 @@ def new_ticket_number(cur):
         result = cur.fetchall()
         log.debug(result)
 
-    # create from integer: fill with 0s and cut out 8 chars from the right
-    num_str = "{:08d}".format(result[0]["nextval"])[-8:]
-    ticket = "{:s}-{:s}".format(date_str, num_str)
+    ticket = _format_ticket(date_str, result[0]["nextval"])
     log.debug('New ticket number "{}".'.format(ticket,))
 
     return ticket
+
+def _format_ticket(date_str, sequence_number: int):
+    # num_str from integer: fill with 0s and cut out 8 chars from the right
+    num_str = "{:08d}".format(sequence_number)[-8:]
+    ticket = "{:s}-{:s}".format(date_str, num_str)
+
+    return ticket
+
+
+def last_ticket_number(cur):
+    """Return a ticket number that has recently been drawn.
+
+    Because of race conditions, there might by other tickets numbers already
+    drawn or the emails may not be send out yet.
+    """
+    sql_query = """SELECT
+                     (SELECT to_char(initialized_for_day, 'YYYYMMDD')
+                        FROM ticket_day) AS day,
+                     last_value FROM intelmq_ticket_seq;"""
+
+    cur.execute(sql_query)
+    result = cur.fetchone()
+
+    return _format_ticket(result["day"], result["last_value"])
 
 
 def mark_as_sent(cur, notification_ids, ticket):
