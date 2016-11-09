@@ -108,11 +108,19 @@ def vue():
     return("./vue.js")
 
 @hug.get('/vue-resource.min.js', output=hug.output_format.file)
-def vue():
+def vue_resource():
     return("./vue-resource.min.js")
 
+@hug.get('/jquery.min.js', output=hug.output_format.file)
+def jquery():
+    return("./jquery-3.1.1.min.js")
+
+@hug.get('/semantic.min.js', output=hug.output_format.file)
+def semantic_js():
+    return("./semantic.min.js")
+
 @hug.get('/semantic.min.css', output=hug.output_format.file)
-def vue():
+def semantic_css():
     return("./semantic.min.css")
 
 
