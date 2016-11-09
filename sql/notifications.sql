@@ -61,7 +61,7 @@ CREATE TABLE directives (
     recipient_address VARCHAR(100) NOT NULL,
     template_name VARCHAR(100) NOT NULL,
     event_data_format VARCHAR(100) NOT NULL,
-    aggregate_identifier TEXT,
+    aggregate_identifier TEXT[][],
     notification_interval INTERVAL NOT NULL,
     endpoint ip_endpoint NOT NULL,
 
@@ -81,6 +81,59 @@ CREATE INDEX directives_sent_id_idx
 GRANT SELECT, UPDATE ON directives TO eventdb_send_notifications;
 
 
+-- Converts a JSON object used as aggregate identifier to a
+-- 2-dimensional TEXT array usable as a value in the database for
+-- grouping. Doing this properly is a bit tricky. Requirements:
+--
+--  1. the type must allow comparison because we need to be able to
+--     GROUP BY the aggregate_identifier column
+--
+--  2. The value must be chosen to preserve the equivalence relation on
+--     the abstact aggregate identifier, meaning
+--
+--      (a) Equal aggregate identifiers have to be mapped to the equal
+--          values
+--
+--      (b) equal values must imply equal aggregate identifiers
+--
+-- Requirement 1 rules out using JSON directly because it doesn't
+-- support comparison. We cannot use JSONB either because that type is
+-- not available in PostgreSQL 9.3 (JSONB requires at least 9.4). Simply
+-- converting the JSON object to TEXT is not an option either since, for
+-- instance, the order of the keys would not be predictable.
+--
+-- Requirement 2 means we need to be careful when choosing the
+-- representation. An easy solution would be to iterate over the JSON
+-- object with the json_each or json_each_text functions. Neither is
+-- really good. json_each returns the values as JSON objects in which
+-- case the conversion to TEXT will not preserve equality in the case of
+-- Strings because escape sequences will not be normalized.
+-- json_each_text returns the values as text which means that numbers
+-- and strings cannot be distinguished reliably (123 and "123" would be
+-- considered equal).
+--
+-- Given that we might switch to PostgreSQL 9.5 which comes with Ubuntu
+-- 16.4 LTS we go with json_each_text because in most cases the values
+-- will have come from IntelMQ events where the values have been
+-- validated and e.g. ASNs will always be numbers.
+CREATE OR REPLACE FUNCTION json_object_as_text_array(obj JSON)
+RETURNS TEXT[][]
+AS $$
+DECLARE
+    arr TEXT[][] = '{}'::TEXT[][];
+    k TEXT;
+    v TEXT;
+BEGIN
+    FOR k, v IN
+        SELECT * FROM json_each_text(obj) ORDER BY key
+    LOOP
+        arr := arr || ARRAY[ARRAY[k, v]];
+    END LOOP;
+    RETURN arr;
+END
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+
 CREATE OR REPLACE FUNCTION insert_directive(
     event_id BIGINT,
     directive JSON,
@@ -92,6 +145,8 @@ DECLARE
     recipient_address TEXT := directive ->> 'recipient_address';
     template_name TEXT := directive ->> 'template_name';
     event_data_format TEXT := directive ->> 'event_data_format';
+    aggregate_identifier TEXT[][]
+        := json_object_as_text_array(directive -> 'aggregate_identifier');
     notification_interval interval
         := coalesce(((directive ->> 'notification_interval') :: INT)
                     * interval '1 second',
@@ -109,6 +164,7 @@ BEGIN
                                 recipient_address,
                                 template_name,
                                 event_data_format,
+                                aggregate_identifier,
                                 notification_interval,
                                 endpoint)
         VALUES (event_id,
@@ -116,6 +172,7 @@ BEGIN
                 recipient_address,
                 template_name,
                 event_data_format,
+                aggregate_identifier,
                 notification_interval,
                 endpoint);
     END IF;
