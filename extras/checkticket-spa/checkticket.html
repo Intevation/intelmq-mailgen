@@ -92,16 +92,15 @@ echo 88aec064ced76b8da2b9445d31da35b29dfc95dfc92777c3b52d39db718aa9d9
       v-if="eventIDs.length > 0 && events.length > 0"
   >
     <tr>
-    <th v-for='column in Object.keys(events[0])' v-if='column !== "raw"'>
-      {{ column }}
-    </th>
+      <th v-for='column in Object.keys(events[0])' v-if='column !== "raw"'>
+        {{ column }}
+      </th>
     <tr v-for='event in events'>
       <td v-for="column in Object.keys(events[0])" v-if='column !== "raw"'>
       {{ event[column] }}
       </td>
     </tr>
-    </table>
-  </p>
+  </table>
 
 </div>
 
