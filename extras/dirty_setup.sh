@@ -11,14 +11,55 @@
 # packages of intelmq-mailgen, intelmq-manager installed with
 #  bash -x
 #
+# To user other than the build in configuration for intelmq 
+# place the common configuration files for /opt/intelmq/etc
+# in a directory named "ds-templates" in your CWD.
+#
+# The files in this directory can contain some key words of the form
+# @keyword@, which will be substituted by this script.  Know key words
+# are defined in TEMPLATE_VARS, they are replaced by the content of
+# the global variables of the same name.
+
+# -------------------------------------------------------------------
+# Copyright (C) 2016 by Intevation GmbH
+# Author(s):
+# Bernhard Reiter <bernhard.reiter@intevation.de>
+# Sascha Wilde <wilde@intevation.de>
+
+# This program is free software under the GNU GPL (>=v2)
+# Read the file COPYING coming with the software for details.
+
+# Templating code derived from xen-make-guest
+# Copyright (C) 2008-2016 by Intevation GmbH
+# Author(s):
+# Sascha Wilde <wilde@intevation.de>
+# Thomas Arendsen Hein <thomas@intevation.de>
+# -------------------------------------------------------------------
 
 #
 # certbund_contact setup
 # MUST adhere to /usr/share/doc/intelmq/bots/experts/certbund_contact/README.md.gz
 #
 
+TEMPLATE_VARS="intelmqdbpasswd dbuser"
+TEMPLATE_PATH="$PWD/ds-templates"
+
 dbuser=intelmq
 intelmqdbpasswd=`tr -dc A-Za-z0-9_ < /dev/urandom | head -c 14`
+
+fill_in_template()
+# $1 TEMPLATE_CONTENT
+# return TEMPLATE_CONTENT with variables of the form @varname@ substituted.
+{
+  local template="$1"
+  local substexp=""
+  for var in $TEMPLATE_VARS ; do
+    substexp="${substexp}s/@$var@/\${$var//\//\\\\/}/g;"
+  done
+  substexp="\"${substexp}\""
+  local content=$( echo "$template" | eval sed $substexp )
+  echo "$content"
+}
 
 sudo -u postgres bash -x << EOF
 if psql -lqt | cut -d \| -f 1 | grep -qw contactdb; then
@@ -94,8 +135,9 @@ cp /usr/share/doc/intelmq-mailgen/examples/example-template.txt \
 # intelmq overall setup
 etcdir=/opt/intelmq/etc
 
-sudo -u intelmq bash -x <<EOF
-cat - >$etcdir/startup.conf <<FOF
+declare -A default_templates
+
+default_templates[startup.conf]=$( cat <<EOF
 {
     "postgresql-output": {
         "group": "Output",
@@ -118,27 +160,28 @@ cat - >$etcdir/startup.conf <<FOF
         "module": "intelmq.bots.collectors.file.collector_file"
     }
 }
-FOF
+EOF
+)
 
-cat - >$etcdir/runtime.conf <<FOF
+default_templates[runtime.conf]=$( cat <<EOF
 {
     "postgresql-output": {
         "autocommit": true,
         "database": "intelmq-events",
         "host": "localhost",
-        "password": "$intelmqdbpasswd",
+        "password": "@intelmqdbpasswd@",
         "port": 5432,
         "sslmode": "require",
         "table": "events",
-        "user": "$dbuser"
+        "user": "@dbuser@"
     },
     "cert-bund-contact-database-expert": {
         "database": "contactdb",
         "host": "localhost",
-        "password": "$intelmqdbpasswd",
+        "password": "@intelmqdbpasswd@",
         "port": 5432,
         "sslmode": "require",
-        "user": "$dbuser"
+        "user": "@dbuser@"
     },
     "shadowserver-parser": {
         "feedname": "Botnet-Drone-Hadoop",
@@ -154,9 +197,10 @@ cat - >$etcdir/runtime.conf <<FOF
         "rate_limit": 300
     }
 }
-FOF
+EOF
+)
 
-cat - >$etcdir/pipeline.conf <<FOF
+default_templates[pipeline.conf]=$( cat <<EOF
 {
     "fileinput-collector": {
         "destination-queues": [
@@ -179,16 +223,28 @@ cat - >$etcdir/pipeline.conf <<FOF
         "source-queue": "postgresql-output-queue"
     }
 }
-FOF
+EOF
+)
 
-# necessary because of https://github.com/certtools/intelmq/issues/754
-cat - >$etcdir/system.conf <<FOF
+default_templates[system.conf]=$( cat <<EOF
 {
     "logging_level": "INFO",
     "logging_path": "/opt/intelmq/var/log/"
 }
-FOF
 EOF
+)
+
+for conf in ${!default_templates[@]} ; do
+  if [ -e "$TEMPLATE_PATH/$conf" ] ; then
+      template=$(< "$TEMPLATE_PATH/$conf")
+  else
+    template="${default_templates[$conf]}"
+  fi
+  export CONF_CONTENT=`fill_in_template "$template"`
+  su intelmq -c "echo \"\$CONF_CONTENT\" >\"$etcdir/$conf\""
+done
+
+# necessary because of https://github.com/certtools/intelmq/issues/754
 
 echo TODO: import contact database, e.g. follow the ripe import readme
 echo TODO: as root: start dsmtp
