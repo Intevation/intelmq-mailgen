@@ -88,7 +88,7 @@ sudo -u postgres bash -x << EOF
   if psql -lqt | cut -d \| -f 1 | grep -qw intelmq-events; then
     echo "database already exists - no need for setup"
   else
-    createdb --owner=$dbuser intelmq-events
+    createdb --encoding=UTF8 --template=template0 --owner=$dbuser intelmq-events
     psql intelmq-events <"$INITDB_FILE"
   fi
 EOF
