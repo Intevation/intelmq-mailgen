@@ -185,7 +185,7 @@ default_templates[runtime.conf]=$( cat <<EOF
     },
     "shadowserver-parser": {
         "feedname": "Botnet-Drone-Hadoop",
-        "override": true
+        "overwrite": true
     },
     "fileinput-collector": {
         "chunk_replicate_header": true,
@@ -226,10 +226,32 @@ default_templates[pipeline.conf]=$( cat <<EOF
 EOF
 )
 
-default_templates[system.conf]=$( cat <<EOF
+default_templates[defaults.conf]=$( cat <<EOF
 {
+    "accuracy": 100,
+    "broker": "redis",
+    "destination_pipeline_db": 2,
+    "destination_pipeline_host": "127.0.0.1",
+    "destination_pipeline_port": 6379,
+    "error_dump_message": true,
+    "error_log_exception": true,
+    "error_log_message": true,
+    "error_max_retries": 3,
+    "error_procedure": "pass",
+    "error_retry_delay": 15,
+    "http_proxy": null,
+    "http_ssl_proxy": null,
+    "http_user_agent": "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36",
+    "http_verify_cert": true,
+    "load_balance": false,
+    "logging_handler": "file",
     "logging_level": "INFO",
-    "logging_path": "/opt/intelmq/var/log/"
+    "logging_path": "/opt/intelmq/var/log/",
+    "logging_syslog": "/dev/log",
+    "rate_limit": 0,
+    "source_pipeline_db": 2,
+    "source_pipeline_host": "127.0.0.1",
+    "source_pipeline_port": 6379
 }
 EOF
 )
