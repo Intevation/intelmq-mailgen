@@ -237,6 +237,11 @@ EOF
 for conf in ${!default_templates[@]} ; do
   if [ -e "$TEMPLATE_PATH/$conf" ] ; then
       template=$(< "$TEMPLATE_PATH/$conf")
+      # Create temporary directories used in template if needed:
+      sed -n 's|.*"path":.*"\(/tmp/.*\)".*|\1|p' "$TEMPLATE_PATH/$conf" | while read p
+      do
+        [ -e "$p" ] || su intelmq -c "mkdir -p \"$p\""
+      done
   else
     template="${default_templates[$conf]}"
   fi
