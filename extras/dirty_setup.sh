@@ -271,8 +271,6 @@ for conf in ${!default_templates[@]} ; do
   su intelmq -c "echo \"\$CONF_CONTENT\" >\"$etcdir/$conf\""
 done
 
-# necessary because of https://github.com/certtools/intelmq/issues/754
-
 echo TODO: import contact database, e.g. follow the ripe import readme
 echo TODO: as root: start dsmtp
 echo TODO: as intelmq: copy shadowdsrv_botnet_droneTESTDATA.csv in /tmp/
