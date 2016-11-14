@@ -1,8 +1,8 @@
 {
     "openpgp": {
-	"gnupg_home" : "/etc/intelmq/mailgen/gnupghome",
-	"always_sign" : true,
-	"signing_key" : "5F503EFAC8C89323D54C252591B8CD7E15925678"
+    "gnupg_home" : "/etc/intelmq/mailgen/gnupghome",
+    "always_sign" : true,
+    "signing_key" : "5F503EFAC8C89323D54C252591B8CD7E15925678"
     },
     "database": {
         "event": {
@@ -16,8 +16,8 @@
     "template_dir": "/etc/intelmq/mailgen/templates",
     "sender": "noreply@example.com",
     "smtp": {
-	"host": "localhost",
-	"port": 25
+    "host": "localhost",
+    "port": 25
     },
     "logging_level": "INFO"
 }
