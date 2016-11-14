@@ -271,6 +271,20 @@ for conf in ${!default_templates[@]} ; do
   su intelmq -c "echo \"\$CONF_CONTENT\" >\"$etcdir/$conf\""
 done
 
-echo TODO: import contact database, e.g. follow the ripe import readme
+echo importing a revision of the ripe database for DE from file
+ripedir=/opt/INTELMQ-DIST-REPO/ripe
+ripeexport=`ls -d "$ripedir"/2???-??-?? 2>/dev/null | tail -1`
+if [ -d "$ripeexport" ] ; then
+  pushd "$ripeexport"
+  cat delegated-ripencc-latest | \
+  awk -F'|' '{if ($2=="DE" && $3=="asn") print "AS"$4}' >asn-DE.txt
+
+  sudo -u postgres bash -x << EOF
+  ripe_import.py --conninfo dbname=contactdb --asn-whitelist-file=asn-DE.txt -v
+EOF
+
+  popd
+fi
+
 echo TODO: as root: start dsmtp
-echo TODO: as intelmq: copy shadowdsrv_botnet_droneTESTDATA.csv in /tmp/
+echo TODO: e.g. as intelmq: copy shadowdsrv_botnet_droneTESTDATA.csv in /tmp/
