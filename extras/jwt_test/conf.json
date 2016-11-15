@@ -1,0 +1,18 @@
+{
+    "users":
+        [{
+            "username": "a",
+            "password": "asdfg",
+            "roles": [{"name": "admin"}]
+        },
+        {
+            "username": "b",
+            "password": "hjklö",
+            "roles": [{"name": "user"}]
+        },
+        {
+            "username": "c",
+            "password": "qwertz",
+            "roles": [{"name": "admin"}, {"name": "user"}]
+        }]
+}
