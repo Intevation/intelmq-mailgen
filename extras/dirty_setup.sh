@@ -7,11 +7,11 @@
 # * does not care for edge cases (or some defects)
 # * is in danger of being out of sync with the authoritative docs for each bot
 #
-# call as root on an Ubuntu 14.04 LTS system which has recent 
+# call as root on an Ubuntu 14.04 LTS system which has recent
 # packages of intelmq-mailgen, intelmq-manager installed with
 #  bash -x
 #
-# To user other than the build in configuration for intelmq 
+# To user other than the build in configuration for intelmq
 # place the common configuration files for /opt/intelmq/etc
 # in a directory named "ds-templates" in your CWD.
 #
@@ -137,64 +137,58 @@ etcdir=/opt/intelmq/etc
 
 declare -A default_templates
 
-default_templates[startup.conf]=$( cat <<EOF
-{
-    "postgresql-output": {
-        "group": "Output",
-        "name": "PostgreSQL",
-        "module": "intelmq.bots.outputs.postgresql.output"
-    },
-    "cert-bund-contact-database-expert": {
-        "group": "Expert",
-        "name": "CERT-bund Contact Database",
-        "module": "intelmq.bots.experts.certbund_contact.expert"
-   },
-    "shadowserver-parser": {
-        "group": "Parser",
-        "name": "ShadowServer",
-        "module": "intelmq.bots.parsers.shadowserver.parser"
-    },
-    "fileinput-collector": {
-        "group": "Collector",
-        "name": "Fileinput",
-        "module": "intelmq.bots.collectors.file.collector_file"
-    }
-}
-EOF
-)
-
 default_templates[runtime.conf]=$( cat <<EOF
 {
     "postgresql-output": {
-        "autocommit": true,
-        "database": "intelmq-events",
-        "host": "localhost",
-        "password": "@intelmqdbpasswd@",
-        "port": 5432,
-        "sslmode": "require",
-        "table": "events",
-        "user": "@dbuser@"
+        "group": "Output",
+        "module": "intelmq.bots.outputs.postgresql.output",
+        "name": "PostgreSQL",
+        "parameters": {
+            "autocommit": true,
+            "database": "intelmq-events",
+            "host": "localhost",
+            "password": "@intelmqdbpasswd@",
+            "port": 5432,
+            "sslmode": "require",
+            "table": "events",
+            "user": "@dbuser@"
+        }
     },
     "cert-bund-contact-database-expert": {
-        "database": "contactdb",
-        "host": "localhost",
-        "password": "@intelmqdbpasswd@",
-        "port": 5432,
-        "sslmode": "require",
-        "user": "@dbuser@"
+        "group": "Expert",
+        "module": "intelmq.bots.experts.certbund_contact.expert",
+        "name": "CERT-bund Contact Database",
+        "parameters": {
+            "database": "contactdb",
+            "host": "localhost",
+            "password": "@intelmqdbpasswd@",
+            "port": 5432,
+            "sslmode": "require",
+            "user": "@dbuser@"
+        }
     },
     "shadowserver-parser": {
-        "feedname": "Botnet-Drone-Hadoop",
-        "overwrite": true
+        "group": "Parser",
+        "module": "intelmq.bots.parsers.shadowserver.parser",
+        "name": "ShadowServer",
+        "parameters": {
+            "feedname": "Botnet-Drone-Hadoop",
+            "overwrite": true
+        }
     },
     "fileinput-collector": {
-        "chunk_replicate_header": true,
-        "chunk_size": null,
-        "delete_file": true,
-        "feed": "FileCollector",
-        "path": "/tmp/",
-        "postfix": ".csv",
-        "rate_limit": 300
+        "group": "Collector",
+        "module": "intelmq.bots.collectors.file.collector_file",
+        "name": "Fileinput",
+        "parameters": {
+            "chunk_replicate_header": true,
+            "chunk_size": null,
+            "delete_file": true,
+            "feed": "FileCollector",
+            "path": "/tmp/",
+            "postfix": ".csv",
+            "rate_limit": 300
+        }
     }
 }
 EOF
