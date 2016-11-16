@@ -79,7 +79,7 @@ def list_csv_formats():
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("Services", "services"),
+        ExtraColumn("Workstation info", "workstation_info"),
         ]),
     ("csv_Open-Memcached", [
         ("source.asn", "ASN"),
