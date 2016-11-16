@@ -1,65 +1,203 @@
 <meta charset="UTF-8">
 <!--
+This is a vuejs.org v2 application.
+See below for needed javascript libraries.
+Also needs a modern browser (that implements the promise interface).
+
+
+Copyright (C) 2016 by Bundesamt für Sicherheit in der Informationstechnik
+Software engineering by Intevation GmbH
+
+This program is Free Software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Author(s):
+    Bernhard E. Reiter <bernhard@intevation.de>
+-->
+
+
+<!--
 curl -O https://vuejs.org/js/vue.js
 head -2 vue.js | tail -1
-# * Vue.js v2.0.3
- sha256sum vue.js
-#3fe87287929f07ad9a590e2ffbcff3656c0c76966c762a5feee531c42a68c1d1  vue.js
+# * Vue.js v2.0.5
+sha256sum vue.js ; \
+echo 045aa148655b5d8083a86c6595bccd594371b26b7324d8f9cbe01af438fff405
 -->
 <script src="./vue.js" type="text/javascript"></script>
 <!--
 curl -O https://cdn.jsdelivr.net/vue.resource/1.0.3/vue-resource.min.js
-sha256sum vue-resource.min.js
-#af5a73780d4b0913d00fda1eb8d0cfe13f1fb72b6aef06928259a621209f13d2  vue-resource.min.js
+sha256sum vue-resource.min.js \
+echo af5a73780d4b0913d00fda1eb8d0cfe13f1fb72b6aef06928259a621209f13d2
 -->
 <script src="./vue-resource.min.js" type="text/javascript"></script>
 
+<!--
+curl -O https://cdn.jsdelivr.net/semantic-ui/2.2.6/semantic.min.css
+sha256sum semantic.min.css \
+echo 88aec064ced76b8da2b9445d31da35b29dfc95dfc92777c3b52d39db718aa9d9
+-->
+<link rel="stylesheet" href="./semantic.min.css">
+
+<!--
+curl -O https://code.jquery.com/jquery-3.1.1.min.js
+echo 85556761a8800d14ced8fcd41a6b8b26bf012d44a318866c0d81a62092efd9bf
+-->
+<script src="./jquery.min.js" type="text/javascript"></script>
+
+<!--
+curl -O https://cdn.jsdelivr.net/semantic-ui/2.2.6/semantic.min.js
+echo 1dc38deb997cf67c4d97bbda4440953deff334307384270960113b3be11caee5
+-->
+<script src="./semantic.min.js" type="text/javascript"></script>
+
+
+
+
 <h1>Checking an intelmq CERT-Bund Ticket</h1>
 <div id="checkticket">
-  Ticket#
-  <input v-model:title="ticketID" placeholder="20161020-10000004">
-  <button v-on:click="lookupIDs">go</button>
-  <p>Event IDs:
-  <span>{{ eventIDs }}
-  <button v-on:click="loadDetails">details</button>
-  </span>
-  <p>
-  Event Details:
-  <span>{{ events }}</span>
-  <p>
-  <h4>developers log</h4>
-  <div id='log'></div>
+  <div class="ui labled input">
+    <div class="ui label">
+        Search for</br>
+        Ticket#
+    </div>
+      <input
+        v-model:title="ticketID"
+        v-on:keyup.enter="lookupIDs"
+        placeholder="20161020-10000004"
+      >
+  </div>
+
+  <div class="ui padded message" v-if='lastTicketNumber'>
+    <div class="header">
+      A recent ticket#:
+    </div>
+    {{ lastTicketNumber }}
+  </div>
+
+
+  <p v-if="eventIDs.length === 0">
+    Not found.
+  </p>
+
+  <p v-if="eventIDs.length === 1">
+    Found one event:
+  </p>
+
+  <p v-if="eventIDs.length > 1">
+  Found {{ eventIDs.length }} events:
+      <button
+       v-if="eventIDs.length >= 50 && events.length === 0"
+       v-on:click="loadDetails"
+          >...
+     </button>
+  </p>
+
+  <table
+      class="ui celled very compact striped table"
+      v-if="eventIDs.length > 0 && events.length > 0"
+  >
+    <tr>
+      <th v-for='column in Object.keys(events[0])' v-if='column !== "raw"'>
+        {{ column }}
+      </th>
+    <tr v-for='event in events'>
+      <td v-for="column in Object.keys(events[0])" v-if='column !== "raw"'>
+      {{ event[column] }}
+      </td>
+    </tr>
+  </table>
+
+  <div
+    v-if="eventIDs.length > 0 && events.length > 0"
+    class="ui styled accordion"
+  >
+      <div class="active title">
+        <i class="dropdown icon"></i>
+        What is an event?
+      </div>
+      <div class="active content">
+        <p>An event in intelmq is an abuse event.
+      </div>
+      <div class="title">
+        <i class="dropdown icon"></i>
+        How do events get into the system?
+      </div>
+      <div class="content">
+        <p>Collector bots will fetch data and parser bots will
+           put it into the event format.
+        </p>
+      </div>
+      <div class="title">
+        <i class="dropdown icon"></i>
+        Where do events go?
+      </div>
+      <div class="content">
+        <p>It depends on your configuration.
+        <p>Expert bots can change the events when being processed.</p>
+        <p>Output bots can write events into a database or send them on.</p>
+      </div>
+  </div>
+
+
 </div>
 
 <script type="text/javascript">
 'use strict';
 
-function log(html) {
+function log(text) {
    var logElement = document.getElementById('log');
-   logElement.insertAdjacentHTML('beforeend', '<p>' + html);
+   console.log(text);
 }
 
 var ticketid = new Vue({
   el: '#checkticket',
   data: {
-    queryURL: 'http://localhost:8000/',
-    ticketID: '20161020-10000004', // TODO remove example
-    eventIDs: [],
-    events: []
+    queryURL: 'http://localhost:8000/',  // base url for checkticket.py service
+    ticketID: '',  // ticket to be examined
+    eventIDs: [],  // list of corresponding ids for the ticket
+    events: [],  // list of events details
+    lastTicketNumber: '' // (approximately) the most recent server ticket#
+  },
+  mounted: function () {
+      // initialise semanic ui javascript for accordion
+      $(this.$el).accordion({'exclusive': false})
   },
   methods: {
     lookupIDs : function () {
-      var url = this.queryURL + '/getEventIDsForTicket?ticket=' + this.ticketID;
+      this.ticketID = this.ticketID.trim();
+      var url = this.queryURL + 'getEventIDsForTicket?ticket=' + this.ticketID;
       this.$http.get(url).then((response) => {
         response.json().then((value) => {
-	  this.eventIDs = value;
-	});
+      if(value) {
+        this.eventIDs = value;
+        this.events = [];
+        // directly load events, if we only have a few
+        if (this.eventIDs.length < 50) {
+            console.log("less than 50 events, triggering loading directly");
+            this.loadDetails();
+        }
+      } else {
+        this.eventIDs = [];
+        this.events = [];
+      }
+    });
       }, (response) => {
         this.eventIDs = []
+    this.events = [];
       });
     },
     loadDetails : function () {
-      var url = this.queryURL + '/getEvents?';
+      var url = this.queryURL + 'getEvents?';
       for(var i = 0, size = this.eventIDs.length; i < size ; i++){
         url += 'ids=' + this.eventIDs[i] + '&';
       }
@@ -67,15 +205,31 @@ var ticketid = new Vue({
 
       this.$http.get(url).then((response) => {
         // success
-	log('Result: ' + response.body);
-	response.json().then((value) => {
-	  this.events = value;
-	});
+    log('Result: ' + response.body);
+    response.json().then((value) => {
+      this.events = value;
+    });
+      }, (response) => {
+        // failure
+        this.events = []
+      });
+    },
+    getLastTicketNumber : function () {
+      var url = this.queryURL + 'getLastTicketNumber';
+      this.$http.get(url).then((response) => {
+        // success
+        response.json().then((value) => {
+          this.lastTicketNumber = value;
+        });
       }, (response) => {
         // failure
         this.events = []
       });
     }
+  }, // methods
+  created: function () {
+      log('calling lastTicket on created');
+      this.getLastTicketNumber();
   }
 })
 </script>

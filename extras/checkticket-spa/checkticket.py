@@ -31,9 +31,11 @@ Author(s):
 """
 #import json
 
+from psycopg2.extras import DictConnection
 import hug
 
 import intelmqmail.cb as cb
+import intelmqmail.db as db
 
 log = cb.log
 
@@ -46,7 +48,7 @@ def setup(api):
     global config, conn, cur
     config = cb.read_configuration()
 
-    conn = cb.open_db_connection(config)
+    conn = cb.open_db_connection(config, connection_factory=DictConnection)
     cur = conn.cursor()
 
 
@@ -88,6 +90,10 @@ def getEvents(ids:ListOfIds()):
 
     return events
 
+@hug.get()
+def getLastTicketNumber():
+    return db.last_ticket_number(cur)
+
 #
 # serving the static files for the single page web application
 # (in a simple manner)
@@ -102,8 +108,20 @@ def vue():
     return("./vue.js")
 
 @hug.get('/vue-resource.min.js', output=hug.output_format.file)
-def vue():
+def vue_resource():
     return("./vue-resource.min.js")
+
+@hug.get('/jquery.min.js', output=hug.output_format.file)
+def jquery():
+    return("./jquery-3.1.1.min.js")
+
+@hug.get('/semantic.min.js', output=hug.output_format.file)
+def semantic_js():
+    return("./semantic.min.js")
+
+@hug.get('/semantic.min.css', output=hug.output_format.file)
+def semantic_css():
+    return("./semantic.min.css")
 
 
 #print(getEvents(getEventIDsForTicket('20161020-10000004')))
