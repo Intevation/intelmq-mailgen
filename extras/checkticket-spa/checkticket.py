@@ -90,7 +90,11 @@ def getEvents(ids:ListOfIds()):
 
     return events
 
-@hug.get()
+allow_8080_header = {
+            "Access-Control-Allow-Origin" : "http://localhost:8080"
+            }
+
+@hug.get(response_headers = allow_8080_header)
 def getLastTicketNumber():
     return db.last_ticket_number(cur)
 
