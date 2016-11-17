@@ -20,6 +20,6 @@ to external percipience is neither sensible nor intend.
 Betroffene Systeme in Ihrem Netzbereich:
 Affected systems on your network:
 
-Format: ASN | IP address | Timestamp (UTC) | Services
+Format: ASN | IP address | Timestamp (UTC) | Workstation Info
 
 ${events_as_csv}
