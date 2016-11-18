@@ -1,3 +1,10 @@
+intelmq-mailgen (0.95~beta1) unstable; urgency=low
+
+  * New release
+  * Various fixes and refactoring.
+
+ -- Sascha Wilde <wilde@intevation.de>  Fri, 18 Nov 2016 12:55:45 +0100
+
 intelmq-mailgen (0.94~beta5) unstable; urgency=low
 
   * New release
