@@ -78,7 +78,13 @@ def get_pending_notifications(cur):
                            AND n2.template = n.template
                            AND n2.format = n.format
                            AND n2.classification_type = n.classification_type
-                           AND n2.feed_name = n.feed_name)
+                           AND (CASE WHEN n2.feed_name
+                                       IN ('Botnet-Drone-Hadoop',
+                                           'Sinkhole-HTTP-Drone',
+                                           'Microsoft-Sinkhole')
+                                     THEN 'generic_malware'
+                                     ELSE n2.feed_name
+                                END) = n.feed_name)
                         + max(n.notification_interval)
                         < CURRENT_TIMESTAMP,
                         TRUE);"""
