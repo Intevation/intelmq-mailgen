@@ -233,7 +233,6 @@ feed_specific_formats = build_table_formats([
         ExtraColumn("Version", "version"),
         ("source.local_hostname", "Server Name"),
         ExtraColumn("Instance Name", "instance_name"),
-        ExtraColumn("Amplification", "amplification"),
         ]),
     ("Open-MongoDB", [
         ("source.asn", "ASN"),
