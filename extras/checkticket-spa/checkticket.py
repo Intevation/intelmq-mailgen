@@ -5,7 +5,7 @@ Reuses the database configuration of intelmqmail.cb.
 
 Requires hug (http://www.hug.rest/)
 
-Development call like
+Development: call like
   hug -f checkticket.py
   connect to http://localhost:8000/
 
@@ -29,8 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 Author(s):
     Bernhard E. Reiter <bernhard@intevation.de>
 """
-#import json
-
 from psycopg2.extras import DictConnection
 import hug
 
