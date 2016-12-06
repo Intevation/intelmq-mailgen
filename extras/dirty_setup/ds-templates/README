@@ -1,4 +1,4 @@
-This setup needs various databaeses, which are regulary updated via
+This setup needs various databases, which are regulary updated via
 /opt/intelmq/etc/runtime.conf.new
 To create/update them manually execute as intelmq user:
 

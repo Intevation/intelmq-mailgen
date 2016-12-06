@@ -11,12 +11,12 @@
 # packages of intelmq-mailgen, intelmq-manager installed with
 #  bash -x
 #
-# To user other than the build in configuration for intelmq
+# To use another than the build-in configuration for intelmq
 # place the common configuration files for /opt/intelmq/etc
 # in a directory named "ds-templates" in your CWD.
 #
-# The files in this directory can contain some key words of the form
-# @keyword@, which will be substituted by this script.  Know key words
+# The files in this directory can contain some keywords in the form
+# @keyword@, which will be substituted by this script.  Known keywords
 # are defined in TEMPLATE_VARS, they are replaced by the content of
 # the global variables of the same name.
 
