@@ -21,19 +21,19 @@ class TemplatesTest(unittest.TestCase):
 
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         "Sets up a directory structure for all template tests."
-        self.top_dir_obj = TemporaryDirectory() # will clean itself up
-        self.template_dir = os.path.join(self.top_dir_obj.name, 'templates')
-        os.mkdir(self.template_dir)
+        cls.top_dir_obj = TemporaryDirectory() # will clean itself up
+        cls.template_dir = os.path.join(cls.top_dir_obj.name, 'templates')
+        os.mkdir(cls.template_dir)
 
-        self.test_contents = """Subject
+        cls.test_contents = """Subject
 
 Bodyline
 Bodyline"""
 
-        with open(os.path.join(self.template_dir, "test-template"), "xt") as f:
-            f.write(self.test_contents)
+        with open(os.path.join(cls.template_dir, "test-template"), "xt") as f:
+            f.write(cls.test_contents)
 
 
 

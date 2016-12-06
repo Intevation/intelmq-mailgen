@@ -214,7 +214,6 @@ feed_specific_formats = build_table_formats([
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("Min. amplification", "min_amplification"),
         ]),
     ("Open-Portmapper", [
         ("source.asn", "ASN"),
@@ -234,7 +233,6 @@ feed_specific_formats = build_table_formats([
         ExtraColumn("Version", "version"),
         ("source.local_hostname", "Server Name"),
         ExtraColumn("Instance Name", "instance_name"),
-        ExtraColumn("Amplification", "amplification"),
         ]),
     ("Open-MongoDB", [
         ("source.asn", "ASN"),
@@ -262,7 +260,6 @@ feed_specific_formats = build_table_formats([
         ("source.asn", "ASN"),
         ("source.ip", "IP"),
         ("time.source", "Timestamp (UTC)"),
-        ExtraColumn("Response size", "size"),
         ]),
     ("Open-Elasticsearch", [
         ("source.asn", "ASN"),

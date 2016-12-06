@@ -43,6 +43,7 @@
 
 TEMPLATE_VARS="intelmqdbpasswd dbuser"
 TEMPLATE_PATH="$PWD/ds-templates"
+MG_TEMPLATE_PATH="$PWD/mg-templates"
 
 dbuser=intelmq
 intelmqdbpasswd=`tr -dc A-Za-z0-9_ < /dev/urandom | head -c 14`
@@ -264,6 +265,12 @@ for conf in ${!default_templates[@]} ; do
   export CONF_CONTENT=`fill_in_template "$template"`
   su intelmq -c "echo \"\$CONF_CONTENT\" >\"$etcdir/$conf\""
 done
+
+if [ -d "$MG_TEMPLATE_PATH" ] ; then
+    mg_tmpl_dst=`sed -n '/"template_dir":/s/.*:[^"]*"\(.*\)".*/\1/p' /etc/intelmq/intelmq-mailgen.conf`
+    mkdir -p "$mg_tmpl_dst"
+    cp "$MG_TEMPLATE_PATH"/* "$mg_tmpl_dst"
+fi
 
 echo importing a revision of the ripe database for DE from file
 ripedir=/opt/INTELMQ-DIST-REPO/ripe
