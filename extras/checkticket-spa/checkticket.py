@@ -122,13 +122,18 @@ def getLastTicketNumber():
     return db.last_ticket_number(cur)
 
 ###
-## when serving a single page web application in a more complex setup,
-## we may serve the main index.html page for root ('/')
+## When serving a single page web application in a more complex setup,
+## we may serve a main html page for root ('/') and static
+## files from a directory.
 ##
-## uncomment (== activate) the following lines:
+## adapt and uncomment (== activate) the following lines:
 #@hug.get('/', output=hug.output_format.file)
 #def root():
 #        return("/home/fody/www/index.html")
+#
+#@hug.static('/static')
+#def my_static_dirs():
+#        return("/home/fody/www/static",)
 ###
 
 ###
