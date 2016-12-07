@@ -78,6 +78,7 @@ def setup(api):
 @hug.cli()
 @hug.get()
 def getEventIDsForTicket(ticket:hug.types.length(17, 18)):
+    global cur
     event_ids = []
     try:
         cur.execute("SELECT array_agg(events_id) as a FROM notifications "
@@ -99,6 +100,7 @@ class ListOfIds(hug.types.Multiple):
 @hug.cli()
 @hug.get()
 def getEvents(ids:ListOfIds()):
+    global cur
     events = []
 
     try:
@@ -116,6 +118,7 @@ def getEvents(ids:ListOfIds()):
 
 @hug.get()
 def getLastTicketNumber():
+    global cur
     return db.last_ticket_number(cur)
 
 ###
