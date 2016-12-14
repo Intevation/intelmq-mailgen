@@ -115,6 +115,10 @@ def getEvents(ids:ListOfIds()):
 
     return events
 
+@hug.get()
+def getEventsForTicket(ticket:hug.types.length(17, 18)):
+    return getEvents(getEventIDsForTicket(ticket))
+
 
 @hug.get()
 def getLastTicketNumber():
