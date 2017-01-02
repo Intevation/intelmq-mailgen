@@ -226,6 +226,12 @@ feed_specific_formats = build_table_formats([
         ("time.source", "timestamp"),
         ExtraColumn("system_desc", "sysdesc"),
         ]),
+    ("Open-LDAP", [
+        ("source.asn", "asn"),
+        ("source.ip", "ip"),
+        ("time.source", "timestamp"),
+        ExtraColumn("dns_hostname", "dns_host_name"),
+        ]),
     ("Open-MSSQL", [
         ("source.asn", "asn"),
         ("source.ip", "ip"),
@@ -255,6 +261,8 @@ feed_specific_formats = build_table_formats([
         ("source.asn", "asn"),
         ("source.ip", "ip"),
         ("time.source", "timestamp"),
+        ExtraColumn("workgroup_name", "workgroup"),
+        ExtraColumn("machine_name", "machine_name"),
         ]),
     ("NTP-Monitor", [
         ("source.asn", "asn"),
