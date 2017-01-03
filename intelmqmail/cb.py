@@ -143,7 +143,7 @@ def mail_format_as_csv(cur, agg_notification, config, gpgme_ctx, format_spec):
     for asn in events_per_asn:
         events_as_csv = format_as_csv(format_spec, events_per_asn[asn])
 
-        n_ids = [] #ids of the affected notifications
+        n_ids = []  # ids of the affected notifications
         for event in events_per_asn[asn]:
             n_ids.extend(agg_notification["idmap"][event["id"]])
 
@@ -320,7 +320,6 @@ feed_specific_formats = build_table_formats([
     ])
 
 
-
 def create_mails(cur, agg_notification, config, gpgme_ctx):
     """Create one or several email objects for an aggregated notification.
 
@@ -330,6 +329,7 @@ def create_mails(cur, agg_notification, config, gpgme_ctx):
     :param config: script configuration
     :param agg_notification: the aggregated notification to create mails for
     :param cur: database cursor to use when loading event information
+    :param gpgme_ctx: context of gpgme
 
     :returns: list of tuples (email object, list of ids, ticket) with len >=1
     :rtype: list
@@ -341,7 +341,7 @@ def create_mails(cur, agg_notification, config, gpgme_ctx):
     formatter = None
 
     if (agg_notification["format"] == "feed_specific"
-        and agg_notification["feed_name"] in feed_specific_formats):
+       and agg_notification["feed_name"] in feed_specific_formats):
         formatter = mail_format_feed_specific_as_csv
 
     if formatter is not None:
@@ -352,7 +352,6 @@ def create_mails(cur, agg_notification, config, gpgme_ctx):
         raise NotImplementedError(msg)
 
     return email_tuples
-
 
 
 def send_notifications(config, notifications, cur):
@@ -523,4 +522,3 @@ def main():
 # the entry-point script by the temporary install or
 # go to the right toplevel directory and use a full import like
 #  python3 -c "from intelmqmail import cb; cb.main()"
-
