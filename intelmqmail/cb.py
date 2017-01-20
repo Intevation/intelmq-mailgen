@@ -339,4 +339,3 @@ def main():
 # the entry-point script by the temporary install or
 # go to the right toplevel directory and use a full import like
 #  python3 -c "from intelmqmail import cb; cb.main()"
-

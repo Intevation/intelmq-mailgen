@@ -1,0 +1,25 @@
+[TEST-Report#${ticket_number}] Offene mDNS-Server in AS${asn}
+
+[English version below]
+
+Sehr geehrte Damen und Herren,
+
+dies ist ein Test-Report für Entwicklungs- und
+Qualitätssicherungszwecke, ein Versnd an externe Empfänger ist nicht
+sinnvoll oder beabsichtigt.
+
+======================================================================
+
+Dear Sir or Madam,
+
+this is a test report for development and quality assurance, sending
+to external percipience is neither sensible nor intend.
+
+======================================================================
+
+Betroffene Systeme in Ihrem Netzbereich:
+Affected systems on your network:
+
+Format: ASN | IP address | Timestamp (UTC) | Workstation Info
+
+${events_as_csv}

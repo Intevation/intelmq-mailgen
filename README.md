@@ -190,11 +190,37 @@ Currently this is done for Shadowservers "Sinkhole-HTTP-Drone",
 Some example templates are distributed with Mailgen.
 
 
-Errors
-======
+Operation manual
+================
 
-Mailgen tries to be as robust as possible, in order to keep sending emails
-whenever possible.
+The logfile shall be monitored for errors to detect unwanted conditions.
+Especially grep for:
+```
+ * 'ERROR'
+ * 'Error:'
+```
+
+Each error condition should be handled by an administrator
+or service technician soon. It is recommended to use a monitor system
+to notify administrators as soon as such a string occurs in the log.
+
+#### Log file contents
+There should be no `Traceback` or other ERROR information in the log
+of mailgen. Please read the lines in question, often they have good
+hints about cause of the failure. Some problem may be solved by correcting
+the configuration.
+
+INFO lines appear during normal operations.
+One condition to get an INFO message is if Mailgen detects
+that it is already running to that a second instance does not start.
+If this is the case, the running Mailgen process may still have problems
+and during the nature of log file, the messages of the Mailgen that
+tries to start up, may appear interwoven with the error conditions.
+
+#### Mailgen tries to continue
+
+Mailgen will try to continue sending mails,
+even if some batch of mails could not be send for several reasons.
 
 If it can't find templates, for instance, it will continue with the next e-mail
 and log an error message and the stacktrace.
@@ -204,8 +230,9 @@ of database ids for events in the `events` table.
 Each with a list of database ids for the corresponding rows of
 the `notifications` table.
 
-Mailgen stops (with an INFO log entry) if a different instance of it is
-already running.
+This information can be used by an administrator to see which events and emails
+may not have gone out in detail, to deal with them later, possibily with
+a small script depending on the problem cause.
 
 
 Developer Information

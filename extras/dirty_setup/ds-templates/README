@@ -1,0 +1,7 @@
+This setup needs various databases, which are regulary updated via
+/opt/intelmq/etc/runtime.conf.new
+To create/update them manually execute as intelmq user:
+
+  /usr/bin/update-tor-nodes /opt/intelmq/var/lib/bots/tor_nodes/tor_nodes.dat
+  /usr/bin/update-geoip-data /opt/intelmq/var/lib/bots/maxmind_geoip/GeoLite2-City.mmdb
+  /usr/bin/update-asn-data /opt/intelmq/var/lib/bots/asn_lookup/ipasn.dat
