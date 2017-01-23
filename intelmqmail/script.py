@@ -9,6 +9,26 @@ import logging
 log = logging.getLogger(__name__)
 
 
+class Script:
+
+    """Represents a script or plugin.
+
+    The script can be run by simply calling the Script object. All
+    parameters will be forwarded to the actual entry point and its
+    return value will be returned.
+
+    The public attribute filename is the name of the python file the
+    script was loaded from.
+    """
+
+    def __init__(self, filename, entry_point):
+        self.filename = filename
+        self.entry_point = entry_point
+
+    def __call__(self, *args, **kw):
+        return self.entry_point(*args, **kw)
+
+
 def load_scripts(script_directory, entry_point):
     entry_points = []
     found_errors = False
@@ -22,7 +42,7 @@ def load_scripts(script_directory, entry_point):
                      my_globals)
                 entry = my_globals.get(entry_point)
                 if entry is not None:
-                    entry_points.append(entry)
+                    entry_points.append(Script(filename, entry))
                 else:
                     found_errors = True
                     log.error("Cannot find entry point %r in %r",

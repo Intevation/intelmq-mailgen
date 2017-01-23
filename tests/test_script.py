@@ -32,6 +32,8 @@ class TestLoadScriptSimple(LoadScriptTest):
 
      - the order of the entry points is the one determined by the
        numbers in the script file names.
+
+     - the names associated with the entry point objects
     """
 
     script_files = [("10preparation.py", """\
@@ -47,6 +49,8 @@ def entry_point():
         entry_points = load_scripts(self.tempdir.name, "entry_point")
         self.assertEqual([f() for f in entry_points],
                          ["preparation", "special rule 1"])
+        self.assertEqual([f.name for f in entry_points],
+                         ["10preparation.py", "45special_rule1.py"])
 
 
 class TestLoadScriptMissingEntryPoint(LoadScriptTest):
