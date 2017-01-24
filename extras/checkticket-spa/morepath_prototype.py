@@ -29,16 +29,67 @@ Author(s):
 
 import morepath
 
+import intelmqmail.cb as cb
+
 class App(morepath.App):
     pass
 
-class EventIDs(Object):
-    def __init__(self, ticket):
-        self.ids = []
-        self.ticket = ticket
+class DBConnection():
+    """Base class to keep the DB connection as class attribute.
 
-@App.path(model=EventIDs, path='/getEventIDsForTicket')
-#TODO
+    Will initialise the connection on first instanciation.
+    """
+    conn = None
+    cur = None
+
+    def __init__(self):
+        if DBConnection.conn == None:
+            # initialising db connection
+            config = cb.read_configuration()
+            DBConnection.conn = cb.open_db_connection(
+                                    config, connection_factory=None)
+
+        if DBConnection.cur == None:
+            # get a new cursor, if we don't have one
+            DBConnection.cur = DBConnection.conn.cursor()
+
+
+@App.path(path='')
+class Root(object):
+        pass
+
+
+class EventIDs(DBConnection):
+    def __init__(self, ticket):
+        super().__init__()
+
+        self.ticket = ticket
+        self.ids = []
+
+        try:
+            DBConnection.cur.execute("SELECT array_agg(events_id) as a "
+                                     "  FROM notifications "
+                                     "  WHERE intelmq_ticket = %s;", (ticket,))
+            self.ids = DBConnection.cur.fetchone()[0]
+        finally:
+            pass
+
+
+@App.path(model=EventIDs, path='/getEventIDsForTicket', required=['ticket'])
+# TODO: use a morepath converter to check the url parameter in more detail
+def get_eventids(ticket=""):
+    return EventIDs(ticket)
+
+@App.json(model=EventIDs)
+def events_ids_info(self, request):
+
+    # the request.after declarator adds a callback to manipulate the response
+    @request.after
+    def manipulate_response(response):
+        response.headers.add("Access-Control-Allow-Origin",
+                             "http://localhost:8000")
+
+    return self.ids
 
 if __name__ == '__main__':
     morepath.run(App())
