@@ -1,8 +1,8 @@
 from intelmqmail.tableformat import build_table_formats, ExtraColumn
 
 
-def list_csv_formats():
-    return build_table_formats([
+
+table_formats = build_table_formats([
     ("csv_malware", [
         # this is used for the following feeds:
         #   "Botnet-Drone-Hadoop", "Sinkhole-HTTP-Drone",
@@ -126,4 +126,9 @@ def list_csv_formats():
         ExtraColumn("issuer_common_name", "issuer_common_name"),
         ]),
     ])
+
+
+
+def determine_format(directive):
+    return table_formats.get(directive["event_data_format"])
 

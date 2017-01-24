@@ -112,12 +112,8 @@ def read_configuration():
     return combined
 
 
-def load_formats(config):
-    formats = {}
-    entry_points = load_scripts(config["script_directory"], "list_csv_formats")
-    for entry in entry_points:
-        formats.update(entry())
-    return formats
+def load_script_entry_points(config):
+    return load_scripts(config["script_directory"], "determine_format")
 
 
 def mail_format_as_csv(cur, directive, config, gpgme_ctx, format_spec):
@@ -154,15 +150,25 @@ def mail_format_as_csv(cur, directive, config, gpgme_ctx, format_spec):
     return [(mail, directive["directive_ids"], ticket)]
 
 
-def create_mails(cur, directive, config, formats, gpgme_ctx):
+def format_for_directive(directive, scripts):
+    for script in scripts:
+        fmt = script(directive)
+        if fmt is not None:
+            return fmt
+    return None
+
+
+def create_mails(cur, directive, config, scripts, gpgme_ctx):
     """Creates emails with events data in CSV format.
 
     :returns: list of tuples (email object, list of ids, ticket)
     :rtype: list
     """
-    format_spec = formats.get(directive["event_data_format"])
+    format_spec = format_for_directive(directive, scripts)
     if format_spec is None:
         msg = ("Cannot generate emails for format %r"
+               # TODO: format_spec now depends on whole directive. Log
+               # all of it?
                % (agg_notification["event_data_format"]))
         raise NotImplementedError(msg)
 
@@ -170,7 +176,7 @@ def create_mails(cur, directive, config, formats, gpgme_ctx):
 
 
 
-def send_notifications(config, directives, cur, formats):
+def send_notifications(config, directives, cur, scripts):
     """
     Create and send notification mails for all items in directives.
 
@@ -202,7 +208,7 @@ def send_notifications(config, directives, cur, formats):
             cur.execute("SAVEPOINT sendmail;")
             try:
                 try:
-                    email_tuples = create_mails(cur, directive, config, formats,
+                    email_tuples = create_mails(cur, directive, config, scripts,
                                                 gpgme_ctx)
 
                     if len(email_tuples) < 1:
@@ -226,7 +232,7 @@ def send_notifications(config, directives, cur, formats):
     return sent_mails
 
 
-def generate_notifications_interactively(config, cur, directives, formats):
+def generate_notifications_interactively(config, cur, directives, scripts):
     batch_size = 10
 
     pending = directives[:]
@@ -264,11 +270,11 @@ def generate_notifications_interactively(config, cur, directives, formats):
                 pending = []
 
             print("Sending mails for %d entries... " % (len(to_send),))
-            sent_mails = send_notifications(config, to_send, cur, formats)
+            sent_mails = send_notifications(config, to_send, cur, scripts)
             print("%d mails sent. " % (sent_mails,))
 
 
-def mailgen(args, config, formats):
+def mailgen(args, config, scripts):
     cur = None
     conn = open_db_connection(config, connection_factory=RealDictConnection)
     try:
@@ -282,11 +288,11 @@ def mailgen(args, config, formats):
             return
 
         if args.all:
-            sent_mails = send_notifications(config, directives, cur, formats)
+            sent_mails = send_notifications(config, directives, cur, scripts)
             log.info("{:d} mails sent.".format(sent_mails))
         else:
             generate_notifications_interactively(config, cur, directives,
-                                                 formats)
+                                                 scripts)
 
     finally:
         if cur is not None:
@@ -329,9 +335,9 @@ def main():
     os.environ['GNUPGHOME'] = config["openpgp"]["gnupg_home"]
 
 
-    formats = load_formats(config)
+    scripts = load_script_entry_points(config)
 
-    mailgen(args, config, formats)
+    mailgen(args, config, scripts)
 
 # to lower the chance of problems like
 # http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html#the-double-import-trap
