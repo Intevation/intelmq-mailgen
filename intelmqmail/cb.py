@@ -245,7 +245,6 @@ feed_specific_formats = build_table_formats([
         ("source.ip", "ip"),
         ("time.source", "timestamp"),
         ExtraColumn("mongodb_version", "version"),
-        ExtraColumn("visible_db_excerpt", "visible_databases"),
         ]),
     ("Open-Chargen", [
         ("source.asn", "asn"),
