@@ -1,3 +1,10 @@
+intelmq-mailgen (0.95~rc1) unstable; urgency=low
+
+  * Customer changes
+  * Work with current intelmq
+
+ -- Sascha Wilde <wilde@intevation.de>  Fri, 27 Jan 2017 12:47:18 +0100
+
 intelmq-mailgen (0.95~beta2) unstable; urgency=low
 
   * Removed amplification field from cvs in mssql report.
