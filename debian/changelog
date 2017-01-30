@@ -1,3 +1,9 @@
+intelmq-mailgen (0.95~rc2) unstable; urgency=low
+
+  * Added fix for #864 (Shadowserver Open-LDAP key mapping)
+
+ -- Sascha Wilde <wilde@intevation.de>  Mon, 30 Jan 2017 18:10:51 +0100
+
 intelmq-mailgen (0.95~rc1) unstable; urgency=low
 
   * Customer changes
