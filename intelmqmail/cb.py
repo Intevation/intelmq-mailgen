@@ -230,7 +230,7 @@ feed_specific_formats = build_table_formats([
         ("source.asn", "asn"),
         ("source.ip", "ip"),
         ("time.source", "timestamp"),
-        ("destination.local_hostname", "dns_host_name"),
+        ("source.local_hostname", "dns_host_name"),
         ]),
     ("Open-MSSQL", [
         ("source.asn", "asn"),
