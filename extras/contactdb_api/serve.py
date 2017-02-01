@@ -41,6 +41,11 @@ Design rationale:
 import json
 import logging
 import os
+import sys
+
+import psycopg2
+from psycopg2.extras import DictConnection
+
 
 #import hug
 
@@ -74,6 +79,35 @@ def read_configuration() -> dict:
 
     return config if isinstance(config, dict) else {}
 
+EXAMPLE_CONF_FILE = r"""
+{ "libpg conninfo":
+    "host=localhost dbname=contactdb user=intelmq password='USER\\'s DB PASSWORD'"
+}
+"""
+
+
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == '--example-conf':
+        print(EXAMPLE_CONF_FILE)
+        exit()
+
     config = read_configuration()
-    print(config)
+    print("config = {}".format(config,))
+
+    con = psycopg2.connect(dsn=config["libpg conninfo"],
+                           connection_factory=DictConnection)
+    cur = con.cursor()
+
+    for count in [
+            "autonomous_system_automatic",
+            "autonomous_system",
+            "organisation_automatic",
+            "organisation",
+            "contact_automatic",
+            "contact"
+            ]:
+        cur.execute("SELECT count(*) from {}".format(count))
+        result = cur.fetchone()
+        print("count {} = {}".format(count, result))
+
+    cur.execute("SELECT count(*) from autonomous_system")
