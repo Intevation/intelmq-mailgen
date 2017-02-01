@@ -22,6 +22,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Author(s):
     Bernhard E. Reiter <bernhard@intevation.de>
+
+
+Design rationale:
+    Our services shall be accessed by https://github.com/Intevation/intelmq-fody
+    so our "endpoints" should be reachable from the same ip:port as
+    the checkticket endpoints.
+
+    We need location and credentials for the database holding the contactdb.
+    checkticket.py [1] (a hug based backend) solves this problem by reusing
+    the intelmq-mailgen configuration to access the 'intelmq-events' database.
+    This serving part need to access a different database 'contactdb', thus
+    we start with our on configuration.
+
+    [1] https://github.com/Intevation/intelmq-mailgen/blob/master/extras/checkticket-spa/checkticket.py
+
 """
 import json
 import logging
