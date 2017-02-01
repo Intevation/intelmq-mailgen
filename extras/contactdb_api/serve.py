@@ -43,11 +43,11 @@ import logging
 import os
 import sys
 
+import hug
 import psycopg2
 from psycopg2.extras import DictConnection
 
 
-#import hug
 
 log = logging.getLogger(__name__)
 
@@ -85,6 +85,23 @@ EXAMPLE_CONF_FILE = r"""
 }
 """
 
+ENDPOINT_PREFIX = '/api/contactdb'
+
+# Using a global object for the database connection
+# must be initialised once
+contactdb_conn = None
+
+def open_db_connection(dsn):
+    global contactdb_conn
+
+    contactdb_conn = psycopg2.connect(dsn=dsn,
+                                      connection_factory=DictConnection)
+    return contactdb_conn
+
+@hug.get(ENDPOINT_PREFIX + '/ping')
+def pong():
+    return ["pong"]
+
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == '--example-conf':
@@ -94,9 +111,7 @@ def main():
     config = read_configuration()
     print("config = {}".format(config,))
 
-    con = psycopg2.connect(dsn=config["libpg conninfo"],
-                           connection_factory=DictConnection)
-    cur = con.cursor()
+    cur = open_db_connection(config["libpg conninfo"]).cursor()
 
     for count in [
             "autonomous_system_automatic",

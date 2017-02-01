@@ -45,6 +45,18 @@ import intelmqmail.db as db
 
 log = cb.log
 
+# if possible add the contactdb_api to our endpoints
+try:
+    import contactdb_api.serve
+
+    @hug.extend_api()
+    def add_contactdb_api():
+        return[contactdb_api.serve]
+
+except ImportError as err:
+    log.warning(err)
+
+
 # We are using global variables for postgresql db connection
 # TODO: should be checked that parallel requests via hug/falcon behave well
 # TODO: a cleanup and reopening may be better if we run this long time
