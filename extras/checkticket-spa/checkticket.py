@@ -31,9 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 Author(s):
     Bernhard E. Reiter <bernhard@intevation.de>
 """
-# the intelmqmail module needs an UTF-8 locale, so we set a common one
+# The intelmqmail module needs an UTF-8 locale, so we set a common one
 # available in Ubuntu 14.04/LTS here explicitely. This also removes the
-# necessity configure calling http server to set the locale correctly.
+# necessity to configure the calling http server to set the locale correctly.
 import os
 os.environ['LANG']= 'en_US.UTF-8'
 
