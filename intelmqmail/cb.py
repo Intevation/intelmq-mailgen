@@ -135,8 +135,15 @@ def mail_format_as_csv(cur, directive, config, gpgme_ctx, format_spec):
     asn = events[0]["source.asn"]
     ticket = new_ticket_number(cur)
 
-    subject, body = template.substitute(dict(asn=asn, ticket_number=ticket,
-                                             events_as_csv=events_as_csv))
+    substitutions = dict(ticket_number=ticket, events_as_csv=events_as_csv)
+
+    # Add the information on which the aggregation was based. These are
+    # the same in all directives and events that led to this
+    # notification, so it can be useful to refer to them in the message
+    for key, value in directive["aggregate_identifier"]:
+        substitutions[key] = value
+
+    subject, body = template.substitute(substitutions)
 
     if gpgme_ctx:
         body = clearsign(gpgme_ctx, body)
