@@ -152,6 +152,55 @@ def __db_query_organisation_ids(operation_str:str,  parameters=None):
 
     return orgs
 
+
+def __db_query_org(org_id:int, table_variant:str):
+    """Returns details for an organisaion.
+
+    Parameters:
+        org_id:int: the organisation id to be queries
+        table_variant: either "" or "_automatic"
+
+    Returns:
+        dict: containing the organisation and additional keys
+            'asns' and 'contacts'
+    """
+
+    operation_str = """
+        SELECT *
+            FROM organisation{0} AS o
+            WHERE o.id = %s
+        """.format(table_variant)
+
+    description, results = _db_query(operation_str, (org_id,))
+
+    if not len(results) == 1:
+            return {}
+    else:
+        org = results[0]
+
+        operation_str = """
+            SELECT * from autonomous_system{0} AS a
+                JOIN organisation_to_asn{0} AS oa
+                    ON oa.asn_id = a.number
+                WHERE oa.organisation_id = %s
+            """.format(table_variant)
+
+        description, results = _db_query(operation_str, (org_id,))
+        org["asns"] = results
+
+        operation_str = """
+            SELECT * from contact{0} AS c
+                JOIN role{0} AS r
+                    ON r.contact_id = c.id
+                WHERE r.organisation_id = %s
+            """.format(table_variant)
+
+        description, results = _db_query(operation_str, (org_id,))
+        org["contacts"] = results
+
+        return org
+
+
 @hug.startup()
 def setup(api):
     config = read_configuration()
@@ -178,8 +227,8 @@ def searchasn(asn:int):
 @hug.get(ENDPOINT_PREFIX + '/searchorg')
 def searchorg(name:str):
     return __db_query_organisation_ids("""
-        SELECT array_agg(o.id) as organisation_ids
-            FROM organisation{0} as o
+        SELECT array_agg(o.id) AS organisation_ids
+            FROM organisation{0} AS o
             WHERE name=%s
             GROUP BY name
         """, (name,))
@@ -187,13 +236,22 @@ def searchorg(name:str):
 @hug.get(ENDPOINT_PREFIX + '/searchcontact')
 def searchorg(email:str):
     return __db_query_organisation_ids("""
-        SELECT array_agg(r.organisation_id) as organisation_ids
-            FROM role{0} as r
-            JOIN contact{0} as c
+        SELECT array_agg(r.organisation_id) AS organisation_ids
+            FROM role{0} AS r
+            JOIN contact{0} AS c
                 ON c.id = r.contact_id
             WHERE c.email=%s
             GROUP BY c.email
         """, (email,))
+
+@hug.get(ENDPOINT_PREFIX + '/org/manual/{id}')
+def get_manual_org_details(id:int):
+    return __db_query_org(id,"")
+
+@hug.get(ENDPOINT_PREFIX + '/org/auto/{id}')
+def get_auto_org_details(id:int):
+    return __db_query_org(id,"_automatic")
+
 
 
 def main():
