@@ -13,11 +13,11 @@ python3 -m contactdb_api --example-conf
 ## Run diagnostic mode main()
 
 ```sh
-PYTHONPATH=..: python3 -m contactdb_api
+python3 -m contactdb_api
 ```
 
 ## Run tests
 
 ```sh
-PYTHONPATH=..: python3 -m unittest
+python3 -m unittest
 ```
