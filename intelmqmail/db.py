@@ -26,6 +26,7 @@ PENDING_DIRECTIVES_QUERY = """\
    SELECT d.recipient_address as recipient_address,
           d.template_name as template_name,
           d.event_data_format as event_data_format,
+          d.aggregate_identifier as aggregate_identifier,
           array_agg(d.events_id) as event_ids,
           array_agg(d.id) as directive_ids
      FROM (SELECT id, events_id, recipient_address, template_name,
