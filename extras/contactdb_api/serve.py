@@ -42,10 +42,16 @@ import json
 import logging
 import os
 import sys
+#FUTURE the typing module is part of Python's standard lib for v>=3.5
+#try:
+#    from typing import Tuple, Union, Sequence, List
+#except:
+#    pass
+
 
 import hug
 import psycopg2
-from psycopg2.extras import DictConnection
+from psycopg2.extras import RealDictCursor
 
 
 
@@ -91,16 +97,68 @@ ENDPOINT_PREFIX = '/api/contactdb'
 # must be initialised once
 contactdb_conn = None
 
-def open_db_connection(dsn):
+def open_db_connection(dsn:str):
     global contactdb_conn
 
-    contactdb_conn = psycopg2.connect(dsn=dsn,
-                                      connection_factory=DictConnection)
+    contactdb_conn = psycopg2.connect(dsn=dsn)
     return contactdb_conn
+
+# FUTURE once typing is available
+#def _db_query(operation:str, parameters:Union[dict, list]=None) -> Tuple(list, list):
+def _db_query(operation:str, parameters=None):
+
+    """Does an database query.
+
+    Creates a cursor from the global database connection, runs
+    the query or command the fetches all results.
+
+    Returns:
+        Tuple[list, List[psycopg2.extras.RealDictRow]]: description and results.
+    """
+    global contactdb_conn
+
+    description = None
+
+    # pscopgy2.4 does not offer 'with' for cursor()
+    # FUTURE use with
+    cur = contactdb_conn.cursor(cursor_factory=RealDictCursor)
+
+    cur.execute(operation, parameters)
+    description = cur.description
+    results = cur.fetchall()
+
+    cur.close()
+
+    return (description, results)
+
+@hug.startup()
+def setup(api):
+    config = read_configuration()
+    open_db_connection(config["libpg conninfo"])
+    log.debug("Initialised DB connection for contactdb_api.")
+
 
 @hug.get(ENDPOINT_PREFIX + '/ping')
 def pong():
     return ["pong"]
+
+@hug.get(ENDPOINT_PREFIX + '/searchasn')
+def searchasn(asn:int):
+    description, results = _db_query(
+            "SELECT * FROM autonomous_system_automatic WHERE number=%s", (asn,))
+    return results
+
+@hug.get(ENDPOINT_PREFIX + '/searchorg')
+def searchorg(name:str):
+    description, results = _db_query(
+            "SELECT * FROM organisation_automatic WHERE name=%s", (name,))
+    return results
+
+@hug.get(ENDPOINT_PREFIX + '/searchcontact')
+def searchorg(email:str):
+    description, results = _db_query(
+            "SELECT * FROM contact_automatic WHERE email=%s", (email,))
+    return results
 
 
 def main():
