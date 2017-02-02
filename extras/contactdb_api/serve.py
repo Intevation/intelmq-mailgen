@@ -106,7 +106,6 @@ def open_db_connection(dsn:str):
 # FUTURE once typing is available
 #def _db_query(operation:str, parameters:Union[dict, list]=None) -> Tuple(list, list):
 def _db_query(operation:str, parameters=None):
-
     """Does an database query.
 
     Creates a cursor from the global database connection, runs
@@ -131,6 +130,28 @@ def _db_query(operation:str, parameters=None):
 
     return (description, results)
 
+def __db_query_organisation_ids(operation_str:str,  parameters=None):
+    """Inquires organisation_ids for a specic query.
+
+    Parameters:
+        operation(str): must be a psycopg2 execute operation string that
+            only returns an array of ids "AS organisation_ids" or nothing
+            it has to contain '{0}' format placeholders for the table variants
+
+    Returns:
+        Dict("auto":list, "manual":list): lists of organisation_ids that
+            where manually entered or imported automatically
+    """
+    orgs = {}
+
+    description, results = _db_query(operation_str.format(""), parameters)
+    orgs["manual"] = results[0]["organisation_ids"] if len(results)==1 else []
+    description, results = _db_query(operation_str.format("_automatic"),
+                                     parameters)
+    orgs["auto"] = results[0]["organisation_ids"] if len(results)==1 else []
+
+    return orgs
+
 @hug.startup()
 def setup(api):
     config = read_configuration()
@@ -142,23 +163,37 @@ def setup(api):
 def pong():
     return ["pong"]
 
+
 @hug.get(ENDPOINT_PREFIX + '/searchasn')
 def searchasn(asn:int):
-    description, results = _db_query(
-            "SELECT * FROM autonomous_system_automatic WHERE number=%s", (asn,))
-    return results
+    return __db_query_organisation_ids("""
+        SELECT array_agg(oa.organisation_id) as organisation_ids
+            FROM autonomous_system{0} AS a
+            JOIN organisation_to_asn{0} AS oa
+                ON oa.asn_id = a.number
+            WHERE number=%s
+            GROUP BY a
+        """, (asn,))
 
 @hug.get(ENDPOINT_PREFIX + '/searchorg')
 def searchorg(name:str):
-    description, results = _db_query(
-            "SELECT * FROM organisation_automatic WHERE name=%s", (name,))
-    return results
+    return __db_query_organisation_ids("""
+        SELECT array_agg(o.id) as organisation_ids
+            FROM organisation{0} as o
+            WHERE name=%s
+            GROUP BY name
+        """, (name,))
 
 @hug.get(ENDPOINT_PREFIX + '/searchcontact')
 def searchorg(email:str):
-    description, results = _db_query(
-            "SELECT * FROM contact_automatic WHERE email=%s", (email,))
-    return results
+    return __db_query_organisation_ids("""
+        SELECT array_agg(r.organisation_id) as organisation_ids
+            FROM role{0} as r
+            JOIN contact{0} as c
+                ON c.id = r.contact_id
+            WHERE c.email=%s
+            GROUP BY c.email
+        """, (email,))
 
 
 def main():
