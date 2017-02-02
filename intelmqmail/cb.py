@@ -130,15 +130,13 @@ def mail_format_as_csv(cur, directive, config, gpgme_ctx, format_spec):
 
     events_as_csv = format_as_csv(format_spec, events)
 
-    subject_template, body_template = read_template(config["template_dir"],
-                                                    directive["template_name"])
+    template = read_template(config["template_dir"], directive["template_name"])
 
     asn = events[0]["source.asn"]
     ticket = new_ticket_number(cur)
 
-    subject = subject_template.substitute(asn=asn, ticket_number=ticket)
-    body = body_template.substitute(events_as_csv=events_as_csv,
-                                    asn=asn, ticket_number=ticket)
+    subject, body = template.substitute(dict(asn=asn, ticket_number=ticket,
+                                             events_as_csv=events_as_csv))
 
     if gpgme_ctx:
         body = clearsign(gpgme_ctx, body)
