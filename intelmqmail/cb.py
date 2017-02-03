@@ -119,9 +119,6 @@ def load_script_entry_points(config):
 def mail_format_as_csv(cur, directive, config, gpgme_ctx, format_spec):
     """Creates emails with csv attachment for given columns.
 
-    Groups the events by 'source.asn' and creates an email for each.
-    TODO: Assumes that all events have such a value.
-
     :returns: list of tuples (email object, list of notification ids, ticket)
     :rtype: list
     """
@@ -132,7 +129,6 @@ def mail_format_as_csv(cur, directive, config, gpgme_ctx, format_spec):
 
     template = read_template(config["template_dir"], directive["template_name"])
 
-    asn = events[0]["source.asn"]
     ticket = new_ticket_number(cur)
 
     substitutions = dict(ticket_number=ticket, events_as_csv=events_as_csv)
