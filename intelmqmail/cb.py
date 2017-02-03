@@ -123,7 +123,7 @@ def mail_format_as_csv(cur, directive, config, gpgme_ctx, format_spec):
     :rtype: list
     """
     events = load_events(cur, directive["event_ids"],
-                         ["id"] + format_spec.event_table_columns())
+                         format_spec.event_table_columns())
 
     events_as_csv = format_as_csv(format_spec, events)
 
