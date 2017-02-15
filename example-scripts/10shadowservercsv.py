@@ -17,10 +17,8 @@ standard_column_titles = {
 
     # column titles for extra attributes
     'extra:system_desc': 'sysdesc',
-    "extra:dns_hostname": "dns_host_name",
     "extra:mssql_version": "version",
     "extra:mongodb_version": "version",
-    "extra:visible_db_excerpt": "visible_databases",
     "extra:workgroup_name": "workgroup",
     "extra:machine_name": "machine_name",
     "extra:elasticsearch_version": "version",
@@ -91,7 +89,7 @@ table_formats = table_formats_with_default_titles([
         "source.asn",
         "source.ip",
         "time.source",
-        "extra:dns_hostname",
+        ("source.local_hostname", "dns_hostname"),
         ]),
     ("csv_Open-MSSQL", [
         "source.asn",
@@ -106,7 +104,6 @@ table_formats = table_formats_with_default_titles([
         "source.ip",
         "time.source",
         "extra:mongodb_version",
-        "extra:visible_db_excerpt",
         ]),
     ("csv_Open-Chargen", [
         "source.asn",

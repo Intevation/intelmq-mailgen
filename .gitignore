@@ -2,8 +2,7 @@
 *.swp
 *.log
 *.*~
-intelmqmail/__pycache__/
-tests/__pycache__/
+__pycache__/
 dist
 build
 .pybuild

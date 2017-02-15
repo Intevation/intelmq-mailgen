@@ -31,9 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 Author(s):
     Bernhard E. Reiter <bernhard@intevation.de>
 """
-# the intelmqmail module needs an UTF-8 locale, so we set a common one
+# The intelmqmail module needs an UTF-8 locale, so we set a common one
 # available in Ubuntu 14.04/LTS here explicitely. This also removes the
-# necessity configure calling http server to set the locale correctly.
+# necessity to configure the calling http server to set the locale correctly.
 import os
 os.environ['LANG']= 'en_US.UTF-8'
 
@@ -44,6 +44,18 @@ import intelmqmail.cb as cb
 import intelmqmail.db as db
 
 log = cb.log
+
+# if possible add the contactdb_api to our endpoints
+try:
+    import contactdb_api.serve
+
+    @hug.extend_api()
+    def add_contactdb_api():
+        return[contactdb_api.serve]
+
+except ImportError as err:
+    log.warning(err)
+
 
 # We are using global variables for postgresql db connection
 # TODO: should be checked that parallel requests via hug/falcon behave well
