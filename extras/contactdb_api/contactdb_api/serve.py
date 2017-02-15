@@ -131,7 +131,7 @@ def _db_query(operation:str, parameters=None):
     return (description, results)
 
 def __db_query_organisation_ids(operation_str:str,  parameters=None):
-    """Inquires organisation_ids for a specic query.
+    """Inquires organisation_ids for a specific query.
 
     Parameters:
         operation(str): must be a psycopg2 execute operation string that
