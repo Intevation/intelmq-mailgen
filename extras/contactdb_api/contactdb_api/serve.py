@@ -252,7 +252,15 @@ def get_manual_org_details(id:int):
 def get_auto_org_details(id:int):
     return __db_query_org(id,"_automatic")
 
-
+# a way to test this is similiar to
+#   import requests
+#   requests.post('http://localhost:8000/api/contactdb/org/manual/commit', json={'one': 'two'}, auth=('user', 'pass')).json()
+@hug.post(ENDPOINT_PREFIX + '/org/manual/commit')
+def commit_pending_org_changes(body):
+    log.warn("Got commit_object: " + repr(body))
+    # TODO do database changes in one transaction
+    # TODO return the list of changed or created manual orgs
+    return ( [ 23, 42 ] )
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == '--example-conf':
