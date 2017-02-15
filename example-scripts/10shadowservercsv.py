@@ -181,7 +181,8 @@ table_formats = table_formats_with_default_titles([
     ])
 
 
-
-def determine_format(directive):
-    return table_formats.get(directive["event_data_format"])
-
+def create_notifications(context):
+    format_spec = table_formats.get(context.directive["event_data_format"])
+    if format_spec is not None:
+        return context.mail_format_as_csv(format_spec)
+    return None

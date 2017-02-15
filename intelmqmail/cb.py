@@ -44,12 +44,9 @@ import gpgme  # developed for pygpgme 0.3
 from psycopg2.extras import RealDictConnection
 
 
-from intelmqmail.templates import read_template
-from intelmqmail.tableformat import format_as_csv
-from intelmqmail.db import open_db_connection, get_pending_notifications, \
-     load_events, new_ticket_number, mark_as_sent
-from intelmqmail.mail import create_mail, clearsign
+from intelmqmail.db import open_db_connection, get_pending_notifications
 from intelmqmail.script import load_scripts
+from intelmqmail.notification import SendContext, ScriptContext
 
 
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
@@ -113,68 +110,25 @@ def read_configuration():
 
 
 def load_script_entry_points(config):
-    return load_scripts(config["script_directory"], "determine_format")
+    return load_scripts(config["script_directory"], "create_notifications")
 
 
-def mail_format_as_csv(cur, directive, config, gpgme_ctx, format_spec):
-    """Creates emails with csv attachment for given columns.
-
-    :returns: list of tuples (email object, list of notification ids, ticket)
-    :rtype: list
-    """
-    events = load_events(cur, directive["event_ids"],
-                         format_spec.event_table_columns())
-
-    events_as_csv = format_as_csv(format_spec, events)
-
-    template = read_template(config["template_dir"], directive["template_name"])
-
-    ticket = new_ticket_number(cur)
-
-    substitutions = dict(ticket_number=ticket, events_as_csv=events_as_csv)
-
-    # Add the information on which the aggregation was based. These are
-    # the same in all directives and events that led to this
-    # notification, so it can be useful to refer to them in the message
-    for key, value in directive["aggregate_identifier"]:
-        substitutions[key] = value
-
-    subject, body = template.substitute(substitutions)
-
-    if gpgme_ctx:
-        body = clearsign(gpgme_ctx, body)
-
-    mail = create_mail(sender=config["sender"],
-                       recipient=directive["recipient_address"],
-                       subject=subject, body=body,
-                       attachments=[])
-    return [(mail, directive["directive_ids"], ticket)]
-
-
-def format_for_directive(directive, scripts):
+def create_notifications(cur, directive, config, scripts, gpgme_ctx):
+    script_context = ScriptContext(config, cur, gpgme_ctx, directive, log)
     for script in scripts:
-        fmt = script(directive)
-        if fmt is not None:
-            return fmt
-    return None
-
-
-def create_mails(cur, directive, config, scripts, gpgme_ctx):
-    """Creates emails with events data in CSV format.
-
-    :returns: list of tuples (email object, list of ids, ticket)
-    :rtype: list
-    """
-    format_spec = format_for_directive(directive, scripts)
-    if format_spec is None:
-        msg = ("Cannot generate emails for format %r"
-               # TODO: format_spec now depends on whole directive. Log
-               # all of it?
-               % (agg_notification["event_data_format"]))
-        raise NotImplementedError(msg)
-
-    return mail_format_as_csv(cur, directive, config, gpgme_ctx, format_spec)
-
+        log.debug("Calling script %r", script.filename)
+        try:
+            notifications = script(script_context)
+        except Exception:
+            log.exception("Error while running entry point of script %r",
+                          script.filename)
+            continue
+        else:
+            log.debug("Script finished.")
+        if notifications:
+            return notifications
+    raise NotImplementedError(("Cannot generate emails for directive %r"
+                               % (directive,)))
 
 
 def send_notifications(config, directives, cur, scripts):
@@ -209,10 +163,10 @@ def send_notifications(config, directives, cur, scripts):
             cur.execute("SAVEPOINT sendmail;")
             try:
                 try:
-                    email_tuples = create_mails(cur, directive, config, scripts,
-                                                gpgme_ctx)
+                    notifications = create_notifications(cur, directive, config,
+                                                         scripts, gpgme_ctx)
 
-                    if len(email_tuples) < 1:
+                    if len(notifications) < 1:
                         # TODO maybe use a user defined exception here?
                         raise RuntimeError("No emails for sending were generated!")
                 except Exception:
@@ -220,9 +174,9 @@ def send_notifications(config, directives, cur, scripts):
                                   " Continuing with other notifications.",
                                   directive)
                 else:
-                    for email_tuple in email_tuples:
-                        smtp.send_message(email_tuple[0])
-                        mark_as_sent(cur, email_tuple[1], email_tuple[2])
+                    context = SendContext(cur, smtp)
+                    for notification in notifications:
+                        notification.send(context)
                         sent_mails += 1
 
             except:
