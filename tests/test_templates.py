@@ -27,20 +27,13 @@ class TemplatesTest(unittest.TestCase):
         cls.template_dir = os.path.join(cls.top_dir_obj.name, 'templates')
         os.mkdir(cls.template_dir)
 
-        cls.test_contents = """Subject
+        cls.test_contents = """Subject for report #${ticket}
 
-Bodyline
-Bodyline"""
+Body of report #${ticket} for AS ${source.asn}. Events:
+${events}"""
 
         with open(os.path.join(cls.template_dir, "test-template"), "xt") as f:
             f.write(cls.test_contents)
-
-
-
-    def assertStringTemplatesEqual(self, a, b, msg=None):
-        "Assert that string.Templates are equal."
-        return self.assertEqual(a.template, b.template, msg=msg)
-
 
     def test_full_template_filename(self):
         self.assertEqual(
@@ -53,9 +46,10 @@ Bodyline"""
                           "../test-template")
 
     def test_read_template(self):
-        self.addTypeEqualityFunc(string.Template, 'assertStringTemplatesEqual')
-
-        subject, body = templates.read_template(self.template_dir,
-                                                "test-template")
-        self.assertEqual(subject, string.Template("Subject"))
-        self.assertEqual(body, string.Template("Bodyline\nBodyline\n"))
+        tmpl = templates.read_template(self.template_dir, "test-template")
+        subject, body = tmpl.substitute({"ticket": "8172",
+                                         "source.asn": "3269",
+                                         "events": "<CSV formatted events>"})
+        self.assertEqual(subject, "Subject for report #8172")
+        self.assertEqual(body, ("Body of report #8172 for AS 3269. Events:\n"
+                                "<CSV formatted events>\n"))
