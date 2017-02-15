@@ -69,8 +69,7 @@ def read_template(template_dir, template_name):
         subject = None
         while not subject:
             subject = infile.readline().strip()
-        return Template(IntelMQStringTemplate(subject),
-                        IntelMQStringTemplate(infile.read().strip() + "\n"))
+        return Template.from_strings(subject, infile.read().strip() + "\n")
 
 
 class IntelMQStringTemplate(string.Template):
@@ -95,6 +94,14 @@ class Template:
         """
         self.subject = subject
         self.body = body
+
+    @classmethod
+    def from_strings(cls, subject, body):
+        """Convenience method that creates a template from strings.
+        The strings are converted to templates with IntelMQStringTemplate.
+        """
+        return cls(IntelMQStringTemplate(subject),
+                   IntelMQStringTemplate(body))
 
     def __repr__(self):
         return "Template(%r, %r)" % (self.subject, self.body)
