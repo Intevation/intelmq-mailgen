@@ -49,8 +49,10 @@ def entry_point():
         entry_points = load_scripts(self.tempdir.name, "entry_point")
         self.assertEqual([f() for f in entry_points],
                          ["preparation", "special rule 1"])
-        self.assertEqual([f.name for f in entry_points],
-                         ["10preparation.py", "45special_rule1.py"])
+        self.assertEqual([f.filename for f in entry_points],
+                         [os.path.join(self.tempdir.name, name)
+                          for name in ["10preparation.py",
+                                       "45special_rule1.py"]])
 
 
 class TestLoadScriptMissingEntryPoint(LoadScriptTest):
