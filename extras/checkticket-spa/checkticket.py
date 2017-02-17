@@ -97,7 +97,7 @@ def getEventIDsForTicket(ticket:hug.types.length(17, 18)):
                     "   WHERE intelmq_ticket = %s;", (ticket,))
         event_ids = cur.fetchone()["a"]
     finally:
-        pass
+        cur.connection.commit() # end transaction
 
     return event_ids
 
@@ -123,7 +123,7 @@ def getEvents(ids:ListOfIds()):
             event = {k:v for k,v in row.items() if v != None}
             events.append(event)
     finally:
-        pass
+        cur.connection.commit() # end transaction
 
     return events
 
@@ -135,7 +135,13 @@ def getEventsForTicket(ticket:hug.types.length(17, 18)):
 @hug.get()
 def getLastTicketNumber():
     global cur
-    return db.last_ticket_number(cur)
+    last_ticket_number = None
+    try:
+        last_ticket_number = db.last_ticket_number(cur)
+    finally:
+        cur.connection.commit() # end transaction
+
+    return last_ticket_number
 
 ###
 ## When serving a single page web application in a more complex setup,

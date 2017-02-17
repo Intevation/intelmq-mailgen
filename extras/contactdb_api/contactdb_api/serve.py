@@ -126,6 +126,7 @@ def _db_query(operation:str, parameters=None):
     description = cur.description
     results = cur.fetchall()
 
+    contactdb_conn.commit() # end transaction
     cur.close()
 
     return (description, results)
@@ -285,3 +286,4 @@ def main():
         print("count {} = {}".format(count, result))
 
     cur.execute("SELECT count(*) from autonomous_system")
+    cur.connection.commit() # end transaction
