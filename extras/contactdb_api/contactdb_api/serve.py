@@ -135,7 +135,8 @@ def _db_query(operation:str, parameters=None, end_transaction:bool=True):
 
     if end_transaction:
         contactdb_conn.commit() # end transaction
-        cur.close()
+
+    cur.close()
 
     return (description, results)
 
