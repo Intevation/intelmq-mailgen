@@ -104,12 +104,19 @@ def open_db_connection(dsn:str):
     return contactdb_conn
 
 # FUTURE once typing is available
-#def _db_query(operation:str, parameters:Union[dict, list]=None) -> Tuple(list, list):
-def _db_query(operation:str, parameters=None):
+#def _db_query(operation:str, parameters:Union[dict, list]=None,
+#              end_transaction:bool=True) -> Tuple(list, list):
+def _db_query(operation:str, parameters=None, end_transaction:bool=True):
     """Does an database query.
 
     Creates a cursor from the global database connection, runs
     the query or command the fetches all results.
+
+    Parameters:
+        operation: The query to be used by psycopg2.cursor.execute()
+        parameters: for the sql query
+        end_transaction: set to False to do subsequent queries in the same
+            transaction.
 
     Returns:
         Tuple[list, List[psycopg2.extras.RealDictRow]]: description and results.
@@ -126,8 +133,9 @@ def _db_query(operation:str, parameters=None):
     description = cur.description
     results = cur.fetchall()
 
-    contactdb_conn.commit() # end transaction
-    cur.close()
+    if end_transaction:
+        contactdb_conn.commit() # end transaction
+        cur.close()
 
     return (description, results)
 
@@ -172,7 +180,7 @@ def __db_query_org(org_id:int, table_variant:str):
             WHERE o.id = %s
         """.format(table_variant)
 
-    description, results = _db_query(operation_str, (org_id,))
+    description, results = _db_query(operation_str, (org_id,), False)
 
     if not len(results) == 1:
             return {}
@@ -186,7 +194,7 @@ def __db_query_org(org_id:int, table_variant:str):
                 WHERE oa.organisation_id = %s
             """.format(table_variant)
 
-        description, results = _db_query(operation_str, (org_id,))
+        description, results = _db_query(operation_str, (org_id,), False)
         org["asns"] = results
 
         operation_str = """
@@ -196,7 +204,7 @@ def __db_query_org(org_id:int, table_variant:str):
                 WHERE r.organisation_id = %s
             """.format(table_variant)
 
-        description, results = _db_query(operation_str, (org_id,))
+        description, results = _db_query(operation_str, (org_id,), True)
         org["contacts"] = results
 
         return org
