@@ -48,7 +48,7 @@ import sys
 #except:
 #    pass
 
-
+from falcon import HTTP_BAD_REQUEST
 import hug
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -266,11 +266,23 @@ def get_auto_org_details(id:int):
 #   import requests
 #   requests.post('http://localhost:8000/api/contactdb/org/manual/commit', json={'one': 'two'}, auth=('user', 'pass')).json()
 @hug.post(ENDPOINT_PREFIX + '/org/manual/commit')
-def commit_pending_org_changes(body):
+def commit_pending_org_changes(body, response):
     log.warn("Got commit_object: " + repr(body))
+    if not (body
+            and 'commands' in body
+            and len(body['commands']) > 0
+            and 'orgs' in body
+            and len(body['orgs']) > 0
+            and len(body['commands']) == len(body['orgs'])):
+        response.status = HTTP_BAD_REQUEST
+        return {'reason': "Needs commands and orgs arrays of same length."}
+
+    commands = body['commands']
+    orgs =  body['orgs']
+
     # TODO do database changes in one transaction
     # TODO return the list of changed or created manual orgs
-    return ( [ 23, 42 ] )
+    return ([ len(commands), 23, 42 ])
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == '--example-conf':
