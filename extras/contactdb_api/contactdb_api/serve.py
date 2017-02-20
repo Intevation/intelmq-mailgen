@@ -149,7 +149,7 @@ def _db_query(operation:str, parameters=None, end_transaction:bool=True):
     results = cur.fetchall()
 
     if end_transaction:
-        __end_transaction()
+        __commit_transaction()
 
     cur.close()
 
@@ -320,16 +320,19 @@ def commit_pending_org_changes(body, response):
             return {'reason':
                     "Unknown command. Not in " + str(known_commands.keys())}
 
-    results = []
+    resultingIDs = []
     try:
         for command, org in zip(commands, orgs):
-            result.append = known_commands[command](org)
-    except:
+            resultingIDs.append(known_commands[command](org))
+    except Exception as err:
         __rollback_transaction()
+        log.exception("Commit failed '%s' with '%r'", command, org)
+        response.status = HTTP_BAD_REQUEST
+        return {"reason": "Commit failed, see server logs."}
     else:
-        __end_transaction()
+        __commit_transaction()
 
-    return results
+    return resultingIDs
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == '--example-conf':
