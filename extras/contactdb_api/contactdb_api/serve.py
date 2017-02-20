@@ -69,10 +69,14 @@ def read_configuration() -> dict:
     Notes:
       Design rationale
       ----------------
-        * Okay separation from config and code.
-        * Better than intelmq-mailgen which has two hard-coded places 
-          and merge code.
-        * (Inspired by https://12factor.net/config.)
+        * Provies an "okay" separation from config and code.
+        * Better than intelmq-mailgen which has two hard-coded places
+          and merge code for the config.
+        * (Inspired by https://12factor.net/config.) But it is not a good
+          idea to put credential information in the commandline or environment.
+        * We are using json for the configuration file format and not
+          Python's configparser module to stay more in line with intelmq's
+          overall design philosophy to use json for configuration files.
     """
     config = None
     config_file_name = os.environ.get(
@@ -86,8 +90,10 @@ def read_configuration() -> dict:
     return config if isinstance(config, dict) else {}
 
 EXAMPLE_CONF_FILE = r"""
-{ "libpg conninfo":
-    "host=localhost dbname=contactdb user=intelmq password='USER\\'s DB PASSWORD'"
+{
+  "libpg conninfo":
+    "host=localhost dbname=contactdb user=intelmq password='USER\\'s DB PASSWORD'",
+  "logging_level": "INFO"
 }
 """
 
@@ -102,6 +108,15 @@ def open_db_connection(dsn:str):
 
     contactdb_conn = psycopg2.connect(dsn=dsn)
     return contactdb_conn
+
+def __commit_transaction():
+    global contactdb_conn
+    contactdb_conn.commit()
+
+def __rollback_transaction():
+    global contactdb_conn
+    contactdb_conn.rollback()
+
 
 # FUTURE once typing is available
 #def _db_query(operation:str, parameters:Union[dict, list]=None,
@@ -134,7 +149,7 @@ def _db_query(operation:str, parameters=None, end_transaction:bool=True):
     results = cur.fetchall()
 
     if end_transaction:
-        contactdb_conn.commit() # end transaction
+        __end_transaction()
 
     cur.close()
 
@@ -210,10 +225,23 @@ def __db_query_org(org_id:int, table_variant:str):
 
         return org
 
+def _create_org(org):
+    log.debug("_create_org called with " + repr(org))
+    pass
+
+def _update_org(org):
+    log.debug("_update_org called with " + repr(org))
+    pass
+
+def _delete_org(org):
+    log.debug("_delete_org called with " + repr(org))
+    pass
 
 @hug.startup()
 def setup(api):
     config = read_configuration()
+    if "logging_level" in config:
+        log.setLevel(config["logging_level"])
     open_db_connection(config["libpg conninfo"])
     log.debug("Initialised DB connection for contactdb_api.")
 
@@ -267,8 +295,13 @@ def get_auto_org_details(id:int):
 #   requests.post('http://localhost:8000/api/contactdb/org/manual/commit', json={'one': 'two'}, auth=('user', 'pass')).json()
 @hug.post(ENDPOINT_PREFIX + '/org/manual/commit')
 def commit_pending_org_changes(body, response):
-    known_commands = {'create':True, 'update':True, 'delete':True}
-    log.warn("Got commit_object: " + repr(body))
+
+    known_commands = { # list of commands and function table
+        'create': _create_org,
+        'update': _update_org,
+        'delete': _delete_org
+        }
+    log.info("Got commit_object: " + repr(body))
     if not (body
             and 'commands' in body
             and len(body['commands']) > 0
@@ -287,9 +320,16 @@ def commit_pending_org_changes(body, response):
             return {'reason':
                     "Unknown command. Not in " + str(known_commands.keys())}
 
-    # TODO do database changes in one transaction
-    # TODO return the list of changed or created manual orgs
-    return ([ len(commands), 23, 42 ])
+    results = []
+    try:
+        for command, org in zip(commands, orgs):
+            result.append = known_commands[command](org)
+    except:
+        __rollback_transaction()
+    else:
+        __end_transaction()
+
+    return results
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == '--example-conf':
@@ -298,6 +338,12 @@ def main():
 
     config = read_configuration()
     print("config = {}".format(config,))
+    if "logging_level" in config:
+        log.setLevel(config["logging_level"])
+
+    print("log.name = \"{}\"".format(log.name))
+    print("log effective level = \"{}\"".format(
+        logging.getLevelName(log.getEffectiveLevel())))
 
     cur = open_db_connection(config["libpg conninfo"]).cursor()
 
