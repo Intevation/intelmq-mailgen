@@ -99,6 +99,15 @@ EXAMPLE_CONF_FILE = r"""
 
 ENDPOINT_PREFIX = '/api/contactdb'
 
+class Error(Exception):
+    """Base class for exceptions in this module."""
+    pass
+
+class CommitError(Error):
+    """Exception raises if a commit action fails.
+    """
+    pass
+
 # Using a global object for the database connection
 # must be initialised once
 contactdb_conn = None
@@ -225,9 +234,43 @@ def __db_query_org(org_id:int, table_variant:str):
 
         return org
 
+def __check_or_create_asns(asns):
+    new_numbers = []
+    for asn in asns:
+        if "ripe_aut_num" in asn and asn["ripe_aut_num"] != None:
+            raise CommitError("ripe_aut_num is set")
+
+        operation_str = """
+            SELECT a.number FROM autonomous_system as a
+                WHERE a.number = %(number)s AND a.comment = %(comment)s
+            """
+        description, results = _db_query(operation_str, asn, False)
+
+        if len(results) == 1:
+            new_numbers.append(results[0]["number"])
+        else:
+            operation_str = """
+                INSERT INTO autonomous_system
+                    (number, comment)
+                    VALUES (%(number)s, %(comment)s)
+                """
+            description, results = _db_query(operation_str, asn, False)
+            new_numbers.append(asn["number"])
+
+    return new_numbers
+
+def __check_or_create_contacts(contacts):
+    pass
+
 def _create_org(org):
     log.debug("_create_org called with " + repr(org))
-    pass
+
+    new_asn_ids = __check_or_create_asns(org['asns'])
+    log.debug("new_asn_ids = " + repr(new_asn_ids))
+    new_contact_ids = __check_or_create_contacts(org['contacts'])
+    log.debug("new_contact_ids = " + repr(new_contact_ids))
+
+
 
 def _update_org(org):
     log.debug("_update_org called with " + repr(org))
