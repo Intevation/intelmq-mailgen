@@ -267,6 +267,7 @@ def get_auto_org_details(id:int):
 #   requests.post('http://localhost:8000/api/contactdb/org/manual/commit', json={'one': 'two'}, auth=('user', 'pass')).json()
 @hug.post(ENDPOINT_PREFIX + '/org/manual/commit')
 def commit_pending_org_changes(body, response):
+    known_commands = {'create':True, 'update':True, 'delete':True}
     log.warn("Got commit_object: " + repr(body))
     if not (body
             and 'commands' in body
@@ -279,6 +280,12 @@ def commit_pending_org_changes(body, response):
 
     commands = body['commands']
     orgs =  body['orgs']
+
+    for command in commands:
+        if not command in known_commands:
+            response.status = HTTP_BAD_REQUEST
+            return {'reason':
+                    "Unknown command. Not in " + str(known_commands.keys())}
 
     # TODO do database changes in one transaction
     # TODO return the list of changed or created manual orgs

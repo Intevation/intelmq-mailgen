@@ -50,6 +50,14 @@ def semi_automatic():
         print(err.code, err.reason)
         print(err.read().decode('utf-8'))
 
+    # test4
+    # bad command
+    try:
+        data = json.dumps({'commands': ['mangle'], 'orgs': [1]})
+        f = urllib.request.urlopen(request, data.encode('utf-8'))
+    except urllib.error.HTTPError as err:
+        print(err.code, err.reason)
+        print(err.read().decode('utf-8'))
 
 if __name__ == '__main__':
     semi_automatic()
