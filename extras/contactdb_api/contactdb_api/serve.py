@@ -296,11 +296,6 @@ def get_auto_org_details(id:int):
 @hug.post(ENDPOINT_PREFIX + '/org/manual/commit')
 def commit_pending_org_changes(body, response):
 
-    known_commands = { # list of commands and function table
-        'create': _create_org,
-        'update': _update_org,
-        'delete': _delete_org
-        }
     log.info("Got commit_object: " + repr(body))
     if not (body
             and 'commands' in body
@@ -313,6 +308,12 @@ def commit_pending_org_changes(body, response):
 
     commands = body['commands']
     orgs =  body['orgs']
+
+    known_commands = { # list of commands and function table
+        'create': _create_org,
+        'update': _update_org,
+        'delete': _delete_org
+        }
 
     for command in commands:
         if not command in known_commands:
