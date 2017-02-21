@@ -10,6 +10,15 @@ Contents see
 python3 -m contactdb_api --example-conf
 ```
 
+There must be a database user which can write to contactdb.
+If there is none yet, you can create one with something likes
+```sh
+createuser apiuser --pwprompt
+psql -c "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO apiuser;" contactdb
+psql -c "GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO apiuser;" contactdb
+
+```
+
 ## Run diagnostic mode main()
 
 ```sh

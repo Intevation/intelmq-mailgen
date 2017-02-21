@@ -164,6 +164,33 @@ def _db_query(operation:str, parameters=None, end_transaction:bool=True):
 
     return (description, results)
 
+def _db_manipulate(operation:str, parameters=None,
+                   end_transaction:bool=True) -> int:
+    """Manipulates the database.
+
+    Creates a cursor from the global database connection, runs the command.
+
+    Parameters:
+        operation: The query to be used by psycopg2.cursor.execute()
+        parameters: for the sql query
+        end_transaction: set to False to do subsequent queries in the same
+            transaction.
+
+    Returns:
+        Number of affected rows.
+    """
+    global contactdb_conn
+
+    # pscopgy2.4 does not offer 'with' for cursor()
+    # FUTURE use with
+    cur = contactdb_conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute(operation, parameters)
+    if end_transaction:
+        __commit_transaction()
+    cur.close()
+
+    return cur.rowcount
+
 def __db_query_organisation_ids(operation_str:str,  parameters=None):
     """Inquires organisation_ids for a specific query.
 
@@ -234,33 +261,76 @@ def __db_query_org(org_id:int, table_variant:str):
 
         return org
 
-def __check_or_create_asns(asns):
+def __check_or_create_asns(asns:list) -> list:
+    """Find or creates db entries for asns.
+
+    Parameter:
+        asns: asns to be found or created
+
+    Returns:
+        List of tuples with asn_id and notification intervall.
+    """
     new_numbers = []
     for asn in asns:
         if "ripe_aut_num" in asn and asn["ripe_aut_num"] != None:
             raise CommitError("ripe_aut_num is set")
 
         operation_str = """
-            SELECT a.number FROM autonomous_system as a
+            SELECT a.number FROM autonomous_system AS a
                 WHERE a.number = %(number)s AND a.comment = %(comment)s
             """
         description, results = _db_query(operation_str, asn, False)
 
         if len(results) == 1:
-            new_numbers.append(results[0]["number"])
+            new_numbers.append((results[0]["number"],
+                                asn['notification_interval']))
         else:
             operation_str = """
                 INSERT INTO autonomous_system
                     (number, comment)
                     VALUES (%(number)s, %(comment)s)
                 """
-            description, results = _db_query(operation_str, asn, False)
-            new_numbers.append(asn["number"])
+            affected_rows = _db_manipulate(operation_str, asn, False)
+            log.debug("affected_rows = " + repr(affected_rows))
+            new_numbers.append(asn["number"], asn['notification_interval'])
 
     return new_numbers
 
-def __check_or_create_contacts(contacts):
-    pass
+def __check_or_create_contacts(contacts:list) -> list:
+    new_contact_ids = []
+    for contact in contacts:
+        operation_str = """
+            SELECT c.id FROM contact AS c
+                WHERE c.firstname = %(firstname)s
+                  AND c.lastname = %(lastname)s
+                  AND c.tel = %(tel)s
+                  AND c.openpgp_fpr = %(openpgp_fpr)s
+                  AND c.email = %(email)s
+                  AND c.format_id = %(format_id)s
+                  AND c.comment = %(comment)s
+            """
+        description, results = _db_query(operation_str, contact, False)
+
+        if len(results) > 1:
+            raise CommitError("More than one contact "
+                              "with {} in the db".format(contact))
+        elif len(results) == 1:
+            new_contact_ids.append(results[0]["id"])
+        else:
+            operation_str = """
+                INSERT INTO contact
+                    (firstname, lastname, tel,
+                     openpgp_fpr, email, format_id, comment)
+                    VALUES (%(firstname)s, %(lastname)s, %(tel)s,
+                            %(openpgp_fpr)s, %(email)s, %(format_id)s,
+                            %(comment)s)
+                    RETURNING id
+                """
+            description, results = _db_query(operation_str, contact, False)
+            new_contact_ids.append(results[0]["id"])
+
+    return new_contact_ids
+
 
 def _create_org(org):
     log.debug("_create_org called with " + repr(org))
@@ -270,6 +340,52 @@ def _create_org(org):
     new_contact_ids = __check_or_create_contacts(org['contacts'])
     log.debug("new_contact_ids = " + repr(new_contact_ids))
 
+    operation_str = """
+        SELECT o.id FROM organisation as o
+            WHERE o.name = %(name)s
+              AND o.sector_id = %(sector_id)s
+              AND o.comment = %(comment)s
+              AND o.ripe_org_hdl = %(ripe_org_hdl)s
+              AND o.ti_handle = %(ti_handle)s
+              AND o.first_handle = %(first_handle)s
+        """
+    description, results = _db_query(operation_str, org, False)
+    if len(results) > 1:
+        raise CommitError("More than one organisation row like"
+                          " {} in the db".format(org))
+    elif len(results) == 1:
+        new_org_id = results[0]["id"]
+    else:
+        operation_str = """
+            INSERT INTO organisation
+                (name, sector_id, comment, ripe_org_hdl,
+                 ti_handle, first_handle)
+                VALUES (%(name)s, %(sector_id)s, %(comment)s, %(ripe_org_hdl)s,
+                        %(ti_handle)s, %(first_handle)s)
+                RETURNING id
+            """
+        description, results = _db_query(operation_str, org, False)
+        new_org_id = results[0]["id"]
+
+    for asn, notification_interval in new_asn_ids:
+        operation_str = """
+            INSERT INTO organisation_to_asn
+                (organisation_id, asn_id, notification_interval)
+                VALUES ( %s, %s, %s )
+            """
+        affected_rows = _db_manipulate(
+                operation_str, (new_org_id, asn, notification_interval), False)
+
+    for contact_id in new_contact_ids:
+        operation_str = """
+            INSERT INTO role
+                (organisation_id, contact_id)
+                VALUES ( %s, %s )
+            """
+        affected_rows = _db_manipulate(operation_str,
+                                         (new_org_id, contact_id), False)
+
+    return(new_org_id)
 
 
 def _update_org(org):
