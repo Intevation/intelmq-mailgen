@@ -292,7 +292,7 @@ def __check_or_create_asns(asns:list) -> list:
                 """
             affected_rows = _db_manipulate(operation_str, asn, False)
             log.debug("affected_rows = " + repr(affected_rows))
-            new_numbers.append(asn["number"], asn['notification_interval'])
+            new_numbers.append((asn["number"], asn['notification_interval']))
 
     return new_numbers
 
