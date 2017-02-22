@@ -154,6 +154,7 @@ def _db_query(operation:str, parameters=None, end_transaction:bool=True):
     cur = contactdb_conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute(operation, parameters)
+    log.debug("Ran query '{}'".format(str(cur.query)))
     description = cur.description
     results = cur.fetchall()
 
@@ -291,7 +292,6 @@ def __check_or_create_asns(asns:list) -> list:
                     VALUES (%(number)s, %(comment)s)
                 """
             affected_rows = _db_manipulate(operation_str, asn, False)
-            log.debug("affected_rows = " + repr(affected_rows))
             new_numbers.append((asn["number"], asn['notification_interval']))
 
     return new_numbers
@@ -332,7 +332,22 @@ def __check_or_create_contacts(contacts:list) -> list:
     return new_contact_ids
 
 
-def _create_org(org):
+def _create_org(org:dict) -> int:
+    """Insert an new contactdb entry.
+
+    Makes sure that the contactdb entry expressed by the org dict
+    is in the tables for manual entries.
+
+    First checks the linked asns and linked contact tables.
+    Then checks the organisation itself.
+    Afterwards checks the n-to-m entries that link the tables.
+
+    By each check queries if an entry with equal values is already in the table.
+    If so, uses the existing entry, otherwise inserts a new entry.
+
+    Returns:
+        Database ID of the organisation that has been there or was created.
+    """
     log.debug("_create_org called with " + repr(org))
 
     new_asn_ids = __check_or_create_asns(org['asns'])
@@ -369,21 +384,42 @@ def _create_org(org):
 
     for asn, notification_interval in new_asn_ids:
         operation_str = """
-            INSERT INTO organisation_to_asn
-                (organisation_id, asn_id, notification_interval)
-                VALUES ( %s, %s, %s )
+            SELECT * FROM organisation_to_asn
+                WHERE organisation_id = %s
+                  AND asn_id = %s
+                  AND notification_interval = %s
             """
-        affected_rows = _db_manipulate(
-                operation_str, (new_org_id, asn, notification_interval), False)
+        description, results = _db_query(
+            operation_str, (new_org_id, asn, notification_interval), False
+            )
+        if len(results) < 1:
+
+            operation_str = """
+                INSERT INTO organisation_to_asn
+                    (organisation_id, asn_id, notification_interval)
+                    VALUES ( %s, %s, %s )
+                """
+            affected_rows = _db_manipulate(
+                operation_str, (new_org_id, asn, notification_interval),
+                False
+                )
 
     for contact_id in new_contact_ids:
         operation_str = """
-            INSERT INTO role
-                (organisation_id, contact_id)
-                VALUES ( %s, %s )
+            SELECT * FROM role
+                WHERE organisation_id = %s
+                  AND contact_id = %s
             """
-        affected_rows = _db_manipulate(operation_str,
+        description, results = _db_query(operation_str,
                                          (new_org_id, contact_id), False)
+        if len(results) < 1:
+            operation_str = """
+                INSERT INTO role
+                    (organisation_id, contact_id)
+                    VALUES ( %s, %s )
+                """
+            affected_rows = _db_manipulate(operation_str,
+                                           (new_org_id, contact_id), False)
 
     return(new_org_id)
 
@@ -492,6 +528,7 @@ def commit_pending_org_changes(body, response):
     else:
         __commit_transaction()
 
+    log.debug("Commit successful, resulting IDs = {}".format(resultingIDs,))
     return resultingIDs
 
 def main():
