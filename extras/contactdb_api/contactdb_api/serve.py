@@ -48,7 +48,7 @@ import sys
 #except:
 #    pass
 
-from falcon import HTTP_BAD_REQUEST
+from falcon import HTTP_BAD_REQUEST, HTTP_NOT_FOUND
 import hug
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -262,6 +262,21 @@ def __db_query_org(org_id:int, table_variant:str):
 
         return org
 
+def __db_query_asn(asn:int, table_variant:str) -> dict:
+    """Returns details for an asn."""
+
+    operation_str = """
+                SELECT * from autonomous_system{0} as a
+                    WHERE number = %s
+                """.format(table_variant)
+    description, results = _db_query(operation_str, (asn,), True)
+
+    if len(results) > 0:
+        return results[0]
+    else:
+        return None
+
+
 def __check_or_create_asns(asns:list) -> list:
     """Find or creates db entries for asns.
 
@@ -279,15 +294,20 @@ def __check_or_create_asns(asns:list) -> list:
         if asn["comment"] == None:
             raise CommitError("comment is not set")
 
-        operation_str = """
-            SELECT a.number FROM autonomous_system AS a
-                WHERE a.number = %(number)s AND a.comment = %(comment)s
-            """
-        description, results = _db_query(operation_str, asn, False)
+        existing_asn_number = __db_query_asn(asn["number"], "")
 
-        if len(results) == 1:
-            new_numbers.append((results[0]["number"],
-                                asn['notification_interval']))
+        if existing_asn_number != None:
+            operation_str = """
+                SELECT a.number FROM autonomous_system AS a
+                    WHERE a.number = %(number)s AND a.comment = %(comment)s
+                """
+            description, results = _db_query(operation_str, asn, False)
+
+            if len(results) == 1:
+                new_numbers.append((results[0]["number"],
+                                    asn['notification_interval']))
+            else:
+                raise CommitError("The ASN already exists with other comment.")
         else:
             operation_str = """
                 INSERT INTO autonomous_system
@@ -507,6 +527,16 @@ def get_manual_org_details(id:int):
 @hug.get(ENDPOINT_PREFIX + '/org/auto/{id}')
 def get_auto_org_details(id:int):
     return __db_query_org(id,"_automatic")
+
+@hug.get(ENDPOINT_PREFIX + '/asn/manual/{number}')
+def get_manual_asn_details(number:int, response):
+    asn = __db_query_asn(number, "")
+
+    if asn == None:
+        response.status = HTTP_NOT_FOUND
+        return {"reason": "ASN not found"}
+    else:
+        return asn
 
 # a way to test this is similiar to
 #   import requests
