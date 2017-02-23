@@ -276,6 +276,9 @@ def __check_or_create_asns(asns:list) -> list:
         if "ripe_aut_num" in asn and asn["ripe_aut_num"] != None:
             raise CommitError("ripe_aut_num is set")
 
+        if asn["comment"] == None:
+            raise CommitError("comment is not set")
+
         operation_str = """
             SELECT a.number FROM autonomous_system AS a
                 WHERE a.number = %(number)s AND a.comment = %(comment)s
@@ -298,7 +301,16 @@ def __check_or_create_asns(asns:list) -> list:
 
 def __check_or_create_contacts(contacts:list) -> list:
     new_contact_ids = []
+
+    needed_attribs = ['firstname', 'lastname', 'tel', 'openpgp_fpr',
+                     'email', 'format_id', 'comment']
+
     for contact in contacts:
+        # we need make sure that all values are there and at least ''
+        # as None would be translated to '= NULL' which always fails in SQL
+        for attrib in needed_attribs:
+            if (not attrib in contact) or contact[attrib] == None:
+                raise CommitError("{} not set".format(attrib))
         operation_str = """
             SELECT c.id FROM contact AS c
                 WHERE c.firstname = %(firstname)s
@@ -355,15 +367,26 @@ def _create_org(org:dict) -> int:
     new_contact_ids = __check_or_create_contacts(org['contacts'])
     log.debug("new_contact_ids = " + repr(new_contact_ids))
 
+    needed_attribs = ['name', 'comment', 'ripe_org_hdl',
+                      'ti_handle', 'first_handle']
+
+    for attrib in needed_attribs:
+        if (not attrib in org) or org[attrib] == None:
+            raise CommitError("{} not set".format(attrib))
+
     operation_str = """
         SELECT o.id FROM organisation as o
             WHERE o.name = %(name)s
-              AND o.sector_id = %(sector_id)s
               AND o.comment = %(comment)s
               AND o.ripe_org_hdl = %(ripe_org_hdl)s
               AND o.ti_handle = %(ti_handle)s
               AND o.first_handle = %(first_handle)s
         """
+    if ('sector_id' not in org) or org['sector_id'] == None:
+        operation_str += " AND o.sector_id IS NULL"
+    else:
+        operation_str += " AND o.sector_id = %(sector_id)s"
+
     description, results = _db_query(operation_str, org, False)
     if len(results) > 1:
         raise CommitError("More than one organisation row like"

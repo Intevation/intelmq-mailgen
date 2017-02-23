@@ -45,11 +45,11 @@ DATA=json.dumps({
                             'organisation_id': 2458,
                             'role_type': 'abuse-c',
                             'tel': '+49 00000000001'}],
-              'first_handle': None,
+              'first_handle': '',
               'name': 'Bundesamt fuer Sicherheit in der Informationstechnik',
               'ripe_org_hdl': 'ORG-BA202-RIPE',
               'sector_id': None,
-              'ti_handle': None}]}
+              'ti_handle': ''}]}
 )
 
 DATA_UPDATE=json.dumps({
@@ -74,12 +74,12 @@ DATA_UPDATE=json.dumps({
                            'organisation_id': 3698,
                            'role_type': 'abuse-c',
                            'tel': ''}],
-              'first_handle': None,
+              'first_handle': '',
               'id': 3698,
               'name': 'Bundesamt fuer Sicherheit in der Informationstechnik',
-              'ripe_org_hdl': None,
+              'ripe_org_hdl': '',
               'sector_id': None,
-              'ti_handle': None}]}
+              'ti_handle': ''}]}
 )
 
 DATA_DELETE = json.dumps({
@@ -104,12 +104,12 @@ DATA_DELETE = json.dumps({
                             'organisation_id': 3698,
                             'role_type': 'abuse-c',
                             'tel': ''}],
-              'first_handle': None,
+              'first_handle': '',
               'id': 3698,
               'name': 'Bundesamt fuer Sicherheit in der Informationstechnik',
-              'ripe_org_hdl': None,
+              'ripe_org_hdl': '',
               'sector_id': None,
-              'ti_handle': None}]}
+              'ti_handle': ''}]}
 )
 
 def semi_automatic():
@@ -124,10 +124,18 @@ def semi_automatic():
     # generic code for a POST request
     request = urllib.request.Request(BASEURL + ENDPOINT)
     request.add_header("Content-Type", "application/json")
-    f = urllib.request.urlopen(request, DATA.encode('utf-8'))
 
     # test1
-    print(f.read().decode('utf-8'))
+    f = urllib.request.urlopen(request, DATA.encode('utf-8'))
+    result = f.read().decode('utf-8')
+    print(result)
+    new_org_id = json.loads(result)[0]
+
+    f = urllib.request.urlopen(request, DATA.encode('utf-8'))
+    result = f.read().decode('utf-8')
+
+    if not json.loads(result)[0] == new_org_id:
+        print('Not idempotent!')
 
     # test2 no commands
     try:
