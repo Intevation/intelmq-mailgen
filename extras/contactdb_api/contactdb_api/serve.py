@@ -154,7 +154,7 @@ def _db_query(operation:str, parameters=None, end_transaction:bool=True):
     cur = contactdb_conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute(operation, parameters)
-    log.debug("Ran query '{}'".format(str(cur.query)))
+    #log.debug("Ran query '{}'".format(str(cur.query)))
     description = cur.description
     results = cur.fetchall()
 
@@ -262,14 +262,15 @@ def __db_query_org(org_id:int, table_variant:str):
 
         return org
 
-def __db_query_asn(asn:int, table_variant:str) -> dict:
+def __db_query_asn(asn:int, table_variant:str,
+                   end_transaction:bool=True) -> dict:
     """Returns details for an asn."""
 
     operation_str = """
                 SELECT * from autonomous_system{0} as a
                     WHERE number = %s
                 """.format(table_variant)
-    description, results = _db_query(operation_str, (asn,), True)
+    description, results = _db_query(operation_str, (asn,), end_transaction)
 
     if len(results) > 0:
         return results[0]
@@ -294,7 +295,7 @@ def __check_or_create_asns(asns:list) -> list:
         if asn["comment"] == None:
             raise CommitError("comment is not set")
 
-        existing_asn_number = __db_query_asn(asn["number"], "")
+        existing_asn_number = __db_query_asn(asn["number"], "", False)
 
         if existing_asn_number != None:
             operation_str = """
@@ -318,6 +319,55 @@ def __check_or_create_asns(asns:list) -> list:
             new_numbers.append((asn["number"], asn['notification_interval']))
 
     return new_numbers
+
+def __remove_or_unlink_asns(asns:list, org_id:int) -> None:
+    """Removes or unlinks db entries for asns.
+
+    Parameter:
+        asns: to be unlinked or removed
+        org_id: the organisation to be unlinked from
+    """
+    for asn in asns:
+        asn_id = asn["number"]
+        operation_str = """
+            DELETE from organisation_to_asn as oa
+                WHERE oa.organisation_id = %s
+                  AND oa.asn_id = %s
+            """
+        _db_manipulate(operation_str, (org_id, asn_id), False)
+
+        # ignore in the comparions, because it comes from the n-to-m table
+        del(asn["notification_interval"])
+        del(asn["organisation_id"])
+        del(asn["asn_id"])
+        log.debug(repr(__db_query_asn(asn_id, ""), False) + ":::" + repr(asn))
+        if __db_query_asn(asn_id, "", False) == asn:
+            operation_str = "DELETE from autonomous_system WHERE number = %s"
+            _db_manipulate(operation_str, (asn_id,), False)
+        else:
+            raise CommitError("ASN{} to be deleted differs from db entry."
+                              "".format(asn_id))
+
+
+def __remove_or_unlink_contacts(contacts:list, org_id:int) -> None:
+    """Removes or unlinks db entries for contacts.
+
+    Parameter:
+        contacts: to be unlinked or removed
+        org_id: the organisation to be unlinked from
+    """
+    for contact in contacts:
+        contact_id = contact["id"]
+        operation_str = """
+            DELETE from role
+                WHERE organisation_id = %s
+                  AND contact_id = %s
+            """
+        _db_manipulate(operation_str, (org_id, contact_id), False)
+
+        operation_str = "DELETE from contact WHERE id = %s"
+        _db_manipulate(operation_str, (contact_id,), False)
+
 
 def __check_or_create_contacts(contacts:list) -> list:
     new_contact_ids = []
@@ -471,9 +521,33 @@ def _update_org(org):
     log.debug("_update_org called with " + repr(org))
     pass
 
-def _delete_org(org):
+def _delete_org(org) -> int:
+    """Delete an contactdb entry.
+
+    Also delete the attached asns and contact entries, if they are
+    not used elsewhere.
+
+    Returns:
+        Database ID of the organisation that has been deleted.
+    """
     log.debug("_delete_org called with " + repr(org))
-    pass
+
+    org_in_db = __db_query_org(org["id"], "")
+
+    if not org_in_db == org:
+        log.debug("org_in_db = {}; org = {}".format(repr(org_in_db), repr(org)))
+        raise CommitError("Org to be deleted differs from db entry.")
+
+    __remove_or_unlink_asns(org['asns'], org['id'])
+    __remove_or_unlink_contacts(org['contacts'], org['id'])
+
+    # remove org itself
+    operation_str = "DELETE FROM organisation WHERE id = %s"
+    affected_rows = __db_manipulate(operation_str, (org["id"],), False)
+
+    if affected_rows == 1:
+        return org["id"]
+
 
 @hug.startup()
 def setup(api):
@@ -510,7 +584,7 @@ def searchorg(name:str):
         """, (name,))
 
 @hug.get(ENDPOINT_PREFIX + '/searchcontact')
-def searchorg(email:str):
+def searchcontact(email:str):
     return __db_query_organisation_ids("""
         SELECT array_agg(r.organisation_id) AS organisation_ids
             FROM role{0} AS r

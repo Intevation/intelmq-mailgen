@@ -39,7 +39,7 @@ DATA=json.dumps({
                             'import_source': 'ripe',
                             'import_time': '2017-01-23T09:43:12.672657',
                             'is_primary_contact': False,
-                            'lastname': 'Abeler',
+                            'lastname': 'Adler',
                             'openpgp_fpr': 'abcdef12',
                             'organisation_id': 2458,
                             'role_type': 'abuse-c',
