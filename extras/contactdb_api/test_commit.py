@@ -8,7 +8,6 @@ the functions in here must be run manually.
 
 import json
 import os
-from urllib.parse import urlencode
 import urllib.error
 import urllib.request
 
