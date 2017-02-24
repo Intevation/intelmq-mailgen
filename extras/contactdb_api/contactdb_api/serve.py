@@ -678,10 +678,10 @@ def commit_pending_org_changes(body, response):
             return {'reason':
                     "Unknown command. Not in " + str(known_commands.keys())}
 
-    resultingIDs = []
+    results = []
     try:
         for command, org in zip(commands, orgs):
-            resultingIDs.append(known_commands[command](org))
+            results.append((command, known_commands[command](org)))
     except Exception as err:
         __rollback_transaction()
         log.exception("Commit failed '%s' with '%r'", command, org)
@@ -690,8 +690,8 @@ def commit_pending_org_changes(body, response):
     else:
         __commit_transaction()
 
-    log.debug("Commit successful, resulting IDs = {}".format(resultingIDs,))
-    return resultingIDs
+    log.debug("Commit successful, results = {}".format(results,))
+    return results
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == '--example-conf':
