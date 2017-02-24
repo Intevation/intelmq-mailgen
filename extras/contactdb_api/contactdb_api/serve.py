@@ -338,25 +338,37 @@ def __remove_or_unlink_asns(asns:list, org_id:int) -> None:
     for asn in asns:
         asn_id = asn["number"]
         operation_str = """
-            DELETE from organisation_to_asn as oa
+            DELETE FROM organisation_to_asn AS oa
                 WHERE oa.organisation_id = %s
                   AND oa.asn_id = %s
             """
         _db_manipulate(operation_str, (org_id, asn_id), False)
 
-        # ignore in the comparions, because it comes from the n-to-m table
-        del(asn["notification_interval"])
-        del(asn["organisation_id"])
-        del(asn["asn_id"])
-        asn_in_db = __db_query_asn(asn_id, "", False)
-        if asn_in_db == asn:
-            operation_str = "DELETE from autonomous_system WHERE number = %s"
-            _db_manipulate(operation_str, (asn_id,), False)
-        else:
-            log.debug("asn_in_db = {}; asn = {}".format(
-                        repr(asn_in_db), repr(asn)))
-            raise CommitError("ASN{} to be deleted differs from db entry."
-                              "".format(asn_id))
+        #how many connections are left to this asn?
+        operation_str = """
+            SELECT count(*) FROM organisation_to_asn WHERE asn_id = %s
+            """
+        description, results = _db_query(operation_str, (asn_id,) , False)
+
+        if results[0]["count"] == 0:
+            # delete asn, because there is no connection anymore
+
+            # ignore in the comparions, because it comes from the n-to-m table
+            del(asn["notification_interval"])
+            del(asn["organisation_id"])
+            del(asn["asn_id"])
+            asn_in_db = __db_query_asn(asn_id, "", False)
+            if asn_in_db == asn:
+                operation_str = """
+                    DELETE FROM autonomous_system
+                      WHERE number = %s"
+                    """
+                _db_manipulate(operation_str, (asn_id,), False)
+            else:
+                log.debug("asn_in_db = {}; asn = {}".format(
+                            repr(asn_in_db), repr(asn)))
+                raise CommitError("ASN{} to be deleted differs from db entry."
+                                  "".format(asn_id))
 
 
 def __remove_or_unlink_contacts(contacts:list, org_id:int) -> None:
@@ -375,8 +387,15 @@ def __remove_or_unlink_contacts(contacts:list, org_id:int) -> None:
             """
         _db_manipulate(operation_str, (org_id, contact_id), False)
 
-        operation_str = "DELETE from contact WHERE id = %s"
-        _db_manipulate(operation_str, (contact_id,), False)
+        # how many connection are left to this contact?
+        operation_str = """SELECT count(*) FROM role WHERE contact_id = %s"""
+        description, results = _db_query(operation_str, (contact_id,) , False)
+
+        if results[0]["count"] == 0:
+            # delete contact, because there is no connection anymore
+
+            operation_str = "DELETE from contact WHERE id = %s"
+            _db_manipulate(operation_str, (contact_id,), False)
 
 
 def __check_or_create_contacts(contacts:list) -> list:
