@@ -354,11 +354,12 @@ def __remove_or_unlink_asns(asns:list, org_id:int) -> None:
         if results[0]["count"] == 0:
             # delete asn, because there is no connection anymore
 
-            # ignore in the comparions, because it comes from the n-to-m table
+            asn_in_db = __db_query_asn(asn_id, "", False)
+
+            # ignore in the comparison, because it comes from the n-to-m table
             del(asn["notification_interval"])
             del(asn["organisation_id"])
             del(asn["asn_id"])
-            asn_in_db = __db_query_asn(asn_id, "", False)
             if asn_in_db == asn:
                 operation_str = """
                     DELETE FROM autonomous_system
@@ -370,6 +371,66 @@ def __remove_or_unlink_asns(asns:list, org_id:int) -> None:
                             repr(asn_in_db), repr(asn)))
                 raise CommitError("ASN{} to be deleted differs from db entry."
                                   "".format(asn_id))
+
+def __check_or_update_asns(asns:list, org_id:int) -> None:
+    """Checks or updates and links as necessary asns for an org.
+
+    For each asn:
+        Reuse and update
+        or create
+
+    Parameter:
+        asns: to be worked on
+        org_id: the org to link to
+    """
+
+    for asn in asns:
+        asn_id = asn["number"]
+
+        # do we already have an asn that has the necessary values?
+        asn_in_db = __db_query_asn(asn_id, "", False)
+
+        if asn_in_db == None:
+            # create
+            # TODO join with creation in __check_or_create_asns()
+            operation_str = """
+                INSERT INTO autonomous_system
+                    (number, comment) VALUES (%(number)s, %(comment)s)
+                """
+            _db_manipulate(operation_str, asn, False)
+        elif asn_in_db["comment"] != asn["comment"]:
+            # update comment (the only field changeable)
+            operation_str = """
+                UPDATE autonomous_system
+                    SET comment = %(comment)s
+                    WHERE number = %(number)s
+                """
+            _db_manipulate(operation_str, asn, False)
+
+        # check the linking
+        operation_str = """
+            SELECT * FROM organisation_to_asn
+                WHERE organisation_id = %s
+                  AND asn_id = %s
+            """
+        description, results = _db_query(operation_str,
+                                        (org_id, asn_id,), False)
+        if len(results) == 0:
+            # add link
+            operation_str = """
+                INSERT INTO organisation_to_asn
+                    (organisation_id, asn_id, notification_interval)
+                    VALUES (%s, %s, %s)
+                """
+            _db_manipulate(operation_str, (org_id, asn_id,
+                                           asn['notification_interval']), False)
+    ## TODO remove superfluous links
+    #operation_str = """
+    #    DELETE FROM organisation_to_asn
+    #        WHERE number != ALL(%s)
+    #    """
+    # use array
+
 
 
 def __remove_or_unlink_contacts(contacts:list, org_id:int) -> None:
@@ -442,6 +503,85 @@ def __check_or_create_contacts(contacts:list) -> list:
             new_contact_ids.append(results[0]["id"])
 
     return new_contact_ids
+
+def __check_or_update_contacts(contacts:list, org_id:int):
+    """Create or update and then link contact if necessary.
+    """
+
+    #TODO refactor with __check_or_create_contacts()
+
+    needed_attribs = ['firstname', 'lastname', 'tel', 'openpgp_fpr',
+                      'email', 'format_id', 'comment']
+
+    for contact in contacts:
+        # sanity check
+        for attrib in needed_attribs:
+            if (not attrib in contact) or contact[attrib] == None:
+                raise CommitError("Updating Org {} contacts: "
+                                  "{} not set".format(org_id, attrib))
+
+        operation_str = """
+            SELECT c.id FROM contact AS c
+                WHERE c.firstname = %(firstname)s
+                  AND c.lastname = %(lastname)s
+                  AND c.tel = %(tel)s
+                  AND c.openpgp_fpr = %(openpgp_fpr)s
+                  AND c.email = %(email)s
+                  AND c.format_id = %(format_id)s
+                  AND c.comment = %(comment)s
+            """
+        description, results = _db_query(operation_str, contact, False)
+
+        if len(results) >= 1:
+            # use the first found
+            new_contact_id = results[0]["id"]
+        elif id in contact:
+            # update
+            operation_str = """
+                UPDATE contact
+                    SET (firstname, lastname, tel,
+                         openpgp_fpr, email, format_id, comment)
+                      = (%(firstname)s, %(lastname)s, %(tel)s,
+                         %(openpgp_fpr)s, %(email)s, %(format_id)s,
+                         %(comment)s)
+                    WHERE id = %(id)s
+                """
+            _db_manipulate(operation_str, contact, False)
+            new_contact_id = contact["id"]
+        else:
+            #create
+            # TODO refactor with __check_or_create_contacts()
+            operation_str = """
+                INSERT INTO contact
+                    (firstname, lastname, tel,
+                     openpgp_fpr, email, format_id, comment)
+                    VALUES (%(firstname)s, %(lastname)s, %(tel)s,
+                            %(openpgp_fpr)s, %(email)s, %(format_id)s,
+                            %(comment)s)
+                    RETURNING id
+                """
+            description, results = _db_query(operation_str, contact, False)
+            new_contact_id = results[0]["id"]
+
+        # fix the linking
+        operation_str = """
+            SELECT * FROM role
+                WHERE organisation_id = %s
+                  AND contact_id = %s
+            """
+        description, results = _db_query(operation_str,
+                                         (org_id, new_contact_id), False)
+
+        if len(results) == 0:
+            # add link
+            operation_str = """
+                INSERT INTO role
+                    (organisation_id, contact_id)
+                    VALUES (%s, %s)
+                """
+            _db_manipulate(operation_str, (org_id, new_contact_id), False)
+
+    # TODO remove superfluous links
 
 
 def _create_org(org:dict) -> int:
@@ -553,8 +693,35 @@ def _create_org(org:dict) -> int:
 
 
 def _update_org(org):
+    """Update a contactdb entry.
+
+    Returns:
+        Database ID of the updated organisation.
+    """
     log.debug("_update_org called with " + repr(org))
-    pass
+
+    org_id = org["id"]
+    org_in_db = __db_query_org(org_id, "", end_transaction=False)
+
+    if ("id" not in org_in_db) or org_in_db["id"] != org_id:
+        raise CommitError("Org {} to be updated not in db.".format(org_id))
+
+    __check_or_update_asns(org["asns"], org_id)
+    __check_or_update_contacts(org["contacts"], org_id)
+
+    # linking of asns and contacts has been done, only update is left to do
+    operation_str = """
+        UPDATE organisation
+            SET (name, sector_id, comment, ripe_org_hdl,
+                 ti_handle, first_handle)
+              = (%(name)s, %(sector_id)s, %(comment)s, %(ripe_org_hdl)s,
+                 %(ti_handle)s, %(first_handle)s)
+            WHERE id = %(id)s
+        """
+    _db_manipulate(operation_str, org, False)
+
+    return org_id
+
 
 def _delete_org(org) -> int:
     """Delete an contactdb entry.
