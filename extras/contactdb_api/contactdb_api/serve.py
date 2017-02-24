@@ -303,9 +303,9 @@ def __check_or_create_asns(asns:list) -> list:
         if asn["comment"] == None:
             raise CommitError("comment is not set")
 
-        existing_asn_number = __db_query_asn(asn["number"], "", False)
+        asn_in_db = __db_query_asn(asn["number"], "", False)
 
-        if existing_asn_number != None:
+        if asn_in_db != None:
             operation_str = """
                 SELECT a.number FROM autonomous_system AS a
                     WHERE a.number = %(number)s AND a.comment = %(comment)s
@@ -316,7 +316,8 @@ def __check_or_create_asns(asns:list) -> list:
                 new_numbers.append((results[0]["number"],
                                     asn['notification_interval']))
             else:
-                raise CommitError("The ASN already exists with other comment.")
+                raise CommitError("The ASN{} already exists"
+                                  " with other comment.".format(asn["number"]))
         else:
             operation_str = """
                 INSERT INTO autonomous_system
@@ -361,7 +362,7 @@ def __remove_or_unlink_asns(asns:list, org_id:int) -> None:
             if asn_in_db == asn:
                 operation_str = """
                     DELETE FROM autonomous_system
-                      WHERE number = %s"
+                      WHERE number = %s
                     """
                 _db_manipulate(operation_str, (asn_id,), False)
             else:
@@ -470,7 +471,10 @@ def _create_org(org:dict) -> int:
                       'ti_handle', 'first_handle']
 
     for attrib in needed_attribs:
-        if (not attrib in org) or org[attrib] == None:
+        if attrib in org:
+            if org[attrib] == None:
+                org[attrib] == ''
+        else:
             raise CommitError("{} not set".format(attrib))
 
     operation_str = """
@@ -481,8 +485,10 @@ def _create_org(org:dict) -> int:
               AND o.ti_handle = %(ti_handle)s
               AND o.first_handle = %(first_handle)s
         """
-    if ('sector_id' not in org) or org['sector_id'] == None:
+    if (('sector_id' not in org) or org['sector_id'] == None
+            or org['sector_id'] == ''):
         operation_str += " AND o.sector_id IS NULL"
+        org["sector_id"] = None
     else:
         operation_str += " AND o.sector_id = %(sector_id)s"
 
