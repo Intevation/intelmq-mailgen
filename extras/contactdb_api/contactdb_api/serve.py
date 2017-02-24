@@ -56,6 +56,9 @@ from psycopg2.extras import RealDictCursor
 
 
 log = logging.getLogger(__name__)
+# adding a custom log level for even more details when diagnosing
+DD = logging.DEBUG-2
+logging.addLevelName(DD, "DDEBUG")
 
 def read_configuration() -> dict:
     """Read configuration file.
@@ -120,10 +123,12 @@ def open_db_connection(dsn:str):
 
 def __commit_transaction():
     global contactdb_conn
+    log.log(DD, "Calling commit()")
     contactdb_conn.commit()
 
 def __rollback_transaction():
     global contactdb_conn
+    log.log(DD, "Calling rollback()")
     contactdb_conn.rollback()
 
 
@@ -154,7 +159,7 @@ def _db_query(operation:str, parameters=None, end_transaction:bool=True):
     cur = contactdb_conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute(operation, parameters)
-    #log.debug("Ran query '{}'".format(str(cur.query)))
+    log.log(DD, "Ran query '{}'".format(str(cur.query)))
     description = cur.description
     results = cur.fetchall()
 
@@ -186,6 +191,7 @@ def _db_manipulate(operation:str, parameters=None,
     # FUTURE use with
     cur = contactdb_conn.cursor(cursor_factory=RealDictCursor)
     cur.execute(operation, parameters)
+    log.log(DD, "Ran query '{}'".format(str(cur.query)))
     if end_transaction:
         __commit_transaction()
     cur.close()
@@ -215,7 +221,8 @@ def __db_query_organisation_ids(operation_str:str,  parameters=None):
     return orgs
 
 
-def __db_query_org(org_id:int, table_variant:str):
+def __db_query_org(org_id:int, table_variant:str,
+                   end_transaction:bool=True) -> dict:
     """Returns details for an organisaion.
 
     Parameters:
@@ -223,7 +230,7 @@ def __db_query_org(org_id:int, table_variant:str):
         table_variant: either "" or "_automatic"
 
     Returns:
-        dict: containing the organisation and additional keys
+        containing the organisation and additional keys
             'asns' and 'contacts'
     """
 
@@ -257,7 +264,8 @@ def __db_query_org(org_id:int, table_variant:str):
                 WHERE r.organisation_id = %s
             """.format(table_variant)
 
-        description, results = _db_query(operation_str, (org_id,), True)
+        description, results = _db_query(operation_str, (org_id,),
+                                         end_transaction)
         org["contacts"] = results
 
         return org
@@ -340,11 +348,13 @@ def __remove_or_unlink_asns(asns:list, org_id:int) -> None:
         del(asn["notification_interval"])
         del(asn["organisation_id"])
         del(asn["asn_id"])
-        log.debug(repr(__db_query_asn(asn_id, ""), False) + ":::" + repr(asn))
-        if __db_query_asn(asn_id, "", False) == asn:
+        asn_in_db = __db_query_asn(asn_id, "", False)
+        if asn_in_db == asn:
             operation_str = "DELETE from autonomous_system WHERE number = %s"
             _db_manipulate(operation_str, (asn_id,), False)
         else:
+            log.debug("asn_in_db = {}; asn = {}".format(
+                        repr(asn_in_db), repr(asn)))
             raise CommitError("ASN{} to be deleted differs from db entry."
                               "".format(asn_id))
 
@@ -357,7 +367,7 @@ def __remove_or_unlink_contacts(contacts:list, org_id:int) -> None:
         org_id: the organisation to be unlinked from
     """
     for contact in contacts:
-        contact_id = contact["id"]
+        contact_id = contact["contact_id"]
         operation_str = """
             DELETE from role
                 WHERE organisation_id = %s
@@ -532,7 +542,7 @@ def _delete_org(org) -> int:
     """
     log.debug("_delete_org called with " + repr(org))
 
-    org_in_db = __db_query_org(org["id"], "")
+    org_in_db = __db_query_org(org["id"], "", end_transaction=False)
 
     if not org_in_db == org:
         log.debug("org_in_db = {}; org = {}".format(repr(org_in_db), repr(org)))
@@ -543,7 +553,7 @@ def _delete_org(org) -> int:
 
     # remove org itself
     operation_str = "DELETE FROM organisation WHERE id = %s"
-    affected_rows = __db_manipulate(operation_str, (org["id"],), False)
+    affected_rows = _db_manipulate(operation_str, (org["id"],), False)
 
     if affected_rows == 1:
         return org["id"]
