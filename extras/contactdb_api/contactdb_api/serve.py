@@ -248,7 +248,7 @@ def __db_query_org(org_id:int, table_variant:str,
         org = results[0]
 
         operation_str = """
-            SELECT * from autonomous_system{0} AS a
+            SELECT * FROM autonomous_system{0} AS a
                 JOIN organisation_to_asn{0} AS oa
                     ON oa.asn_id = a.number
                 WHERE oa.organisation_id = %s
@@ -258,7 +258,7 @@ def __db_query_org(org_id:int, table_variant:str,
         org["asns"] = results
 
         operation_str = """
-            SELECT * from contact{0} AS c
+            SELECT * FROM contact{0} AS c
                 JOIN role{0} AS r
                     ON r.contact_id = c.id
                 WHERE r.organisation_id = %s
@@ -275,7 +275,7 @@ def __db_query_asn(asn:int, table_variant:str,
     """Returns details for an asn."""
 
     operation_str = """
-                SELECT * from autonomous_system{0} as a
+                SELECT * FROM autonomous_system{0} AS a
                     WHERE number = %s
                 """.format(table_variant)
     description, results = _db_query(operation_str, (asn,), end_transaction)
@@ -441,9 +441,9 @@ def __check_or_update_asns(asns:list, org_id:int) -> None:
 
     # remove all manual asns that are unlinked
     operation_str = """
-        DELETE FROM autonomous_system as a
+        DELETE FROM autonomous_system AS a
             WHERE a.number NOT IN (
-                SELECT oa.asn_id from organisation_to_asn as oa
+                SELECT oa.asn_id FROM organisation_to_asn AS oa
                 WHERE oa.asn_id = a.number
                 )
         """
@@ -460,7 +460,7 @@ def __remove_or_unlink_contacts(contacts:list, org_id:int) -> None:
     for contact in contacts:
         contact_id = contact["contact_id"]
         operation_str = """
-            DELETE from role
+            DELETE FROM role
                 WHERE organisation_id = %s
                   AND contact_id = %s
             """
@@ -473,7 +473,7 @@ def __remove_or_unlink_contacts(contacts:list, org_id:int) -> None:
         if results[0]["count"] == 0:
             # delete contact, because there is no connection anymore
 
-            operation_str = "DELETE from contact WHERE id = %s"
+            operation_str = "DELETE FROM contact WHERE id = %s"
             _db_manipulate(operation_str, (contact_id,), False)
 
 
@@ -521,8 +521,12 @@ def __check_or_create_contacts(contacts:list) -> list:
 
     return new_contact_ids
 
-def __check_or_update_contacts(contacts:list, org_id:int):
+def __check_or_update_contacts(contacts:list, org_id:int) -> None:
     """Create or update and then link contact if necessary.
+
+    Parameter:
+        contacts: to be updated or created and linked
+        org_id: from the org to link to
     """
 
     #TODO refactor with __check_or_create_contacts()
@@ -530,6 +534,7 @@ def __check_or_update_contacts(contacts:list, org_id:int):
     needed_attribs = ['firstname', 'lastname', 'tel', 'openpgp_fpr',
                       'email', 'format_id', 'comment']
 
+    new_contact_ids = []
     for contact in contacts:
         # sanity check
         for attrib in needed_attribs:
@@ -598,7 +603,25 @@ def __check_or_update_contacts(contacts:list, org_id:int):
                 """
             _db_manipulate(operation_str, (org_id, new_contact_id), False)
 
-    # TODO remove superfluous links
+        new_contact_ids.append(new_contact_id)
+
+    # remove all links that should not be there
+    operation_str = """
+        DELETE FROM role
+            WHERE organisation_id = %s
+              AND contact_id != ALL(%s)
+        """
+    _db_manipulate(operation_str, (org_id, new_contact_ids), False)
+
+    # remove all manual contacts that are not linked to
+    operation_str = """
+        DELETE FROM contact as c
+            WHERE c.id NOT IN (
+                SELECT r.contact_id FROM role AS r
+                WHERE r.contact_id = c.id
+                )
+        """
+    _db_manipulate(operation_str, end_transaction=False)
 
 
 def _create_org(org:dict) -> int:
@@ -904,9 +927,9 @@ def main():
             "contact_automatic",
             "contact"
             ]:
-        cur.execute("SELECT count(*) from {}".format(count))
+        cur.execute("SELECT count(*) FROM {}".format(count))
         result = cur.fetchone()
         print("count {} = {}".format(count, result))
 
-    cur.execute("SELECT count(*) from autonomous_system")
+    cur.execute("SELECT count(*) FROM autonomous_system")
     cur.connection.commit() # end transaction
