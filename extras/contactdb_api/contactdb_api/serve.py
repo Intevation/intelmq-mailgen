@@ -373,17 +373,34 @@ def __remove_or_unlink_asns(asns:list, org_id:int) -> None:
                                   "".format(asn_id))
 
 def __check_or_update_asns(asns:list, org_id:int) -> None:
-    """Checks or updates and links as necessary asns for an org.
+    """Checks or updates and links as necessary the asns for an org.
 
     For each asn:
         Reuse and update
         or create
 
+        Fix links
+
+        Remove stale objects.
+
     Parameter:
         asns: to be worked on
         org_id: the org to link to
     """
+    # remember previously linked asns
+    # TODO join with the similiar code from __db_query_org() and serachasn()
+    operation_str = """
+        SELECT array_agg(a.number) as asn_ids
+            FROM autonomous_system AS a
+            JOIN organisation_to_asn AS oa
+                ON oa.asn_id = a.number
+            WHERE oa.organisation_id = %s
+        """
+    description, results = _db_query(operation_str, (org_id,), False)
+    old_asn_ids = results[0]["asn_ids"]
 
+    # deal with the asns that shall be linked afterwards
+    new_asn_ids = []
     for asn in asns:
         asn_id = asn["number"]
 
@@ -424,13 +441,30 @@ def __check_or_update_asns(asns:list, org_id:int) -> None:
                 """
             _db_manipulate(operation_str, (org_id, asn_id,
                                            asn['notification_interval']), False)
-    ## TODO remove superfluous links
-    #operation_str = """
-    #    DELETE FROM organisation_to_asn
-    #        WHERE number != ALL(%s)
-    #    """
-    # use array
 
+        new_asn_ids.append(asn_id)
+
+    # TODO remove all links that should not be there
+    operation_str = """
+        DELETE FROM organisation_to_asn
+            WHERE organisation_id = %s
+              AND asn_id != ALL(%s)
+        """
+    _db_manipulate(operation_str, (org_id, new_asn_ids), False)
+
+    # check stale ASNs for removal
+    potentially_stale_asn_ids = [pid for pid in old_asn_ids
+                                 if pid not in set(new_asn_ids)]
+
+    operation_str = """
+        DELETE FROM autonomous_system as a
+            WHERE a.number = ANY(%s)
+              AND a.number NOT IN (
+                SELECT oa.asn_id from organisation_to_asn as oa
+                WHERE oa.asn_id = a.number
+                )
+        """
+    _db_manipulate(operation_str, (potentially_stale_asn_ids,), False)
 
 
 def __remove_or_unlink_contacts(contacts:list, org_id:int) -> None:
@@ -694,6 +728,9 @@ def _create_org(org:dict) -> int:
 
 def _update_org(org):
     """Update a contactdb entry.
+
+    First update asns and links to them then the same for contacts.
+    Last update of the values of the org itself.
 
     Returns:
         Database ID of the updated organisation.
