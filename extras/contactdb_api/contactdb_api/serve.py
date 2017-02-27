@@ -613,7 +613,7 @@ def _create_org(org:dict) -> int:
     for attrib in needed_attribs:
         if attrib in org:
             if org[attrib] == None:
-                org[attrib] == ''
+                org[attrib] = ''
         else:
             raise CommitError("{} not set".format(attrib))
 
