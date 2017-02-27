@@ -428,6 +428,18 @@ def __check_or_update_asns(asns:list, org_id:int) -> None:
                 """
             _db_manipulate(operation_str, (org_id, asn_id,
                                            asn['notification_interval']), False)
+        elif (results[0]["notification_interval"]
+              != asn['notification_interval']):
+            # update link to the new notifcation_interval
+            operation_str = """
+                UPDATE organisation_to_asn
+                    SET notification_interval = %s
+                    WHERE organisation_id = %s
+                      AND asn_id = %s
+                """
+            _db_manipulate(operation_str,
+                           (asn['notification_interval'], org_id, asn_id),
+                           False)
 
         new_asn_ids.append(asn_id)
 
