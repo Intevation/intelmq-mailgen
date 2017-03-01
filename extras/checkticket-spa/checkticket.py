@@ -73,6 +73,19 @@ def setup(api):
     cur = conn.cursor()
 
 ###
+# when trying to find out how our setup can handle multiple requests, you can
+# enable the following debugging endpoint:
+#
+#@hug.get()
+#def sleep(secs:float, request):
+#    import time
+#    if secs < 300:
+#       time.sleep(secs)
+#    return {"wsgi.multithread": request.env["wsgi.multithread"],
+#            "wsgi.multiprocess": request.env["wsgi.multiprocess"]}
+###
+
+###
 ## when called from a web application that has been served from
 ## a different port, we can allow the browser to read from us
 ##
