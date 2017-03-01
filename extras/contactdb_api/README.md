@@ -2,7 +2,7 @@ Server side API of contactdb interface for intelmq-fody.
 
 ## Configuration
 Uses environment variable ```CONTACTDB_SERVE_CONF_FILE``` to read
-a configuration file, otherwise falls back to 
+a configuration file, otherwise falls back to
 reading `/etc/intelmq/contactdb-serve.conf`.
 
 Contents see
