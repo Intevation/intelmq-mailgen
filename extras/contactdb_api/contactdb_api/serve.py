@@ -875,7 +875,7 @@ def get_manual_asn_details(number:int, response):
 @hug.post(ENDPOINT_PREFIX + '/org/manual/commit')
 def commit_pending_org_changes(body, response):
 
-    log.info("Got commit_object: " + repr(body))
+    log.info("Got commit_object = " + repr(body))
     if not (body
             and 'commands' in body
             and len(body['commands']) > 0
@@ -906,13 +906,13 @@ def commit_pending_org_changes(body, response):
             results.append((command, known_commands[command](org)))
     except Exception as err:
         __rollback_transaction()
-        log.exception("Commit failed '%s' with '%r'", command, org)
+        log.info("Commit failed '%s' with '%r'", command, org, exc_info=True)
         response.status = HTTP_BAD_REQUEST
         return {"reason": "Commit failed, see server logs."}
     else:
         __commit_transaction()
 
-    log.debug("Commit successful, results = {}".format(results,))
+    log.info("Commit successful, results = {}".format(results,))
     return results
 
 def main():

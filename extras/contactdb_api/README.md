@@ -37,5 +37,5 @@ python3 -m unittest
 
 ## Installation
 For a production setup `checkticket.py` has to be installed
-with a webserver running `wsgi.multithread == false` and will try
+with a webserver running `wsgi.multithread == False` and will try
 to import the `contactdb\_api` module.
