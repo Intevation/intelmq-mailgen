@@ -231,7 +231,7 @@ def __db_query_org(org_id:int, table_variant:str,
 
     Returns:
         containing the organisation and additional keys
-            'asns' and 'contacts'
+            'asns' (with 'inhibitions') and 'contacts'
     """
 
     operation_str = """
@@ -257,6 +257,27 @@ def __db_query_org(org_id:int, table_variant:str,
         description, results = _db_query(operation_str, (org_id,), False)
         org["asns"] = results
 
+        if table_variant == '':
+            # insert inhibition information
+            for index, asn in enumerate(org["asns"][:]):
+                operation_str = """
+                    SELECT n.address, ct.name AS type,
+                           ci.name AS identifier, n.comment, i.id
+                        FROM inhibition AS i
+                        JOIN network AS n
+                            ON i.net_id = n.id
+                        JOIN classification_type AS ct
+                            ON i.classification_type_id = ct.id
+                        JOIN classification_identifier AS ci
+                            ON i.classification_identifier_id = ci.id
+                        WHERE asn_id = %s
+                    """
+                description, results = _db_query(operation_str,
+                                                 (asn["number"],),
+                                                 end_transaction)
+                if len(results) > 0:
+                    org["asns"][index]["inhibitions"] = results
+
         operation_str = """
             SELECT * FROM contact{0} AS c
                 JOIN role{0} AS r
@@ -267,6 +288,9 @@ def __db_query_org(org_id:int, table_variant:str,
         description, results = _db_query(operation_str, (org_id,),
                                          end_transaction)
         org["contacts"] = results
+
+
+
 
         return org
 
@@ -284,6 +308,28 @@ def __db_query_asn(asn:int, table_variant:str,
         return results[0]
     else:
         return None
+
+
+def __remove_inhibitions(inhibitions:list) -> None:
+    """Removes inhibitions and afterwards stale network entries.
+
+    Assumes that organisation_to_network is not used.
+    """
+    operation_str = """
+        DELETE FROM inhibition WHERE id = ANY(%s)
+        """
+    affected_rows = _db_manipulate(operation_str,
+                                   ([i["id"] for i in inhibitions],) , False)
+
+    # remove all manual network entries that are unlinked by inhibition
+    operation_str = """
+        DELETE FROM network AS n
+            WHERE n.id NOT IN (
+                SELECT i.net_id FROM inhibition as i
+                    WHERE n.id = i.net_id
+                )
+        """
+    affected_rows = _db_manipulate(operation_str, end_transaction=False)
 
 
 def __check_or_create_asns(asns:list) -> list:
@@ -360,6 +406,10 @@ def __remove_or_unlink_asns(asns:list, org_id:int) -> None:
             del(asn["notification_interval"])
             del(asn["organisation_id"])
             del(asn["asn_id"])
+            if "inhibitions" in asn:
+                __remove_inhibitions(asn["inhibitions"])
+                del(asn["inhibitions"]) # comes from inserted inhibitions
+
             if asn_in_db == asn:
                 operation_str = """
                     DELETE FROM autonomous_system
