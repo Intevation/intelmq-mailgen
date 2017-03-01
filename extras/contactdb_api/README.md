@@ -23,7 +23,7 @@ psql -c "GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO apiuser;" contactdb
 There is an additional loglevel `DDEBUG`
 for more details than `DEBUG`.
 
-#e Run diagnostic mode main()
+## Run diagnostic mode main()
 
 ```sh
 python3 -m contactdb_api
@@ -34,3 +34,8 @@ python3 -m contactdb_api
 ```sh
 python3 -m unittest
 ```
+
+## Installation
+For a production setup `checkticket.py` has to be installed
+with a webserver running `wsgi.multithread == false` and will try
+to import the `contactdb\_api` module.
