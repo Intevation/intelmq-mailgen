@@ -378,6 +378,8 @@ def __check_or_create_asns(asns:list) -> list:
 def __remove_or_unlink_asns(asns:list, org_id:int) -> None:
     """Removes or unlinks db entries for asns.
 
+    Considers a list of inhibitions in each asn.
+
     Parameter:
         asns: to be unlinked or removed
         org_id: the organisation to be unlinked from
@@ -425,13 +427,19 @@ def __remove_or_unlink_asns(asns:list, org_id:int) -> None:
 def __check_or_update_asns(asns:list, org_id:int) -> None:
     """Checks or updates and links as necessary the asns for an org.
 
+    Considers that an already existing asn may have inhibitions linked to it.
+    Does not create or update inhibitions, but removes stale when removing
+    and asn.
+
+    Considers the notification interval in the organisation_to_asn table.
+
     For each asn:
         Reuse and update
         or create
 
         Fix links
 
-        Remove asns which are not linked from anywhere.
+        Remove asns which are not linked to from anywhere.
 
     Parameter:
         asns: to be worked on
@@ -502,14 +510,33 @@ def __check_or_update_asns(asns:list, org_id:int) -> None:
     _db_manipulate(operation_str, (org_id, new_asn_ids), False)
 
     # remove all manual asns that are unlinked
+    # first find all asns that are not linked from any organisation anymore
     operation_str = """
-        DELETE FROM autonomous_system AS a
+        SELECT a.number AS id FROM autonomous_system AS a
             WHERE a.number NOT IN (
                 SELECT oa.asn_id FROM organisation_to_asn AS oa
                 WHERE oa.asn_id = a.number
                 )
         """
-    _db_manipulate(operation_str, end_transaction=False)
+    description, results = _db_query(operation_str, end_transaction=False)
+
+    if len(results) > 0:
+        stale_asns = results
+
+        for stale_asn in stale_asns:
+            # then deal with inhibitions
+            operation_str = """
+                SELECT id FROM inhibition
+                    WHERE asn_id = %s
+                """
+            description, results = _db_query(operation_str, (stale_asn["id"],),
+                                             end_transaction=False)
+            if len(results) > 0:
+                __remove_inhibitions(results)
+
+            # finally remove the asn
+            operation_str = "DELETE FROM autonomous_system WHERE number = %s"
+            _db_manipulate(operation_str, (stale_asn["id"],), False)
 
 
 def __remove_or_unlink_contacts(contacts:list, org_id:int) -> None:
