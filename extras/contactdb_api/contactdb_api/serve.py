@@ -269,13 +269,13 @@ def __db_query_org(org_id:int, table_variant:str,
             for index, asn in enumerate(org["asns"][:]):
                 operation_str = """
                     SELECT n.address, ct.name AS type,
-                           ci.name AS identifier, n.comment, i.id
+                           ci.name AS identifier, i.comment, i.id
                         FROM inhibition AS i
-                        JOIN network AS n
+                        LEFT OUTER JOIN network AS n
                             ON i.net_id = n.id
-                        JOIN classification_type AS ct
+                        LEFT OUTER JOIN classification_type AS ct
                             ON i.classification_type_id = ct.id
-                        JOIN classification_identifier AS ci
+                        LEFT OUTER JOIN classification_identifier AS ci
                             ON i.classification_identifier_id = ci.id
                         WHERE asn_id = %s
                     """
