@@ -342,6 +342,8 @@ def __remove_inhibitions(inhibitions:list) -> None:
 def __check_or_create_asns(asns:list) -> list:
     """Find or creates db entries for asns.
 
+    Will append the new comment to the old one, if the asn already exists.
+
     Parameter:
         asns: asns to be found or created
 
@@ -358,20 +360,7 @@ def __check_or_create_asns(asns:list) -> list:
 
         asn_in_db = __db_query_asn(asn["number"], "", False)
 
-        if asn_in_db != None:
-            operation_str = """
-                SELECT a.number FROM autonomous_system AS a
-                    WHERE a.number = %(number)s AND a.comment = %(comment)s
-                """
-            description, results = _db_query(operation_str, asn, False)
-
-            if len(results) == 1:
-                new_numbers.append((results[0]["number"],
-                                    asn['notification_interval']))
-            else:
-                raise CommitError("The ASN{} already exists"
-                                  " with other comment.".format(asn["number"]))
-        else:
+        if asn_in_db == None:
             operation_str = """
                 INSERT INTO autonomous_system
                     (number, comment)
@@ -379,6 +368,22 @@ def __check_or_create_asns(asns:list) -> list:
                 """
             affected_rows = _db_manipulate(operation_str, asn, False)
             new_numbers.append((asn["number"], asn['notification_interval']))
+        else:
+            comment_in_db = asn_in_db["comment"]
+            comment = asn["comment"]
+            if comment_in_db == comment:
+                new_numbers.append((results[0]["number"],
+                                    asn['notification_interval']))
+            else:
+                # append the new comment part
+                new_comment = ' '.join((comment_in_db, comment)).strip()
+                operation_str = """
+                    UPDATE autonomous_system
+                        SET comment = %s
+                        WHERE number = %s
+                    """
+                _db_manipulate(operation_str,
+                               (new_comment, asn["number"]), False)
 
     return new_numbers
 
