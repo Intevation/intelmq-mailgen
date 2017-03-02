@@ -213,10 +213,17 @@ def __db_query_organisation_ids(operation_str:str,  parameters=None):
     orgs = {}
 
     description, results = _db_query(operation_str.format(""), parameters)
-    orgs["manual"] = results[0]["organisation_ids"] if len(results)==1 else []
+    if len(results)==1 and results[0]["organisation_ids"] != None:
+        orgs["manual"] = results[0]["organisation_ids"]
+    else:
+        orgs["manual"] = []
+
     description, results = _db_query(operation_str.format("_automatic"),
                                      parameters)
-    orgs["auto"] = results[0]["organisation_ids"] if len(results)==1 else []
+    if len(results)==1 and results[0]["organisation_ids"] != None:
+        orgs["auto"] = results[0]["organisation_ids"]
+    else:
+        orgs["auto"] = []
 
     return orgs
 
@@ -910,12 +917,18 @@ def searchasn(asn:int):
 
 @hug.get(ENDPOINT_PREFIX + '/searchorg')
 def searchorg(name:str):
+    """Searches for an entry with the given name.
+
+    Search is an case-insensitive substring search.
+    """
     return __db_query_organisation_ids("""
         SELECT array_agg(o.id) AS organisation_ids
             FROM organisation{0} AS o
-            WHERE name=%s
-            GROUP BY name
-        """, (name,))
+            WHERE name ILIKE %s
+               OR name ILIKE %s
+               OR name ILIKE %s
+               OR name ILIKE %s
+        """, (name, "%" + name + "%", "%" + name, name + "%" ))
 
 @hug.get(ENDPOINT_PREFIX + '/searchcontact')
 def searchcontact(email:str):
