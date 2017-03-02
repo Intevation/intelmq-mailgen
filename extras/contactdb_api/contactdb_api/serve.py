@@ -159,7 +159,7 @@ def _db_query(operation:str, parameters=None, end_transaction:bool=True):
     cur = contactdb_conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute(operation, parameters)
-    log.log(DD, "Ran query '{}'".format(str(cur.query)))
+    log.log(DD, "Ran query={}".format(repr(cur.query.decode('utf-8'))))
     description = cur.description
     results = cur.fetchall()
 
@@ -191,7 +191,7 @@ def _db_manipulate(operation:str, parameters=None,
     # FUTURE use with
     cur = contactdb_conn.cursor(cursor_factory=RealDictCursor)
     cur.execute(operation, parameters)
-    log.log(DD, "Ran query '{}'".format(str(cur.query)))
+    log.log(DD, "Ran query={}".format(cur.query.decode('utf-8')))
     if end_transaction:
         __commit_transaction()
     cur.close()
@@ -907,39 +907,44 @@ def pong():
 @hug.get(ENDPOINT_PREFIX + '/searchasn')
 def searchasn(asn:int):
     return __db_query_organisation_ids("""
-        SELECT array_agg(oa.organisation_id) as organisation_ids
+        SELECT DISTINCT array_agg(oa.organisation_id) as organisation_ids
             FROM autonomous_system{0} AS a
             JOIN organisation_to_asn{0} AS oa
                 ON oa.asn_id = a.number
             WHERE number=%s
-            GROUP BY a
         """, (asn,))
 
 @hug.get(ENDPOINT_PREFIX + '/searchorg')
 def searchorg(name:str):
-    """Searches for an entry with the given name.
+    """Search for an entry with the given name.
 
     Search is an case-insensitive substring search.
     """
     return __db_query_organisation_ids("""
-        SELECT array_agg(o.id) AS organisation_ids
+        SELECT DISTINCT array_agg(o.id) AS organisation_ids
             FROM organisation{0} AS o
             WHERE name ILIKE %s
                OR name ILIKE %s
                OR name ILIKE %s
                OR name ILIKE %s
-        """, (name, "%" + name + "%", "%" + name, name + "%" ))
+        """, (name, "%"+name+"%", "%"+name, name+"%"))
 
 @hug.get(ENDPOINT_PREFIX + '/searchcontact')
 def searchcontact(email:str):
+    """Search for an entry with the given email address.
+
+    Uses an case-insensitive substring search.
+    """
     return __db_query_organisation_ids("""
-        SELECT array_agg(r.organisation_id) AS organisation_ids
+        SELECT DISTINCT array_agg(r.organisation_id) AS organisation_ids
             FROM role{0} AS r
             JOIN contact{0} AS c
                 ON c.id = r.contact_id
-            WHERE c.email=%s
-            GROUP BY c.email
-        """, (email,))
+            WHERE c.email LIKE %s
+               OR c.email LIKE %s
+               OR c.email LIKE %s
+               OR c.email LIKE %s
+        """, (email, "%"+email+"%", "%"+email, email+"%"))
 
 @hug.get(ENDPOINT_PREFIX + '/org/manual/{id}')
 def get_manual_org_details(id:int):
