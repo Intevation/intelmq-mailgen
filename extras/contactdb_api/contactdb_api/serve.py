@@ -367,23 +367,18 @@ def __check_or_create_asns(asns:list) -> list:
                     VALUES (%(number)s, %(comment)s)
                 """
             affected_rows = _db_manipulate(operation_str, asn, False)
-            new_numbers.append((asn["number"], asn['notification_interval']))
-        else:
-            comment_in_db = asn_in_db["comment"]
-            comment = asn["comment"]
-            if comment_in_db == comment:
-                new_numbers.append((results[0]["number"],
-                                    asn['notification_interval']))
-            else:
-                # append the new comment part
-                new_comment = ' '.join((comment_in_db, comment)).strip()
-                operation_str = """
-                    UPDATE autonomous_system
-                        SET comment = %s
-                        WHERE number = %s
-                    """
-                _db_manipulate(operation_str,
-                               (new_comment, asn["number"]), False)
+        elif asn_in_db["comment"] != asn["comment"]:
+            # append the new comment part
+            new_comment = ' '.join((asn_in_db["comment"],
+                                    asn["comment"])).strip()
+            operation_str = """
+                UPDATE autonomous_system
+                    SET comment = %s
+                    WHERE number = %s
+                """
+            _db_manipulate(operation_str, (new_comment, asn["number"]), False)
+
+        new_numbers.append((asn["number"], asn['notification_interval']))
 
     return new_numbers
 
@@ -852,6 +847,9 @@ def _update_org(org):
 
     __check_or_update_asns(org["asns"], org_id)
     __check_or_update_contacts(org["contacts"], org_id)
+
+    if org["sector_id"] == '':
+        org["sector_id"] = None
 
     # linking of asns and contacts has been done, only update is left to do
     operation_str = """
