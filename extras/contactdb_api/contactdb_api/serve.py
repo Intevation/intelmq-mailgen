@@ -753,6 +753,9 @@ def _create_org(org:dict) -> int:
         else:
             raise CommitError("{} not set".format(attrib))
 
+    if org['name'] == '':
+        raise CommitError("Name of the organisation must be provided.")
+
     operation_str = """
         SELECT o.id FROM organisation as o
             WHERE o.name = %(name)s
@@ -844,6 +847,9 @@ def _update_org(org):
 
     if ("id" not in org_in_db) or org_in_db["id"] != org_id:
         raise CommitError("Org {} to be updated not in db.".format(org_id))
+
+    if 'name' not in org or org['name'] == None or org['name'] == '':
+        raise CommitError("Name of the organisation must be provided.")
 
     __check_or_update_asns(org["asns"], org_id)
     __check_or_update_contacts(org["contacts"], org_id)
