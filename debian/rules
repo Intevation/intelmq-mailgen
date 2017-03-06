@@ -4,6 +4,22 @@ export PYBUILD_NAME=intelmqmail
 %:
 	dh $@ --with python3 --without python2 --buildsystem=pybuild
 
+override_dh_gencontrol:
+	dh_gencontrol -p intelmq-mailgen
+	dh_gencontrol -p intelmq-db-api \
+          -u-v`sed -n "s/[[:space:]]*version.*'\([^']*\)'.*/\1/p" \
+	  extras/contactdb_api/setup.py`
+
+override_dh_auto_configure:
+	dh_auto_configure -p intelmq-mailgen
+	dh_auto_configure --sourcedirectory=extras/contactdb_api \
+	  -p intelmq-db-api
+
+override_dh_auto_build:
+	dh_auto_build -p intelmq-mailgen
+	dh_auto_build --sourcedirectory=extras/contactdb_api \
+	  -p intelmq-db-api
+
 override_dh_install:
 	dh_install
 	dh_installexamples
@@ -21,6 +37,9 @@ override_dh_install:
 # installed into /usr/lib/python3.4/site-packages.
 override_dh_auto_install:
 	python3 setup.py install --root=debian/intelmq-mailgen \
+		--prefix=/usr --install-lib=/usr/lib/python3/dist-packages
+	cd extras/contactdb_api && \
+	python3 setup.py install --root=../../debian/intelmq-db-api \
 		--prefix=/usr --install-lib=/usr/lib/python3/dist-packages
 
 # vim :set noet sts=0 sw=2 ts=2:

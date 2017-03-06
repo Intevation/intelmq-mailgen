@@ -15,3 +15,10 @@ Description: Generate and send emails using data from the IntelMQ ContactDB.
  .
  The tool processes events written to the PostgreSQL database and send
  email notifications based on data from the IntelMQ Contacts Database.
+
+Package: intelmq-db-api
+Architecture: all
+Depends: ${misc:Depends}, python3-psycopg2, python3-hug (>= 2.2.0), python3
+Description: Backend for DB manipulation via modern web aplications.
+ .
+ Backend APIs for accessing IntelMQ databases, as used by Fody.
