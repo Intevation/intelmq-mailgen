@@ -32,6 +32,8 @@ override_dh_install:
 	sed 's@src/\(intelmq-mailgen/tests/keys/test1.sec\)@/usr/share/\1@; s@sql/notifications.sql@/usr/share/intelmq-mailgen/sql/notifications.sql@; s@intelmq-mailgen.conf.example@/usr/share/doc/intelmq-mailgen/examples/intelmq-mailgen.conf.example@' \
 		README.md \
 		> debian/intelmq-mailgen/usr/share/doc/intelmq-mailgen/README.md
+	sed -i "\%@hug.get('/'%,\%fody/www/static%s/^.//;s@/home/fody/www@/usr/share/fody/www@" \
+	  debian/intelmq-db-api/usr/lib/intelmq-db-api/checkticket.py
 
 # Without forcing the correct --install-lib path here, files would get
 # installed into /usr/lib/python3.4/site-packages.
