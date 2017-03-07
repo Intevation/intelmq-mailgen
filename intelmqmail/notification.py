@@ -2,7 +2,7 @@ from intelmqmail.db import load_events, new_ticket_number, mark_as_sent
 from intelmqmail.templates import read_template
 from intelmqmail.tableformat import format_as_csv
 from intelmqmail.mail import create_mail, clearsign
-
+import pyxarf
 
 class NotificationError(Exception):
 
@@ -105,6 +105,26 @@ class ScriptContext:
                            attachments=[])
         return [EmailNotification(self.directive, mail, ticket)]
 
+    def mail_format_as_xarf(self, xarf_schema):
+        events = self.load_events(xarf_schema.event_columns())
+
+        sender = self.config["sender"]
+        for event in events:
+            ticket = self.new_ticket_number()
+            report_id = "{}@EXAMPLE.COM".format(ticket) # TODO This has to be corrected. It's the Ticketn-Number@TLD
+
+            params = {
+                'schema_cache': '/tmp/',
+                'reported_from': sender,
+                'report_id': report_id,
+                # 'useragent': "IntelMQ-Mailgen,  # Useragent is set by pyxarf __useragent__
+                }
+            params.update(xarf_schema.xarf_params(event))
+
+            xarf_object = pyxarf.Xarf(**params)
+            print(xarf_object)
+
+        pass
 
 
 class SendContext:
