@@ -52,19 +52,19 @@ known_xarf_schema = {
         'destination_type': 'ip-address',
         'attachment': None,
     },
-        {
-            'source': 'source.ip',
-            'source_port': 'source.port',
-            'source_asn': 'source.asn',
-            'date': Formatter("time.source", str),
-            'destination': 'destination.ip',
-            'destination_port': 'destination.port',
-            'destination_asn': 'destination.asn',
-            'classification_taxonomy': 'classification.taxonomy',
-            'classification_type': 'classification.type',
-            'classification_identifier': 'classification.identifier',
-            'malware_name': 'malware.name',
-            'malware_md5': 'malware.hash.md5',
+    {
+        'source': 'source.ip',
+        'source_port': 'source.port',
+        'source_asn': 'source.asn',
+        'date': Formatter("time.source", str),
+        'destination': 'destination.ip',
+        'destination_port': 'destination.port',
+        'destination_asn': 'destination.asn',
+        'classification_taxonomy': 'classification.taxonomy',
+        'classification_type': 'classification.type',
+        'classification_identifier': 'classification.identifier',
+        'malware_name': 'malware.name',
+        'malware_md5': 'malware.hash.md5',
     })
 }
 # underscore _ should be converted by the xarf lib:
