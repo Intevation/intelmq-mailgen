@@ -3,6 +3,9 @@ from intelmqmail.templates import read_template
 from intelmqmail.tableformat import format_as_csv
 from intelmqmail.mail import create_mail, clearsign
 import pyxarf
+import tempfile
+import os
+
 
 class NotificationError(Exception):
 
@@ -19,6 +22,7 @@ class InvalidDirective(NotificationError):
     invalid for various reasons, e.g. by referring to unknown CSV
     formats or templates.
     """
+
 
 class InvalidTemplate(InvalidDirective):
 
@@ -59,6 +63,7 @@ class ScriptContext:
         return load_events(self.db_cursor, self.directive["event_ids"], columns)
 
     def read_template(self):
+        template_name = ''
         try:
             template_name = self.directive["template_name"]
             return read_template(self.config["template_dir"], template_name)
@@ -106,24 +111,55 @@ class ScriptContext:
         return [EmailNotification(self.directive, mail, ticket)]
 
     def mail_format_as_xarf(self, xarf_schema):
+        """
+        Create Messages in X-Arf Format
+        Args:
+            xarf_schema: an XarfSchema object, like in 20xarf.py
+
+        Returns:
+
+        """
+
+        # Load the events and their required columns.
+        # xarf_schema.event_columns() returns a dict/set/list of column-names
         events = self.load_events(xarf_schema.event_columns())
 
         sender = self.config["sender"]
+
+        # Read the path to cache X-Arf Schemata from conf
+        # if the variable was not set use a tempdir
+        schema_cache = self.config.get("xarf_schemacache", tempfile.gettempdir()+os.sep)
+
+        # This automatism is setting the Domain-Part within the report_id of the X-ARF
+        # Report. If the parameter xarf_reportdomain was not set in the the config, the
+        # senders domain name is used.
+        reportid_domain = self.config.get("xarf_reportdomain", sender.split("@")[1])
+
+        # Create an X-Arf Message for every event
         for event in events:
+            # Get a new ticketnumber for each event
             ticket = self.new_ticket_number()
-            report_id = "{}@EXAMPLE.COM".format(ticket) # TODO This has to be corrected. It's the Ticketn-Number@TLD
+            report_id = "{}@{}".format(ticket, reportid_domain)
 
             params = {
-                'schema_cache': '/tmp/',
+                'schema_cache': schema_cache,
                 'reported_from': sender,
                 'report_id': report_id,
                 # 'useragent': "IntelMQ-Mailgen,  # Useragent is set by pyxarf __useragent__
                 }
+            # now, as we know the events data and the intelmq-fields and
+            # the mapping of these fields to the X-ARF Schema, pass the
+            # event into the XarfSchema's xarf_params function in order
+            # to resolve mapping of the events data to the X-Arf-Key
             params.update(xarf_schema.xarf_params(event))
 
+            # Create an X-ARF Message using the pyxarf library.
+            # The lib downloads the schema from schema_url automagically
+            # and stores it in the schema_cache
             xarf_object = pyxarf.Xarf(**params)
             print(xarf_object)
 
+        # TODO Send the E-Mail containing the X-ARF Message
         pass
 
 

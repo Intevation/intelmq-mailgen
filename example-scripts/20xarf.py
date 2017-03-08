@@ -1,30 +1,60 @@
-
 """
 This Script looks for xarf directives....
-it is highly experimental
-this Script expects a directive like:
+It expects a directive like:
 
     return Directive(template_name="bot-infection_0.2.0_unstable",
                      event_data_format="xarf",
                      notification_interval=0)
 
+Which has been create by an IntelMQ CertBUND-Contact RUke Expert
 
 """
 
-class Formatter:
 
+class Formatter:
+    """
+    This is a Formatter which is used to combine information on the IntelMQ-field
+     which should be inserted into the X-Arf Message and a Function which is converting
+     this data into an X-Arf compliant format
+    """
     def __init__(self, field, formatter=lambda x: x):
+        """
+        Initialise the formatter
+        Args:
+            field: The name of the IntelMQ field, for instance "source.ip"
+            formatter: a function which should be used to format the data of the IntelMQ field
+        """
         self.field = field
         self.formatter = formatter
 
     def format(self, event):
+        """
+        Apply the formatting function to the data
+
+        Args:
+            event: An IntelMQ Event
+
+        Returns:
+            The formatted value of self.field
+        """
         return self.formatter(event[self.field])
 
 
-
 class XarfSchema:
+    """
+    This Class provides functions in order to handle the
+    X-ARF Schema definitions provided below.
+    """
 
     def __init__(self, static_fields, event_mapping):
+        """
+        Initialise the Schema Object
+
+        Args:
+            static_fields: A dictionary of static fields, which are typical to X-Arf messages of this schema
+            event_mapping: A dictionary of X-Arf-Key / Formatter pairs. Each Formatter contains the field-name
+             of the IntelMQ-Event. Each X-Arf-Key contains the name of the X-Arf Field
+        """
         self.static_fields = static_fields
         self.event_mapping = event_mapping
         for key, value in self.event_mapping.items():
@@ -33,16 +63,69 @@ class XarfSchema:
             self.event_mapping[key] = value
 
     def event_columns(self):
+        """
+        This returns the Fieldname of the Event-Mappings
+        Formatter-Object
+
+        Returns:
+            A field name. For instance "source.ip"
+        """
         return [formatter.field for formatter in self.event_mapping.values()]
 
     def xarf_params(self, event):
+        """
+        Provides the possibility to generate a dictionary of
+        key-value pairs, where key is the name of the X-ARF field, and
+        value is the data of the IntelMQ-Event.
+        The funtions formats the data to the correct format, by using the
+        formatting funtions which have been provided within the schema-definitions
+        below.
+
+        Args:
+            event: An IntelMQ-Event
+
+        Returns:
+            A dictionary containing the X-Arf-Fieldname to EventData Mapping after
+            the formatting-function was applied.
+
+        """
         params = self.static_fields.copy()
         for key, formatter in self.event_mapping.items():
             formatted = formatter.format(event)
             if formatted is not None:
+                # Only add non-Null values to the dict
                 params[key] = formatted
         return params
 
+
+def datetime_to_rfc3339(datetime):
+    """
+    Convert DateTime Object to RFC3339 String
+    Hint: when using python > 3.6 one could use timespec='seconds'
+    to truncate the result to seconds...
+
+    Args:
+        datetime: A Datetime-Object with Timezone Information
+
+    Returns:
+        an RFC3339 Encoded String
+    """
+
+    return datetime.astimezone().isoformat()
+
+
+# Each X-Arf-Schema is divided into two discrete dictionaries.
+# 1. "Static" Fields: These fields are the same in each X-Arf-Message of
+# the given schema
+# 2. "Event-Mapping" fields: This is a dictionary providing the mapping
+# of an IntelMQ field to the X-ARF Message. For instance:
+# The IntelMQ field "source.ip" will be converted to the field "source"
+# in the X-ARF Message.
+# As a direct conversation is not poissible in all cases, you can user formatters,
+# like the datetime_to_rfc3339 formatter in order to convert the data retrieved from
+# the IntelMQ-Event
+# Note: The underscores _ will be converted by the xarf library:
+# https://github.com/xarf/python-xarf/blob/master/pyxarf/xarf.py#L425
 known_xarf_schema = {
     "bot-infection_0.2.0_unstable": XarfSchema({
         'schema_url': 'https://raw.githubusercontent.com/Intevation/xarf-schemata/master/abuse_bot-infection_0.2.0_unstable.json',
@@ -56,7 +139,7 @@ known_xarf_schema = {
         'source': 'source.ip',
         'source_port': 'source.port',
         'source_asn': 'source.asn',
-        'date': Formatter("time.source", str),
+        'date': Formatter("time.source", datetime_to_rfc3339),
         'destination': 'destination.ip',
         'destination_port': 'destination.port',
         'destination_asn': 'destination.asn',
@@ -67,12 +150,18 @@ known_xarf_schema = {
         'malware_md5': 'malware.hash.md5',
     })
 }
-# underscore _ should be converted by the xarf lib:
-# https://github.com/xarf/python-xarf/blob/master/pyxarf/xarf.py#L425
-
 
 
 def create_notifications(context):
+    """
+    This function is called as an entrypoint by intelmq-mailgen.
+
+    Args:
+        context:
+
+    Returns:
+
+    """
     maybe_xarf = context.directive["event_data_format"]
     maybe_xarf_schema = context.directive["template_name"]
 
@@ -82,6 +171,6 @@ def create_notifications(context):
         return context.mail_format_as_xarf(xarf_schema)
     elif maybe_xarf and xarf_schema is None:
         # XARF was defined, but the schema is not configured.
-        raise # TODO proper handling
+        raise  # TODO proper handling
 
     return None

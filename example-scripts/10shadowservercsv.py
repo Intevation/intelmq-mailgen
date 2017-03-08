@@ -33,7 +33,15 @@ standard_column_titles = {
 
 
 def add_default_titles(columns):
-    """Add the standard title to each the columns."""
+    """
+    Add the standard title to each of the columns.
+
+    Args:
+        columns:
+
+    Returns:
+
+    """
     extended_columns = []
     for col in columns:
         if isinstance(col, str):
@@ -48,7 +56,16 @@ def add_default_titles(columns):
 
 
 def table_formats_with_default_titles(formats):
-    """Frontend for build_table_formats that adds standard column titles."""
+    """
+    Frontend for build_table_formats that adds standard column titles.
+
+    Args:
+        formats:
+
+    Returns:
+
+    """
+
     return build_table_formats([(name, add_default_titles(columns))
                                 for name, columns in formats])
 
@@ -179,6 +196,14 @@ table_formats = table_formats_with_default_titles([
 
 
 def create_notifications(context):
+    """
+
+    Args:
+        context:
+
+    Returns:
+
+    """
     format_spec = table_formats.get(context.directive["event_data_format"])
     if format_spec is not None:
         return context.mail_format_as_csv(format_spec)
