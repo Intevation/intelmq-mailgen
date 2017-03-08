@@ -94,7 +94,7 @@ def read_configuration() -> dict:
 EXAMPLE_CONF_FILE = r"""
 {
   "libpg conninfo":
-    "host=localhost dbname=contactdb user=intelmq password='USER\\'s DB PASSWORD'",
+    "host=localhost dbname=contactdb user=apiuser password='USER\\'s DB PASSWORD'",
   "logging_level": "INFO"
 }
 """
