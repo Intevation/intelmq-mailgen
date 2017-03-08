@@ -56,16 +56,24 @@ For use with Mailgen it needs to be extended:
 As database-superuser (usually via system user postgres):
 
 1. Create a new database-user:
-    createuser --encrypted --pwprompt intelmq_mailgen
+   ```
+   createuser --encrypted --pwprompt intelmq_mailgen
+   ```
 
 2. Extend the database:
+    ```
     psql -f sql/notifications.sql intelmq-events
+    ```
 
 3. Grant `intelmq` the right to insert new events via a trigger:
+    ```
     psql -c "GRANT eventdb_insert TO intelmq" intelmq-events
-
+    ```
+    
 4. Grant the new user the right to send out notifications:
+    ```
     psql -c "GRANT eventdb_send_notifications TO intelmq_mailgen" intelmq-events
+    ```
 
 
 Interaction with IntelMQ and the events database

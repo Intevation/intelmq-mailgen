@@ -12,6 +12,11 @@ log = logging.getLogger(__name__)
 
 
 def open_db_connection(config, connection_factory=None):
+    """Opens a psycopg2 database connection.
+
+    Does not set autocommit, so using code must take
+    care about transaction handling itself.
+    """
     params = config['database']['event']
     return psycopg2.connect(database=params['name'],
                             user=params['username'],

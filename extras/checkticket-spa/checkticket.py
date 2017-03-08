@@ -73,6 +73,19 @@ def setup(api):
     cur = conn.cursor()
 
 ###
+# when trying to find out how our setup can handle multiple requests, you can
+# enable the following debugging endpoint:
+#
+#@hug.get()
+#def sleep(secs:float, request):
+#    import time
+#    if secs < 300:
+#       time.sleep(secs)
+#    return {"wsgi.multithread": request.env["wsgi.multithread"],
+#            "wsgi.multiprocess": request.env["wsgi.multiprocess"]}
+###
+
+###
 ## when called from a web application that has been served from
 ## a different port, we can allow the browser to read from us
 ##
@@ -97,7 +110,7 @@ def getEventIDsForTicket(ticket:hug.types.length(17, 18)):
                     "   WHERE intelmq_ticket = %s;", (ticket,))
         event_ids = cur.fetchone()["a"]
     finally:
-        pass
+        cur.connection.commit() # end transaction
 
     return event_ids
 
@@ -123,7 +136,7 @@ def getEvents(ids:ListOfIds()):
             event = {k:v for k,v in row.items() if v != None}
             events.append(event)
     finally:
-        pass
+        cur.connection.commit() # end transaction
 
     return events
 
@@ -135,7 +148,13 @@ def getEventsForTicket(ticket:hug.types.length(17, 18)):
 @hug.get()
 def getLastTicketNumber():
     global cur
-    return db.last_ticket_number(cur)
+    last_ticket_number = None
+    try:
+        last_ticket_number = db.last_ticket_number(cur)
+    finally:
+        cur.connection.commit() # end transaction
+
+    return last_ticket_number
 
 ###
 ## When serving a single page web application in a more complex setup,
