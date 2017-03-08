@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "remove" ] ; then
+    . /usr/share/apache2/apache2-maintscript-helper
+    apache2_invoke ensite db-api
+fi
+
+#DEBHELPER#
