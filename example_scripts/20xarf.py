@@ -99,20 +99,20 @@ class XarfSchema:
         return params
 
 
-def datetime_to_rfc3339(datetime):
+def datetime_to_rfc3339(eventdatetime):
     """Convert datetime object to `RFC3339 <https://www.ietf.org/rfc/rfc3339.txt>`_ string
 
     Hint: when using python > 3.6 one could use timespec='seconds'
     to truncate the result to seconds...
 
     Args:
-        datetime: A datetime-object with timezone information
+        eventdatetime: A datetime-object with timezone information
 
     Returns:
         the datetime as a `RFC3339 <https://www.ietf.org/rfc/rfc3339.txt>`_ encoded string
     """
 
-    return datetime.astimezone().isoformat()
+    return eventdatetime.astimezone().isoformat()
 
 
 known_xarf_schema = {

@@ -135,6 +135,8 @@ class ScriptContext:
         # senders domain name is used.
         reportid_domain = self.config.get("xarf_reportdomain", sender.split("@")[1])
 
+        returnlist_notifications = []
+
         # Create an X-Arf Message for every event
         for event in events:
             # Get a new ticketnumber for each event
@@ -157,10 +159,43 @@ class ScriptContext:
             # The lib downloads the schema from schema_url automagically
             # and stores it in the schema_cache
             xarf_object = pyxarf.Xarf(**params)
-            print(xarf_object)
 
-        # TODO Send the E-Mail containing the X-ARF Message
-        pass
+            mail = self.create_xarf_mail(xarf_object)
+
+            returnlist_notifications.append(EmailNotification(self.directive, mail, ticket))
+
+        return returnlist_notifications
+
+    def create_xarf_mail(self, xarf_object):
+        """
+
+        Args:
+            xarf_object:
+
+        Returns:
+
+        """
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        from email.utils import formatdate
+
+        templatetext = "DEMO CHANGE ME"
+        subject = "DEMOSUBJECT CHANGE ME"
+
+        mailtext = templatetext
+
+        msg = MIMEMultipart()
+        msg.attach(MIMEText(mailtext))
+        msg.attach(MIMEText(xarf_object.to_yaml('machine_readable'), 'plain', 'utf-8'))
+
+        msg.add_header("From", self.config["sender"])
+        msg.add_header("To", self.directive["recipient_address"])
+        msg.add_header("Subject", subject)
+        msg.add_header("Auto-Submitted", "auto-generated")
+        msg.add_header("X-ARF", "PLAIN")  # TODO BULK IS NOT SUPPORTED YET
+        msg.add_header("Date", formatdate(timeval=None, localtime=True))
+
+        return msg
 
 
 class SendContext:
