@@ -162,7 +162,7 @@ def getLastTicketNumber():
 ## files from a directory.
 ##
 ## adapt and uncomment (== activate) the following lines:
-#@hug.get(urls=['/', '/tickets', '/contacts', '/stats', '/settings'],
+#@hug.get(urls=['/', '/tickets', '/contacts', '/stats', '/settings', '/login'],
 #         output=hug.output_format.file)
 #def root():
 #        return("/home/fody/www/index.html")
