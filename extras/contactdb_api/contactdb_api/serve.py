@@ -3,8 +3,8 @@
 
 Requires hug (http://www.hug.rest/)
 
-
 Copyright (C) 2017 by Bundesamt für Sicherheit in der Informationstechnik
+
 Software engineering by Intevation GmbH
 
 This program is Free Software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Author(s):
-    Bernhard E. Reiter <bernhard@intevation.de>
+    * Bernhard E. Reiter <bernhard@intevation.de>
 
 
 Design rationale:
@@ -70,8 +70,7 @@ def read_configuration() -> dict:
         The configuration values, possibly containing more dicts.
 
     Notes:
-      Design rationale
-      ----------------
+      Design rationale:
         * Provies an "okay" separation from config and code.
         * Better than intelmq-mailgen which has two hard-coded places
           and merge code for the config.
@@ -95,7 +94,7 @@ def read_configuration() -> dict:
 EXAMPLE_CONF_FILE = r"""
 {
   "libpg conninfo":
-    "host=localhost dbname=contactdb user=intelmq password='USER\\'s DB PASSWORD'",
+    "host=localhost dbname=contactdb user=apiuser password='USER\\'s DB PASSWORD'",
   "logging_level": "INFO"
 }
 """

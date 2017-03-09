@@ -1,3 +1,9 @@
+intelmq-mailgen (0.95.1) unstable; urgency=low
+
+  * Added Db-api backends for Fody to packaging.
+
+ -- Sascha Wilde <wilde@intevation.de>  Mon, 06 Mar 2017 17:01:15 +0100
+
 intelmq-mailgen (0.95) testing; urgency=medium
 
   * Release 0.95
