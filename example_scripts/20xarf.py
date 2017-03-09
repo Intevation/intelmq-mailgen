@@ -9,7 +9,7 @@ Rule Expert* like::
                      notification_interval=0)
 
 """
-
+from email.utils import formatdate  # required for RFC2822 date-conversion
 
 class Formatter:
     """A Formatter which converts data into an other representation.
@@ -114,6 +114,18 @@ def datetime_to_rfc3339(eventdatetime):
 
     return eventdatetime.astimezone().isoformat()
 
+def datetime_to_rfc2822(eventdatetime):
+    """Convert datetime object to `RFC2822 <https://www.ietf.org/rfc/rfc2822.txt>`_ string
+
+    Args:
+        eventdatetime: A datetime-object with timezone information
+
+    Returns:
+        the datetime as a `RFC2822 <https://www.ietf.org/rfc/rfc2822.txt>`_ encoded string
+    """
+
+    return formatdate(eventdatetime.timestamp(), localtime=True)
+
 
 known_xarf_schema = {
     "bot-infection_0.2.0_unstable": XarfSchema({
@@ -128,7 +140,7 @@ known_xarf_schema = {
         'source': 'source.ip',
         'source_port': 'source.port',
         'source_asn': 'source.asn',
-        'date': Formatter("time.source", datetime_to_rfc3339),
+        'date': Formatter("time.source", datetime_to_rfc2822),
         'destination': 'destination.ip',
         'destination_port': 'destination.port',
         'destination_asn': 'destination.asn',
