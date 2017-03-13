@@ -4,8 +4,9 @@ This script looks for xarf directives within IntelMQ-Mailgen's context
 objects. To be successful, it expects a directive which was created by
 an *IntelMQ CertBUND-Contact Rule Expert* like::
 
-    return Directive(template_name="bot-infection_0.2.0_unstable",
-                     event_data_format="xarf",
+    return Directive(template_name="xarf-description-template",
+                     notification_format="xarf",
+                     event_data_format="bot-infection_0.2.0_unstable",
                      notification_interval=0)
 """
 
@@ -197,17 +198,17 @@ def create_notifications(context):
         context:
 
     Returns:
-
     """
-    maybe_xarf = context.directive["event_data_format"]
-    maybe_xarf_schema = context.directive["template_name"]
+    if context.directive["notification_format"] != "xarf":
+        return None
 
-    xarf_schema = known_xarf_schema.get(maybe_xarf_schema, None)
+    schema_name = context.directive["event_data_format"]
 
-    if maybe_xarf == "xarf" and xarf_schema is not None:
+    xarf_schema = known_xarf_schema.get(schema_name)
+    if xarf_schema is not None:
         return context.mail_format_as_xarf(xarf_schema)
-    elif maybe_xarf and xarf_schema is None:
+    else:
         # XARF was defined, but the schema is not configured.
-        raise  # TODO proper handling
+        raise RuntimeError("Unknown X-ARF schema %r" % (schema_name,))
 
     return None
