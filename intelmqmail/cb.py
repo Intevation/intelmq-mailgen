@@ -292,6 +292,10 @@ def main():
 
 
     scripts = load_script_entry_points(config)
+    if not scripts:
+        log.error("Could not load any scripts from %r"
+                  % (config["script_directory"],))
+        exit(1)
 
     mailgen(args, config, scripts)
 
