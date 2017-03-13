@@ -128,12 +128,15 @@ class ScriptContext:
 
         # Read the path to cache X-Arf Schemata from conf
         # if the variable was not set use a tempdir
-        schema_cache = self.config.get("xarf_schemacache", tempfile.gettempdir()+os.sep)
+        schema_cache = self.config.get("xarf_schemacache",
+                                       tempfile.gettempdir() + os.sep)
 
-        # This automatism is setting the Domain-Part within the report_id of the X-ARF
-        # Report. If the parameter xarf_reportdomain was not set in the the config, the
-        # senders domain name is used.
-        reportid_domain = self.config.get("xarf_reportdomain", sender.split("@")[1])
+        # This automatism is setting the Domain-Part within the
+        # report_id of the X-ARF Report. If the parameter
+        # xarf_reportdomain was not set in the the config, the senders
+        # domain name is used.
+        reportid_domain = self.config.get("xarf_reportdomain",
+                                          sender.split("@")[1])
 
         returnlist_notifications = []
 
@@ -162,7 +165,8 @@ class ScriptContext:
 
             mail = self.create_xarf_mail(xarf_object)
 
-            returnlist_notifications.append(EmailNotification(self.directive, mail, ticket))
+            returnlist_notifications.append(EmailNotification(self.directive,
+                                                              mail, ticket))
 
         return returnlist_notifications
 
@@ -186,7 +190,8 @@ class ScriptContext:
 
         msg = MIMEMultipart()
         msg.attach(MIMEText(mailtext))
-        msg.attach(MIMEText(xarf_object.to_yaml('machine_readable'), 'plain', 'utf-8'))
+        msg.attach(MIMEText(xarf_object.to_yaml('machine_readable'), 'plain',
+                            'utf-8'))
 
         msg.add_header("From", self.config["sender"])
         msg.add_header("To", self.directive["recipient_address"])
