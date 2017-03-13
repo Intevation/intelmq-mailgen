@@ -140,7 +140,7 @@ known_xarf_schema = {
         'source': 'source.ip',
         'source_port': 'source.port',
         'source_asn': 'source.asn',
-        'date': Formatter("time.source", datetime_to_rfc2822),
+        'date': Formatter("time.source", datetime_to_rfc3339),
         'destination': 'destination.ip',
         'destination_port': 'destination.port',
         'destination_asn': 'destination.asn',
