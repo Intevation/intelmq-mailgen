@@ -54,7 +54,7 @@ logging.addLevelName(DD, "DDEBUG")
 EXAMPLE_CONF_FILE = r"""
 {
   "libpg conninfo":
-    "host=localhost dbname=contactdb user=apiuser password='USER\\'s DB PASSWORD'",
+    "host=localhost dbname=eventdb user=apiuser password='USER\\'s DB PASSWORD'",
   "logging_level": "INFO"
 }
 """
