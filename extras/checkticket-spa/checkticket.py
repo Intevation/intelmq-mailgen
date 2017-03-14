@@ -57,6 +57,16 @@ try:
 except ImportError as err:
     log.warning(err)
 
+# if possible add the eventdb_api to our endpoints
+try:
+    import events_api.serve
+
+    @hug.extend_api()
+    def add_events_api():
+        return[events_api.serve]
+
+except ImportError as err:
+    log.warning(err)
 
 # We are using global variables for postgresql db connection
 # TODO: should be checked that parallel requests via hug/falcon behave well
