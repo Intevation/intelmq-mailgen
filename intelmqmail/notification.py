@@ -128,12 +128,17 @@ class ScriptContext:
 
         # Read the path to cache X-Arf Schemata from conf
         # if the variable was not set use a tempdir
-        schema_cache = self.config.get("xarf_schemacache", tempfile.gettempdir()+os.sep)
+        schema_cache = self.config.get("xarf_schemacache",
+                                       tempfile.gettempdir() + os.sep)
 
-        # This automatism is setting the Domain-Part within the report_id of the X-ARF
-        # Report. If the parameter xarf_reportdomain was not set in the the config, the
-        # senders domain name is used.
-        reportid_domain = self.config.get("xarf_reportdomain", sender.split("@")[1])
+        # This automatism is setting the Domain-Part within the
+        # report_id of the X-ARF Report. If the parameter
+        # xarf_reportdomain was not set in the the config, the senders
+        # domain name is used.
+        reportid_domain = self.config.get("xarf_reportdomain",
+                                          sender.split("@")[1])
+
+        template = self.read_template()
 
         returnlist_notifications = []
 
@@ -142,6 +147,8 @@ class ScriptContext:
             # Get a new ticketnumber for each event
             ticket = self.new_ticket_number()
             report_id = "{}@{}".format(ticket, reportid_domain)
+
+            subject, body = template.substitute({"ticket_number": ticket})
 
             params = {
                 'schema_cache': schema_cache,
@@ -160,13 +167,14 @@ class ScriptContext:
             # and stores it in the schema_cache
             xarf_object = pyxarf.Xarf(**params)
 
-            mail = self.create_xarf_mail(xarf_object)
+            mail = self.create_xarf_mail(subject, body, xarf_object)
 
-            returnlist_notifications.append(EmailNotification(self.directive, mail, ticket))
+            returnlist_notifications.append(EmailNotification(self.directive,
+                                                              mail, ticket))
 
         return returnlist_notifications
 
-    def create_xarf_mail(self, xarf_object):
+    def create_xarf_mail(self, subject, body, xarf_object):
         """
 
         Args:
@@ -179,14 +187,10 @@ class ScriptContext:
         from email.mime.multipart import MIMEMultipart
         from email.utils import formatdate
 
-        templatetext = "DEMO CHANGE ME"
-        subject = "DEMOSUBJECT CHANGE ME"
-
-        mailtext = templatetext
-
         msg = MIMEMultipart()
-        msg.attach(MIMEText(mailtext))
-        msg.attach(MIMEText(xarf_object.to_yaml('machine_readable'), 'plain', 'utf-8'))
+        msg.attach(MIMEText(body))
+        msg.attach(MIMEText(xarf_object.to_yaml('machine_readable'), 'plain',
+                            'utf-8'))
 
         msg.add_header("From", self.config["sender"])
         msg.add_header("To", self.directive["recipient_address"])

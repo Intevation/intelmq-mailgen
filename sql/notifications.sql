@@ -60,6 +60,7 @@ CREATE TABLE directives (
     medium VARCHAR(100) NOT NULL,
     recipient_address VARCHAR(100) NOT NULL,
     template_name VARCHAR(100) NOT NULL,
+    notification_format VARCHAR(100) NOT NULL,
     event_data_format VARCHAR(100) NOT NULL,
     aggregate_identifier TEXT[][],
     notification_interval INTERVAL NOT NULL,
@@ -72,7 +73,8 @@ CREATE TABLE directives (
 
 CREATE INDEX directives_grouping_idx
           ON directives (medium, recipient_address, template_name,
-                         event_data_format, aggregate_identifier, endpoint);
+                         notification_format, event_data_format,
+                         aggregate_identifier, endpoint);
 CREATE INDEX directives_events_id_idx
           ON directives (events_id);
 CREATE INDEX directives_sent_id_idx
@@ -144,6 +146,7 @@ DECLARE
     medium TEXT := directive ->> 'medium';
     recipient_address TEXT := directive ->> 'recipient_address';
     template_name TEXT := directive ->> 'template_name';
+    notification_format TEXT := directive ->> 'notification_format';
     event_data_format TEXT := directive ->> 'event_data_format';
     aggregate_identifier TEXT[][]
         := json_object_as_text_array(directive -> 'aggregate_identifier');
@@ -155,6 +158,7 @@ BEGIN
     IF medium IS NOT NULL
        AND recipient_address IS NOT NULL
        AND template_name IS NOT NULL
+       AND notification_format IS NOT NULL
        AND event_data_format IS NOT NULL
        AND notification_interval IS NOT NULL    
        AND notification_interval != interval '-1 second'
@@ -163,6 +167,7 @@ BEGIN
                                 medium,
                                 recipient_address,
                                 template_name,
+                                notification_format,
                                 event_data_format,
                                 aggregate_identifier,
                                 notification_interval,
@@ -171,6 +176,7 @@ BEGIN
                 medium,
                 recipient_address,
                 template_name,
+                notification_format,
                 event_data_format,
                 aggregate_identifier,
                 notification_interval,

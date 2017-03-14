@@ -196,9 +196,10 @@ def generate_notifications_interactively(config, cur, directives, scripts):
         print('Current batch (%d of %d total):'
               % (len(batch), len(batch) + len(pending)))
         for i in batch:
-            print('    * {0} {1} ({2}): {3} events'
+            print('    * {0} {1} ({2}/{3}): {4} events'
                   .format(i["recipient_address"],
                           i["template_name"],
+                          i["notification_format"],
                           i["event_data_format"],
                           len(i["event_ids"])))
         valid_answers = ("c", "s", "a", "q")
@@ -291,6 +292,10 @@ def main():
 
 
     scripts = load_script_entry_points(config)
+    if not scripts:
+        log.error("Could not load any scripts from %r"
+                  % (config["script_directory"],))
+        exit(1)
 
     mailgen(args, config, scripts)
 

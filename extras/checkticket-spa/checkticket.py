@@ -12,7 +12,8 @@ Development: call like
 Several configuration methods are shown within the code.
 
 
-Copyright (C) 2016 by Bundesamt für Sicherheit in der Informationstechnik
+Copyright (C) 2016, 2017 by Bundesamt für Sicherheit in der Informationstechnik
+
 Software engineering by Intevation GmbH
 
 This program is Free Software: you can redistribute it and/or modify
@@ -29,7 +30,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Author(s):
-    Bernhard E. Reiter <bernhard@intevation.de>
+    * Bernhard E. Reiter <bernhard@intevation.de>
 """
 # The intelmqmail module needs an UTF-8 locale, so we set a common one
 # available in Ubuntu 14.04/LTS here explicitely. This also removes the
@@ -106,8 +107,9 @@ def getEventIDsForTicket(ticket:hug.types.length(17, 18)):
     global cur
     event_ids = []
     try:
-        cur.execute("SELECT array_agg(events_id) as a FROM notifications "
-                    "   WHERE intelmq_ticket = %s;", (ticket,))
+        cur.execute("SELECT array_agg(d.events_id) AS a FROM directives AS d "
+                    "   JOIN sent ON d.sent_id = sent.id "
+                    "   WHERE sent.intelmq_ticket = %s;", (ticket,))
         event_ids = cur.fetchone()["a"]
     finally:
         cur.connection.commit() # end transaction
