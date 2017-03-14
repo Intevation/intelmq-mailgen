@@ -154,7 +154,7 @@ def new_ticket_number(cur):
 
     return ticket
 
-def _format_ticket(date_str, sequence_number: int):
+def _format_ticket(date_str, sequence_number: int) -> str:
     # num_str from integer: fill with 0s and cut out 8 chars from the right
     num_str = "{:08d}".format(sequence_number)[-8:]
     ticket = "{:s}-{:s}".format(date_str, num_str)
@@ -162,7 +162,7 @@ def _format_ticket(date_str, sequence_number: int):
     return ticket
 
 
-def last_ticket_number(cur):
+def last_ticket_number(cur) -> str:
     """Return a ticket number that has recently been drawn.
 
     Because of race conditions, there might by other tickets numbers already

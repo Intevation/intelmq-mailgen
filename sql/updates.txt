@@ -1,3 +1,8 @@
+== New notification handling
+
+TODO
+
+
 == adding ticket_number #28
 
 === forward
