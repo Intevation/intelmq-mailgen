@@ -127,6 +127,8 @@ def __rollback_transaction():
     eventdb_conn.rollback()
 
 QUERY_EVENT_SUBQUERY = {
+    'id': 'id = %s',
+    'ids': 'id IN %s',
     # Time
     'to_before': '"time.observation" < %s',
     'to_before_encl': '"time.observation" <= %s',
@@ -155,14 +157,7 @@ QUERY_EVENT_SUBQUERY = {
 }
 
 
-QUERY_DIRECTIVE_SUBQUERY = {
-    # Sector
-    # Receiver
-    # Organisation : TODO clarify how this might work
-}
-
-
-def query_get_event_subquery(q: str):
+def query_get_subquery(q: str):
     """ Return the query-Statement from the QUERY_EVENT_SUBQUERY
 
     Basically this is a getter for the dict...
@@ -180,26 +175,7 @@ def query_get_event_subquery(q: str):
         raise ValueError('The Query-Paramter you asked for is not supported.')
 
 
-def query_get_directive_subquery(q: str):
-    """ Return the query-Statement from the QUERY_DIRECTIVE_SUBQUERY
-
-    Basically this is a getter for the dict...
-
-    Args:
-        q: A Key which can be found in QUERY_DIRECTIVE_SUBQUERY
-
-    Returns: The subquery from QUERY_DIRECTIVE_SUBQUERY
-
-    """
-    raise NotImplementedError
-    # r = QUERY_DIRECTIVE_SUBQUERY.get(q, '')
-    # if r:
-    #    return r
-    # else:
-    #    raise ValueError('The Query-Paramter you asked for is not supported.')
-
-
-def query_build_event_subquery(q: str, p: str):
+def query_build_subquery(q: str, p: str):
     """Resolves the Query-Operaton and the Parameter into a tuple of SQL and the parameter
 
     Args:
@@ -209,7 +185,7 @@ def query_build_event_subquery(q: str, p: str):
     Returns: a tuple containing Query an Search Value
 
     """
-    t = (query_get_event_subquery(q), p)
+    t = (query_get_subquery(q), p)
     return t
 
 
@@ -224,12 +200,12 @@ def query_build_query(params):
     """
     queries = []
     for key in params:
-        queries.append(query_build_event_subquery(key, params[key]))
+        queries.append(query_build_subquery(key, params[key]))
     return queries
 
 
-def query_prepare(q):
-    """ Prepares a Query-string
+def query_prepare_export(q):
+    """ Prepares a Query-string in order to Export Everything from the DB
 
     Args:
         q: An array of Tuples created with query_build_query
@@ -238,6 +214,47 @@ def query_prepare(q):
 
     """
     q_string = "SELECT * FROM events"  # TODO maybe events should be a variable...
+    params = []
+    # now iterate over q (which had to be created with query_build_query
+    # previously) and should be a list of tuples an concatenate the resulting query.
+    # and a list of query parameters
+    counter = 0
+    for subquerytuple in q:
+        if counter > 0:
+            q_string = q_string + " AND " + subquerytuple[0]
+            params.append(subquerytuple[1])
+        else:
+            q_string = q_string + " WHERE " + subquerytuple[0]
+            params.append(subquerytuple[1])
+        counter += 1
+    return q_string, params
+
+
+def query_prepare_search(q):
+    """ Prepares a Query-string in order to Export Everything from the DB
+
+    Args:
+        q: An array of Tuples created with query_build_query
+
+    Returns: A Tuple consisting of a query sting and an array of parameters.
+
+    """
+    """
+    q_string = "SELECT id , " \
+               # " \"time.observation\", " \
+               # " \"time.source\", " \
+               # " \"source.ip\", " \
+               # " \"destination.ip\", " \
+               # " \"classification.taxonomy\", " \
+               # " \"classification.type\", " \
+               # " \"classification.identifier\", " \
+               # " \"malware.name\", " \
+               # " \"feed.provider\", "\
+               # " \"feed.name\" " \
+               " FROM events"  # TODO maybe events should be a variable...
+    """
+    q_string = "SELECT id FROM events "
+
     params = []
     # now iterate over q (which had to be created with query_build_query
     # previously) and should be a list of tuples an concatenate the resulting query.
@@ -272,6 +289,7 @@ def query(prepared_query):
     operation = prepared_query[0]
     parameters = prepared_query[1]
 
+    log.info(cur.mogrify(operation, parameters))
     cur.execute(operation, parameters)
     log.log(DD, "Ran query={}".format(repr(cur.query.decode('utf-8'))))
     # description = cur.description
@@ -289,14 +307,41 @@ def setup(api):
     log.debug("Initialised DB connection for events_api.")
 
 
-@hug.get(ENDPOINT_PREFIX + '')
-@hug.post(ENDPOINT_PREFIX + '')
+@hug.get(ENDPOINT_PREFIX)
+@hug.post(ENDPOINT_PREFIX)
+def search(response, id: int = None, ids: hug.types.multi = None):
+
+    if ids:
+        raise NotImplementedError
+        # param = {"ids": ids}
+        # print(ids)
+    elif id:
+        param =  {"id": id}
+    else:
+        response.status = HTTP_BAD_REQUEST
+        return {"error": "You need to provide an id or a list of ids"}
+
+    querylist = query_build_query(param)
+
+    prep = query_prepare_export(querylist)
+
+    try:
+        return query(prep)
+    except psycopg2.Error as e:
+        log.error(e)
+        __rollback_transaction()
+        response.status = HTTP_SERVICE_UNAVAILABLE
+        return {"error": "The database is unavailable"}
+
+
+@hug.get(ENDPOINT_PREFIX + '/search')
+@hug.post(ENDPOINT_PREFIX + '/search')
 def search(response, **params):
 
     for param in params:
         # Test if the parameters are sane....
         try:
-            query_get_event_subquery(param)
+            query_get_subquery(param)
         except ValueError:
             response.status = HTTP_BAD_REQUEST
             return {"error": "At least one of the queryparameters is not allowed"}
@@ -306,7 +351,8 @@ def search(response, **params):
         return {"error": "Queries without parameters are not supported"}
 
     querylist = query_build_query(params)
-    prep = query_prepare(querylist)
+
+    prep = query_prepare_search(querylist)
 
     try:
         return query(prep)
@@ -315,6 +361,36 @@ def search(response, **params):
         __rollback_transaction()
         response.status = HTTP_SERVICE_UNAVAILABLE
         return {"error": "The database is unavailable"}
+
+
+@hug.get(ENDPOINT_PREFIX + '/export')
+@hug.post(ENDPOINT_PREFIX + '/export')
+def export(response, **params):
+
+    for param in params:
+        # Test if the parameters are sane....
+        try:
+            query_get_subquery(param)
+        except ValueError:
+            response.status = HTTP_BAD_REQUEST
+            return {"error": "At least one of the queryparameters is not allowed"}
+
+    if not params:
+        response.status = HTTP_BAD_REQUEST
+        return {"error": "Queries without parameters are not supported"}
+
+    querylist = query_build_query(params)
+
+    prep = query_prepare_export(querylist)
+
+    try:
+        return query(prep)
+    except psycopg2.Error as e:
+        log.error(e)
+        __rollback_transaction()
+        response.status = HTTP_SERVICE_UNAVAILABLE
+        return {"error": "The database is unavailable"}
+
 
 
 def main():
