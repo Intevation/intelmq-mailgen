@@ -204,7 +204,8 @@ def create_notifications(context):
     Returns:
 
     """
-    format_spec = table_formats.get(context.directive["event_data_format"])
-    if format_spec is not None:
-        return context.mail_format_as_csv(format_spec)
+    if context.directive["notification_format"] == "text":
+        format_spec = table_formats.get(context.directive["event_data_format"])
+        if format_spec is not None:
+            return context.mail_format_as_csv(format_spec)
     return None
