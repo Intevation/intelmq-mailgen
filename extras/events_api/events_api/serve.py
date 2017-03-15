@@ -41,10 +41,12 @@ import sys
 # except:
 #    pass
 
-from falcon import HTTP_BAD_REQUEST, HTTP_NOT_FOUND, HTTP_SERVICE_UNAVAILABLE
+from falcon import HTTP_BAD_REQUEST, HTTP_NOT_FOUND, HTTP_SERVICE_UNAVAILABLE, HTTP_INTERNAL_SERVER_ERROR
 import hug
 import psycopg2
+import datetime
 from psycopg2.extras import RealDictCursor
+
 
 log = logging.getLogger(__name__)
 # adding a custom log level for even more details when diagnosing
@@ -128,32 +130,44 @@ def __rollback_transaction():
 
 QUERY_EVENT_SUBQUERY = {
     'id': 'id = %s',
-    'ids': 'id IN %s',
     # Time
-    'to_before': '"time.observation" < %s',
-    'to_before_encl': '"time.observation" <= %s',
-    'to_after': '"time.observation" > %s',
-    'to_after_encl': '"time.observation" > %s',
-    'ts_before': '"time.source" < %s',
-    'ts_before_encl': '"time.source" <= %s',
-    'ts_after': '"time.source" > %s',
-    'ts_after_encl': '"time.source" > %s',
+    'time-observation_before': '"time.observation" < %s',
+    'time-observation_before_encl': '"time.observation" <= %s',
+    'time-observation_after': '"time.observation" > %s',
+    'time-observation_after_encl': '"time.observation" > %s',
+    'time-source_before': '"time.source" < %s',
+    'time-source_before_encl': '"time.source" <= %s',
+    'time-source_after': '"time.source" > %s',
+    'time-source_after_encl': '"time.source" > %s',
     # Source
-    'sip_in_sn': '"source.ip" <<= %s',
-    'sip_is': '"source.ip" = %s',
-    'sasn_is': '"source.asn" = %s',
-    'sfqdn_is': '"source.fqdn" = %s',
-    'sfqdn_icontains': '"source.fqdn" ILIKE %s',
+    'source-ip_in_sn': '"source.ip" <<= %s',
+    'source-ip_is': '"source.ip" = %s',
+    'source-asn_is': '"source.asn" = %s',
+    'source-fqdn_is': '"source.fqdn" = %s',
+    'source-fqdn_icontains': '"source.fqdn" ILIKE %s',
 
     # Destinations
-    'dip_in_sn': '"destination.ip" <<= %s',
-    'dip_is': '"destination.ip" = %s',
-    'dasn_is': '"destination.asn" = %s',
-    'dfqdn_is': '"destination.fqdn" = %s',
-    'dfqdn_icontains': '"destination.fqdn" ILIKE %s',
+    'destination-ip_in_sn': '"destination.ip" <<= %s',
+    'destination-ip_is': '"destination.ip" = %s',
+    'destination-asn_is': '"destination.asn" = %s',
+    'destination-fqdn_is': '"destination.fqdn" = %s',
+    'destination-fqdn_icontains': '"destination.fqdn" ILIKE %s',
 
     # Classification
-    # TODO: And many more, like Type, etc.
+    'classification-taxonomy_is': '"classification.taxonomy" = %s',
+    'classification-taxonomy_icontains': '"classification.taxonomy" ILIKE %s',
+    'classification-type_is': '"classification.type" = %s',
+    'classification-type_icontains': '"classification.type" ILIKE %s',
+    'classification-identifier_is': '"classification.identifier" = %s',
+    'classification-identifier_icontains': '"classification.identifier" ILIKE %s',
+    'malware-name_is': '"malware.name" = %s',
+    'malware-name_icontains': '"malware.name" ILIKE %s',
+
+    # Feed
+    'feed-provider_is': '"feed.provider" = %s',
+    'feed-provider_icontains': '"feed.provider" ILIKE %s',
+    'feed-name_is': '"feed.name" = %s',
+    'feed-name_icontains': '"feed.name" ILIKE %s',
 }
 
 
@@ -239,21 +253,18 @@ def query_prepare_search(q):
     Returns: A Tuple consisting of a query sting and an array of parameters.
 
     """
-    """
     q_string = "SELECT id , " \
-               # " \"time.observation\", " \
-               # " \"time.source\", " \
-               # " \"source.ip\", " \
-               # " \"destination.ip\", " \
-               # " \"classification.taxonomy\", " \
-               # " \"classification.type\", " \
-               # " \"classification.identifier\", " \
-               # " \"malware.name\", " \
-               # " \"feed.provider\", "\
-               # " \"feed.name\" " \
+               " \"time.observation\", " \
+               " \"time.source\", " \
+               " \"source.ip\", " \
+               " \"destination.ip\", " \
+               " \"classification.taxonomy\", " \
+               " \"classification.type\", " \
+               " \"classification.identifier\", " \
+               " \"malware.name\", " \
+               " \"feed.provider\", "\
+               " \"feed.name\" " \
                " FROM events"  # TODO maybe events should be a variable...
-    """
-    q_string = "SELECT id FROM events "
 
     params = []
     # now iterate over q (which had to be created with query_build_query
@@ -270,6 +281,41 @@ def query_prepare_search(q):
         counter += 1
     return q_string, params
 
+
+def query_prepare_stats(q, interval = 'day'):
+    """ Prepares a Query-string for statistics
+
+    Args:
+        q: An array of Tuples created with query_build_query
+        interval: 'month, 'day' or 'hour'
+
+    Returns: A Tuple consisting of a query sting and an array of parameters.
+
+    """
+
+    if interval not in ('month', 'day', 'hour'):
+        raise ValueError
+
+    trunc = "date_trunc('%s', \"time.source\")" % (interval,)
+
+    q_string = "SELECT %s, count(*) " \
+               "FROM events " % (trunc, )  # TODO maybe events should be a variable...
+
+    params = []
+    # now iterate over q (which had to be created with query_build_query
+    # previously) and should be a list of tuples an concatenate the resulting query.
+    # and a list of query parameters
+    counter = 0
+    for subquerytuple in q:
+        if counter > 0:
+            q_string = q_string + " AND " + subquerytuple[0]
+            params.append(subquerytuple[1])
+        else:
+            q_string = q_string + " WHERE " + subquerytuple[0]
+            params.append(subquerytuple[1])
+        counter += 1
+    q_string = q_string + " GROUP BY %s" % (trunc, )
+    return q_string, params
 
 def query(prepared_query):
     """ Queries the Database for Events
@@ -288,7 +334,6 @@ def query(prepared_query):
 
     operation = prepared_query[0]
     parameters = prepared_query[1]
-
     log.info(cur.mogrify(operation, parameters))
     cur.execute(operation, parameters)
     log.log(DD, "Ran query={}".format(repr(cur.query.decode('utf-8'))))
@@ -307,19 +352,23 @@ def setup(api):
     log.debug("Initialised DB connection for events_api.")
 
 
-@hug.get(ENDPOINT_PREFIX)
-@hug.post(ENDPOINT_PREFIX)
-def search(response, id: int = None, ids: hug.types.multi = None):
+@hug.get(ENDPOINT_PREFIX, examples="id=1")
+# @hug.post(ENDPOINT_PREFIX)
+def getEvent(response, id: int = None):
+    """Return one Event identifid by ID
 
-    if ids:
-        raise NotImplementedError
-        # param = {"ids": ids}
-        # print(ids)
-    elif id:
+    Args:
+        response: A HUG response object...
+        id: The ID of an event
+
+    Returns: If existing one event of the EventDB
+
+    """
+    if id:
         param =  {"id": id}
     else:
         response.status = HTTP_BAD_REQUEST
-        return {"error": "You need to provide an id or a list of ids"}
+        return {"error": "You need to provide an id."}
 
     querylist = query_build_query(param)
 
@@ -330,14 +379,22 @@ def search(response, id: int = None, ids: hug.types.multi = None):
     except psycopg2.Error as e:
         log.error(e)
         __rollback_transaction()
-        response.status = HTTP_SERVICE_UNAVAILABLE
-        return {"error": "The database is unavailable"}
+        response.status = HTTP_INTERNAL_SERVER_ERROR
+        return {"error": "The query could not be processed."}
 
 
-@hug.get(ENDPOINT_PREFIX + '/search')
-@hug.post(ENDPOINT_PREFIX + '/search')
+@hug.get(ENDPOINT_PREFIX + '/search', examples="time-observation_after=2017-03-01&time-observation_before=2017-03-01")
+# @hug.post(ENDPOINT_PREFIX + '/search')
 def search(response, **params):
+    """Search for events
 
+    Args:
+        response: A HUG response object...
+        **params: Queries from QUERY_EVENT_SUBQUERY
+
+    Returns: A subset of the most likely most important fields of the events which are matching the query.
+
+    """
     for param in params:
         # Test if the parameters are sane....
         try:
@@ -359,14 +416,75 @@ def search(response, **params):
     except psycopg2.Error as e:
         log.error(e)
         __rollback_transaction()
-        response.status = HTTP_SERVICE_UNAVAILABLE
-        return {"error": "The database is unavailable"}
+        response.status = HTTP_INTERNAL_SERVER_ERROR
+        return {"error": "The query could not be processed."}
 
 
-@hug.get(ENDPOINT_PREFIX + '/export')
-@hug.post(ENDPOINT_PREFIX + '/export')
+@hug.get(ENDPOINT_PREFIX + '/stats', examples="malware-name_is=nymaim")
+# @hug.post(ENDPOINT_PREFIX + '/export')
+def stats(response, **params):
+    """ This interface returns a statistic all events matching the query parameters
+
+    Args:
+        response: A HUG response object...
+        **params: Queries from QUERY_EVENT_SUBQUERY
+
+    Returns: If existing a statiustical view on the amount of events per time-frame
+
+    """
+    today = datetime.date.today()
+
+    # TODO: Make the Timebox configurable
+
+    params["time-observation_after"] = today - datetime.timedelta(days=1),
+    params["time-observation_before"] = today + datetime.timedelta(days=1)
+
+    # remove other time-params which  might conflict this.
+    if params.get("time-observation_after_encl"):
+        del params["time-observation_after_encl"]
+    if params.get("time-observation_before_encl"):
+        del params["time-observation_before_encl"]
+
+    for param in params:
+        # Test if the parameters are sane....
+
+        try:
+            query_get_subquery(param)
+        except ValueError:
+            response.status = HTTP_BAD_REQUEST
+            return {"error": "At least one of the queryparameters is not allowed"}
+
+    if not params:
+        response.status = HTTP_BAD_REQUEST
+        return {"error": "Queries without parameters are not supported"}
+
+    querylist = query_build_query(params)
+
+    # TODO : Make the Resolution 'day' configurable
+
+    prep = query_prepare_stats(querylist, 'day')
+
+    try:
+        return query(prep)
+    except psycopg2.Error as e:
+        log.error(e)
+        __rollback_transaction()
+        response.status = HTTP_INTERNAL_SERVER_ERROR
+        return {"error": "The query could not be processed."}
+
+
+@hug.get(ENDPOINT_PREFIX + '/export', examples="time-observation_after=2017-03-01&time-observation_before=2017-03-01")
+# @hug.post(ENDPOINT_PREFIX + '/export')
 def export(response, **params):
+    """ This interface exports all events matching the query parameters
 
+    Args:
+        response: A HUG response object...
+        **params: Queries from QUERY_EVENT_SUBQUERY
+
+    Returns: If existing all events of the EventDB which are matching the query
+
+    """
     for param in params:
         # Test if the parameters are sane....
         try:
@@ -388,8 +506,8 @@ def export(response, **params):
     except psycopg2.Error as e:
         log.error(e)
         __rollback_transaction()
-        response.status = HTTP_SERVICE_UNAVAILABLE
-        return {"error": "The database is unavailable"}
+        response.status = HTTP_INTERNAL_SERVER_ERROR
+        return {"error": "The query could not be processed."}
 
 
 
