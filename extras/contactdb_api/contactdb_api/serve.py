@@ -30,12 +30,12 @@ Design rationale:
     the checkticket endpoints.
 
     We need location and credentials for the database holding the contactdb.
-    checkticket.py [1] (a hug based backend) solves this problem by reusing
+    serve.py [1] (a hug based backend) solves this problem by reusing
     the intelmq-mailgen configuration to access the 'intelmq-events' database.
     This serving part need to access a different database 'contactdb', thus
     we start with our on configuration.
 
-    [1] https://github.com/Intevation/intelmq-mailgen/blob/master/extras/checkticket-spa/checkticket.py
+    [1] https://github.com/Intevation/intelmq-mailgen/blob/master/extras/checkticket_api/serve.py
 
 """
 import json
@@ -100,6 +100,7 @@ EXAMPLE_CONF_FILE = r"""
 """
 
 ENDPOINT_PREFIX = '/api/contactdb'
+ENDPOINT_NAME = 'ContactDB'
 
 class Error(Exception):
     """Base class for exceptions in this module."""

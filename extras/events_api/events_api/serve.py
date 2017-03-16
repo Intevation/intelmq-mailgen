@@ -60,10 +60,8 @@ EXAMPLE_CONF_FILE = r"""
 }
 """
 
-EVENTDB_TABLE_NAME = "events"
-
 ENDPOINT_PREFIX = '/api/events'
-
+ENDPOINT_NAME = 'Events'
 
 def read_configuration() -> dict:
     """Read configuration file.
@@ -75,6 +73,7 @@ def read_configuration() -> dict:
         Move this to a lib which can be used as a common function
         for contact_db_api and other extensions.
         Maybe the Endpoint-Prefix can be a parameter for this.
+        or IntelMQ_api....
 
     Returns:
         The configuration values, possibly containing more dicts.
@@ -570,7 +569,7 @@ def export(response, **params):
 
 
 def main():
-    """ Main function of this modul
+    """ Main function of this module
 
     Returns: Nothing....
 

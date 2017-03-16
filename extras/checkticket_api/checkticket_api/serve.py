@@ -6,7 +6,7 @@ Reuses the database configuration of intelmqmail.cb.
 Requires hug (http://www.hug.rest/)
 
 Development: call like
-  hug -f checkticket.py
+  hug -f serve.py
   connect to http://localhost:8000/
 
 Several configuration methods are shown within the code.
@@ -31,7 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Author(s):
     * Bernhard E. Reiter <bernhard@intevation.de>
+    * Dustin Demuth <dustin@intevation.de>
 """
+
 # The intelmqmail module needs an UTF-8 locale, so we set a common one
 # available in Ubuntu 14.04/LTS here explicitely. This also removes the
 # necessity to configure the calling http server to set the locale correctly.
@@ -40,33 +42,22 @@ os.environ['LANG']= 'en_US.UTF-8'
 
 from psycopg2.extras import DictConnection
 import hug
+import logging
 
-import intelmqmail.cb as cb
-import intelmqmail.db as db
+log = logging.getLogger(__name__)
+# adding a custom log level for even more details when diagnosing
+DD = logging.DEBUG-2
+logging.addLevelName(DD, "DDEBUG")
 
-log = cb.log
 
-# if possible add the contactdb_api to our endpoints
 try:
-    import contactdb_api.serve
-
-    @hug.extend_api()
-    def add_contactdb_api():
-        return[contactdb_api.serve]
-
+    import intelmqmail.cb as cb
+    import intelmqmail.db as db
 except ImportError as err:
-    log.warning(err)
+    log.error(err)
 
-# if possible add the eventdb_api to our endpoints
-try:
-    import events_api.serve
-
-    @hug.extend_api()
-    def add_events_api():
-        return[events_api.serve]
-
-except ImportError as err:
-    log.warning(err)
+ENDPOINT_PREFIX = '/api/checkticket'
+ENDPOINT_NAME = 'Checkticket'
 
 # We are using global variables for postgresql db connection
 # TODO: should be checked that parallel requests via hug/falcon behave well
@@ -83,36 +74,9 @@ def setup(api):
     conn = cb.open_db_connection(config, connection_factory=DictConnection)
     cur = conn.cursor()
 
-###
-# when trying to find out how our setup can handle multiple requests, you can
-# enable the following debugging endpoint:
-#
-#@hug.get()
-#def sleep(secs:float, request):
-#    import time
-#    if secs < 300:
-#       time.sleep(secs)
-#    return {"wsgi.multithread": request.env["wsgi.multithread"],
-#            "wsgi.multiprocess": request.env["wsgi.multiprocess"]}
-###
-
-###
-## when called from a web application that has been served from
-## a different port, we can allow the browser to read from us
-##
-##
-## uncomment (== activate) the following lines:
-#allow_8080_header = {
-#            "Access-Control-Allow-Origin" : "http://localhost:8080"
-#            }
-#
-## for each allowed endpoint then add it to the response_headers, 
-## e.g. replace each @hug.get() with 
-#@hug.get(response_headers = allow_8080_header)
-
 
 @hug.cli()
-@hug.get()
+@hug.get(ENDPOINT_PREFIX  + '/getEventIDsForTicket')
 def getEventIDsForTicket(ticket:hug.types.length(17, 18)):
     global cur
     event_ids = []
@@ -135,7 +99,7 @@ class ListOfIds(hug.types.Multiple):
 
 
 @hug.cli()
-@hug.get()
+@hug.get(ENDPOINT_PREFIX  + '/getEvents')
 def getEvents(ids:ListOfIds()):
     global cur
     events = []
@@ -152,12 +116,12 @@ def getEvents(ids:ListOfIds()):
 
     return events
 
-@hug.get()
+@hug.get(ENDPOINT_PREFIX + '/getEventsForTicket')
 def getEventsForTicket(ticket:hug.types.length(17, 18)):
     return getEvents(getEventIDsForTicket(ticket))
 
 
-@hug.get()
+@hug.get(ENDPOINT_PREFIX + '/getLastTicketNumber')
 def getLastTicketNumber():
     global cur
     last_ticket_number = None
@@ -168,61 +132,7 @@ def getLastTicketNumber():
 
     return last_ticket_number
 
-###
-## When serving a single page web application in a more complex setup,
-## we may serve a main html page for root ('/') and static
-## files from a directory.
-##
-## adapt and uncomment (== activate) the following lines:
-#@hug.get(urls=['/', '/tickets', '/contacts', '/stats', '/settings', '/login'],
-#         output=hug.output_format.file)
-#def root():
-#        return("/home/fody/www/index.html")
-#
-#@hug.static('/static')
-#def my_static_dirs():
-#        return("/home/fody/www/static",)
-###
-
-###
-## serving the static files for the single page web application
-## (in a simple manner)
-##
-## uncomment (== activate) the following lines:
-#
-#@hug.get('/index.html', output=hug.output_format.file)
-#def index():
-#    return("./checkticket.html")
-#
-#@hug.get('/vue.js', output=hug.output_format.file)
-#def vue():
-#    return("./vue.js")
-#
-#@hug.get('/vue-resource.min.js', output=hug.output_format.file)
-#def vue_resource():
-#    return("./vue-resource.min.js")
-#
-#@hug.get('/jquery.min.js', output=hug.output_format.file)
-#def jquery():
-#    return("./jquery-3.1.1.min.js")
-#
-#@hug.get('/semantic.min.js', output=hug.output_format.file)
-#def semantic_js():
-#    return("./semantic.min.js")
-#
-#@hug.get('/semantic.min.css', output=hug.output_format.file)
-#def semantic_css():
-#    return("./semantic.min.css")
-#
-###
-
-###
-## test lines to see if the access to the db works, use valid parameters
-#print(getEvents(getEventIDsForTicket('20161020-10000004')))
-#print(getEventIDsForTicket('20100101-10000001'))
-###
-
-if __name__ == '__main__':
+def main():
     # expose only one function to the cli
     setup(hug.API('cli'))
     getEventIDsForTicket.interface.cli()
