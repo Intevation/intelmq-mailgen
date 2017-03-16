@@ -14,6 +14,6 @@ setup(
 
     packages=find_packages(),
 
-    install_requires=['hug', 'psycopg2'],
+    install_requires=['hug', 'psycopg2', 'python-dateutil'],
 
 )

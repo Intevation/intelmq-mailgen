@@ -25,9 +25,7 @@ Author(s):
     * Dustin Demuth <dustin.demuth@intevation.de>
 
 TODO:
-    - Paging needs to be considered, it's not implemented yet
     - To start, all queries will be AND concatenated. OR-Queries can be introduced later.
-    - Search for and in directives
 
 """
 
@@ -45,6 +43,7 @@ from falcon import HTTP_BAD_REQUEST, HTTP_NOT_FOUND, HTTP_SERVICE_UNAVAILABLE, H
 import hug
 import psycopg2
 import datetime
+import dateutil.parser
 from psycopg2.extras import RealDictCursor
 
 
@@ -296,7 +295,7 @@ def query_prepare_stats(q, interval = 'day'):
     if interval not in ('month', 'day', 'hour'):
         raise ValueError
 
-    trunc = "date_trunc('%s', \"time.source\")" % (interval,)
+    trunc = "date_trunc('%s', \"time.observation\")" % (interval,)
 
     q_string = "SELECT %s, count(*) " \
                "FROM events " % (trunc, )  # TODO maybe events should be a variable...
@@ -432,22 +431,81 @@ def stats(response, **params):
     Returns: If existing a statiustical view on the amount of events per time-frame
 
     """
-    today = datetime.date.today()
+    now = datetime.datetime.now()
 
-    # TODO: Make the Timebox configurable
+    DAY = datetime.timedelta(1,0)
+    WEEK = datetime.timedelta(7,0)
+    MONTH = datetime.timedelta(30,0)
 
-    params["time-observation_after"] = today - datetime.timedelta(days=1),
-    params["time-observation_before"] = today + datetime.timedelta(days=1)
 
-    # remove other time-params which  might conflict this.
+    # The Timebox of the resulting query. For which timeframe should an evaluation take place?
+    # based upon this timeframe a good timeresolution will be suggested and used, if
+    # no other resolution was provided...
+
+    time_after = params.get("time-observation_after", now - datetime.timedelta(days=1))
+    time_before = params.get("time-observation_before", now + datetime.timedelta(days=1))
+
+    # Convert to datetime....
+    if type(time_after) == str:
+        time_after = dateutil.parser.parse(time_after)
+    if type(time_before) == str:
+        time_before = dateutil.parser.parse(time_before)
+
+    suggested_timeres = 'day'
+
+    if time_after and time_before:
+        # Test end before start and correct that.
+        if time_after > time_before:
+            time_temp = time_after
+            time_after = time_before
+            time_before = time_temp
+            time_temp = None
+
+        delta_t = time_before - time_after
+        # suggest a most likely sane timeframe:
+        if delta_t > MONTH:
+            suggested_timeres = 'month'
+
+        elif delta_t <= MONTH and delta_t > WEEK:
+            suggested_timeres = 'week'
+
+        elif delta_t <= WEEK and delta_t > DAY:
+            suggested_timeres = 'day'
+
+        else:
+            suggested_timeres = 'hour'
+
+        params["time-observation_after"] = time_after
+        params["time-observation_before"] = time_before
+
+    else:
+        response.status = HTTP_INTERNAL_SERVER_ERROR
+        return {"error": "The query could not be processed."}
+
+
+    # Read the Timeres parameter or use suggestion
+    timeres = params.get("timeres", suggested_timeres)
+
+    # Remove timeres from the params dict
+    if params.get("timeres"):
+        # skip the test for this parameter and remove it from params!
+        del params["timeres"]
+
+    # Check if this is a sane value. day, month, hour...
+    if timeres not in ('month', 'week', 'day', 'hour'):
+        # Default: suggested_timeres is a sane thing.
+        timeres = suggested_timeres
+
+
+    # remove other time-params which will be in conflict with this query
     if params.get("time-observation_after_encl"):
         del params["time-observation_after_encl"]
     if params.get("time-observation_before_encl"):
         del params["time-observation_before_encl"]
 
+
     for param in params:
         # Test if the parameters are sane....
-
         try:
             query_get_subquery(param)
         except ValueError:
@@ -460,9 +518,9 @@ def stats(response, **params):
 
     querylist = query_build_query(params)
 
-    # TODO : Make the Resolution 'day' configurable
 
-    prep = query_prepare_stats(querylist, 'day')
+
+    prep = query_prepare_stats(querylist, timeres)
 
     try:
         return query(prep)

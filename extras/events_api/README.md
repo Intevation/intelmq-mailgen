@@ -27,3 +27,6 @@ for more details than `DEBUG`.
 For a production setup `checkticket.py` has to be installed
 with a webserver running `wsgi.multithread == False` and will try
 to import the `eventdb\_api` module.
+
+The `eventdb\_api` requires `python-dateutil` which can be installed from pypi.
+`python-dateutil` is already a requirement of IntelMQ 
