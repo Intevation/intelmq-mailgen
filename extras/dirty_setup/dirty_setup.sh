@@ -289,3 +289,13 @@ fi
 
 echo TODO: as root: start dsmtp
 echo TODO: e.g. as intelmq: copy shadowdsrv_botnet_droneTESTDATA.csv in /tmp/
+cat << EOF
+# When using intelmq/tests/bots/parsers/shadowserver/testdata you could:
+git clone --depth=1 -b integrated https://github.com/intevation/intelmq intelmq-git
+pushd intelmq-git/intelmq/tests/bots/parsers/shadowserver/testdata
+cp accessible-open-mongodb.csv /tmp/input_open-mongodb/
+cp chargen.csv /tmp/input_open-chargen
+cp ipmi.csv /tmp/input_open-ipmi
+cp microsoft-sinkhole.csv /tmp/input_microsoft-sinkhole
+popd
+EOF
