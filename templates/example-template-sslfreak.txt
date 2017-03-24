@@ -1,4 +1,4 @@
-Report on vulnerable systems against SSL FREAK Attack AS${asn}
+Report on vulnerable systems against SSL FREAK Attack AS${source.asn}
 
 EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE
 

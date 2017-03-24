@@ -27,74 +27,49 @@ def open_db_connection(config, connection_factory=None):
                             connection_factory=connection_factory)
 
 
-def json_array_to_mapping(jsonarray):
-    """Return a json(-string) representation of a list of pairs into a mapping.
-    The parameter may either be a list of key/value pairs or a JSON
-    string encoding a list of pairs. This function is used for the value
-    describing which notifications belong to which events returned from
-    the database query
-    """
-    if isinstance(jsonarray, str):
-        jsonarray = json.loads(jsonarray)
-    mapping = {}
-    for key, value in jsonarray:
-        mapping.setdefault(key, []).append(value)
-    return mapping
-
+PENDING_DIRECTIVES_QUERY = """\
+   SELECT d.recipient_address as recipient_address,
+          d.template_name as template_name,
+          d.notification_format as notification_format,
+          d.event_data_format as event_data_format,
+          d.aggregate_identifier as aggregate_identifier,
+          array_agg(d.events_id) as event_ids,
+          array_agg(d.id) as directive_ids
+     FROM (SELECT id, events_id, recipient_address, template_name,
+                  notification_format, event_data_format, notification_interval,
+                  aggregate_identifier
+             FROM directives
+            WHERE sent_id IS NULL
+              AND medium = 'email'
+              AND endpoint = 'source'
+            FOR UPDATE NOWAIT) d
+ GROUP BY d.recipient_address, d.template_name, d.notification_format,
+          d.event_data_format, d.aggregate_identifier
+   HAVING coalesce((SELECT max(s.sent_at)
+                      FROM directives d2
+                      JOIN sent s ON d2.sent_id = s.id
+                     WHERE d2.recipient_address = d.recipient_address
+                       AND d2.template_name = d.template_name
+                       AND d2.notification_format = d.notification_format
+                       AND d2.event_data_format = d.event_data_format
+                       AND d2.aggregate_identifier = d.aggregate_identifier)
+                   + max(d.notification_interval)
+                   < CURRENT_TIMESTAMP,
+                   TRUE);
+"""
 
 def get_pending_notifications(cur):
-    """Retrieve all pending notifications from the database.
-    Notifications are pending if they haven't been sent yet.
-    Notifications are grouped by recipient, template, format,
-    classification type and feed name so that the information about the
-    events for which the notifications are sent can be aggregated.
+    """Retrieve all pending directives from the database.
+    Directives are pending if the notification they describe hasn't been
+    sent yet and the last time a similar notification has been sent was
+    long enough ago that the notification interval has been exceeded.
+    The directives are grouped according to the aggregation identifier.
 
-    Also, the feed names 'Botnet-Drone-Hadoop', 'Sinkhole-HTTP-Drone'
-    and 'Microsoft-Sinkhole' are replaced by 'generic_malware' before
-    grouping so that event from those feeds are aggregated.
-
-    :returns: list of aggreated notifications
+    :returns: list of aggreated directives
     :rtype: list
     """
-    # The query uses json_agg for the idmap result column instead of the
-    # more obvious array_agg because the latter cannot create
-    # multidimensional arrays. Arrays of ROWs might be an alternative
-    # but psycopg does not support that out of the box (the array is
-    # returned as a string).
-    operation_str = """\
-        SELECT n.email as email, n.template as template, n.format as format,
-               n.classification_type as classification_type,
-               n.feed_name AS feed_name,
-               json_agg(ARRAY[n.events_id, n.id]) as idmap
-          FROM (SELECT id, events_id, email, template, format,
-                       classification_type, notification_interval,
-                       CASE WHEN feed_name IN ('Botnet-Drone-Hadoop',
-                                               'Sinkhole-HTTP-Drone',
-                                               'Microsoft-Sinkhole')
-                            THEN 'generic_malware'
-                            ELSE feed_name
-                       END AS feed_name
-                  FROM notifications
-                 WHERE intelmq_ticket IS NULL
-                FOR UPDATE NOWAIT) n
-      GROUP BY n.email, n.template, n.format, n.classification_type, n.feed_name
-        HAVING coalesce((SELECT max(sent_at) FROM notifications n2
-                         WHERE n2.email = n.email
-                           AND n2.template = n.template
-                           AND n2.format = n.format
-                           AND n2.classification_type = n.classification_type
-                           AND (CASE WHEN n2.feed_name
-                                       IN ('Botnet-Drone-Hadoop',
-                                           'Sinkhole-HTTP-Drone',
-                                           'Microsoft-Sinkhole')
-                                     THEN 'generic_malware'
-                                     ELSE n2.feed_name
-                                END) = n.feed_name)
-                        + max(n.notification_interval)
-                        < CURRENT_TIMESTAMP,
-                        TRUE);"""
     try:
-        cur.execute(operation_str)
+        cur.execute(PENDING_DIRECTIVES_QUERY)
     except psycopg2.OperationalError as e:
         if e.pgcode == psycopg2.errorcodes.LOCK_NOT_AVAILABLE:
             log.info("Could not get db lock for pending notifications. "
@@ -103,11 +78,7 @@ def get_pending_notifications(cur):
         else:
             raise
 
-    rows = []
-    for row in cur.fetchall():
-        row["idmap"] = json_array_to_mapping(row["idmap"])
-        rows.append(row)
-    return rows
+    return cur.fetchall()
 
 
 # characters allowed in identifiers in escape_sql_identifier. There are
@@ -185,7 +156,7 @@ def new_ticket_number(cur):
 
     return ticket
 
-def _format_ticket(date_str, sequence_number: int):
+def _format_ticket(date_str, sequence_number: int) -> str:
     # num_str from integer: fill with 0s and cut out 8 chars from the right
     num_str = "{:08d}".format(sequence_number)[-8:]
     ticket = "{:s}-{:s}".format(date_str, num_str)
@@ -193,7 +164,7 @@ def _format_ticket(date_str, sequence_number: int):
     return ticket
 
 
-def last_ticket_number(cur):
+def last_ticket_number(cur) -> str:
     """Return a ticket number that has recently been drawn.
 
     Because of race conditions, there might by other tickets numbers already
@@ -210,11 +181,14 @@ def last_ticket_number(cur):
     return _format_ticket(result["day"], result["last_value"])
 
 
-def mark_as_sent(cur, notification_ids, ticket):
+def mark_as_sent(cur, directive_ids, ticket):
     "Mark notifactions with given ids as sent and set the ticket number."
-    log.debug("Marking notifications_ids {} as sent.".format(notification_ids))
-    cur.execute(""" UPDATE notifications
-                    SET sent_at = now(),
-                        intelmq_ticket = %s
-                  WHERE id = ANY (%s);""",
-                (ticket, notification_ids,))
+    log.debug("Marking directive ids {} as sent.".format(directive_ids))
+    cur.execute("""\
+                  WITH sent_row AS (INSERT INTO sent (intelmq_ticket, sent_at)
+                                         VALUES (%s, now())
+                                      RETURNING id)
+                UPDATE directives
+                   SET sent_id = (SELECT id FROM sent_row)
+                 WHERE id = ANY (%s);""",
+                (ticket, directive_ids,))

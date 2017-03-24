@@ -63,13 +63,59 @@ def read_template(template_dir, template_name):
         the different formatter implementations for the substitions they
         support.
 
-    The return value is a pair of the subject and the body where both
-    are an instances of string.Template.
+    The return value is an instance of the Template class.
     """
     with open(full_template_filename(template_dir, template_name)) as infile:
         subject = None
         while not subject:
             subject = infile.readline().strip()
-        subject = string.Template(subject)
-        body = string.Template(infile.read().strip() + "\n")
-        return subject, body
+        return Template.from_strings(subject, infile.read().strip() + "\n")
+
+
+class IntelMQStringTemplate(string.Template):
+
+    """Variant of string.Template that allows '.' characters in identifiers."""
+
+    idpattern = "[_a-z][_a-z0-9.]*"
+
+
+class Template:
+
+    """A template for email contents.
+
+    The template contains two separate templates, one for the subject
+    and one for the body. To fill in values, use the substitute()
+    method.
+    """
+
+    def __init__(self, subject, body):
+        """Initialize the template with subject and body.
+        Both parameters should behave like string.Template instances.
+        """
+        self.subject = subject
+        self.body = body
+
+    @classmethod
+    def from_strings(cls, subject, body):
+        """Convenience method that creates a template from strings.
+        The strings are converted to templates with IntelMQStringTemplate.
+        """
+        return cls(IntelMQStringTemplate(subject),
+                   IntelMQStringTemplate(body))
+
+    def __repr__(self):
+        return "Template(%r, %r)" % (self.subject, self.body)
+
+    def substitute(self, substitutions):
+        """Fill-in the template with the given substitutions.
+
+        The substitutions parameter should be a dictionary mapping the
+        keys that might be in the template to the respective values.
+        This is done by passing the dictionary to the subject/body's
+        subtitute method.
+
+        The return value is a pair (subject, body) with the filled in
+        subject and body.
+        """
+        return (self.subject.substitute(substitutions),
+                self.body.substitute(substitutions))
