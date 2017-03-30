@@ -56,4 +56,4 @@ class GpgHomeTestCase(unittest.TestCase):
 
     def tearDown(self):
         del os.environ['GNUPGHOME']
-        #shutil.rmtree(self._gpghome, ignore_errors=True)
+        shutil.rmtree(self._gpghome, ignore_errors=True)
