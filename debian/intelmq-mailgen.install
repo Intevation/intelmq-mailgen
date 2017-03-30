@@ -1,2 +1,4 @@
 sql/*  usr/share/intelmq-mailgen/sql/
 tests/*  usr/share/intelmq-mailgen/tests/
+intelmq-mailgen.conf.example etc/intelmq/
+example_scripts/* etc/intelmq/mailgen/formats/

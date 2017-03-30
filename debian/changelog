@@ -1,3 +1,13 @@
+intelmq-mailgen (0.99~rc1) unstable; urgency=high
+
+  * The functionality from db-api was removed and moved to new repo (and
+    package) intelmq-fody-api.
+  * New notification concept.
+  * Preliminary Xarf Support
+  * New, more flexible configuration concept.
+
+ -- Sascha Wilde <wilde@intevation.de>  Thu, 30 Mar 2017 15:16:39 +0200
+
 intelmq-mailgen (0.95.1) unstable; urgency=low
 
   * Added Db-api backends for Fody to packaging.
