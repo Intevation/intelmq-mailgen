@@ -30,28 +30,20 @@ IntelMQ Configuration
 For Mailgen to work, the following IntelMQ bots will need to be configured
 first:
 
- 1. expert/certbund-contact
- 2. output/postgresql
+ 1. Expert: CERT-bund Contact Database
+ 2. Expert: CERT-bund Contact Rules
+ 3. Output: PostgreSQL
 
 You **must follow the setup instructions for these bots** before
 setting up Mailgen.
 
-Preparing Input Data for Mailgen
---------------------------------
-
-IntelMQ Mailgen makes certain assumptions about the input data it receives.
-Currently, it expects `classification.identifier` to be present.  It may
-therefore be necessary to first prepare the data fed to Mailgen.
-
-IntelMQ comes with a "modify" expert bot that can be added to the queue to
-enrich feed data.
 
 Database
 --------
 
-The `intelmq-events` database and the `intelmq` database-user
-should already have set up by the configuration of the output/postgresql bot.  
-For use with Mailgen it needs to be extended:
+The `intelmq-events` database and the `intelmq` database-user should
+already have been set up by the configuration of the PostgreSQL output
+bot. For use with Mailgen this setup has to be extended:
 
 As database-superuser (usually via system user postgres):
 
@@ -79,26 +71,48 @@ As database-superuser (usually via system user postgres):
 Interaction with IntelMQ and the events database
 ------------------------------------------------
 
-Once you applied `sql/notifications.sql` a trigger called
-`events_insert_notification_trigger` was added to you events-table.
-This trigger calls an sql-procedure `events_insert_notifications_for_row`,
-which extracts data from an event which is relevant to create a notification,
-everytime an event is inserted into the events table.
+The events written into the events database have been processed by the
+rules bot which adds notification directives to the events. The
+directives tell mailgen which notifications to generate based on that
+event. The statements in `sql/notifications.sql` add triggers and tables
+to the event database that process these directives as they come in and
+prepare them for use by mailgen. In particular:
 
-This data contains:
- - E-Mail address
- - Classification Type of the event
- - Feedname of the event
- - Data-Format the contact prefers
- - ID of the event
- - Source IP-address of the event
+ - The `directives` table contains all the directives. The main
+   attributes of a directive are
+
+    - ID of the event
+    - recipient address
+    - data format
+    - template name (see "Templates" below)
+    - how to aggregate
+    - whether and when it was sent. this is the ID of the corresponding
+      row in the `sent` table (see below)
+
+ - When a new event is inserted into the `events` table, a trigger
+   procedure extracts the directives and inserts them into `directives`.
+
+ - The `sent` table records which notifications have actually been sent.
+   Its main attributes are
+
+    - the ticket number generated for the notification
+    - a time stamp indicating when it was sent
+
+
+When mailgen processes the directives, it reads the still unsent
+directives from the database, aggregates directives that are
+sufficiently similar that they could be sent in the same mail and calls
+a series of scripts for each of the aggregated directives. These scripts
+inspect the directive and if they can process the directive generate
+mails from it. mailgen then sends these mails and records it in the
+`sent` table.
 
 
 Ticket Numbers
 --------------
 
 For every email sent by Mailgen a ticket number is generated. If a mail
-was successfully sent, this number is stored in the notifications table,
+was successfully sent, this number is stored in the table `sent`,
 together with a timestamp when the mail was sent.
 
 
@@ -159,43 +173,46 @@ echo Moin moin. | GNUPGHOME=/tmp/gnupghome gpg2 --clearsign --local-user "5F503E
 Templates
 ---------
 
-`template_dir` must contain the email templates you want to use with IntelMQ
-Mailgen.  You may organize templates in subdirectories.
+mailgen comes with a templating mechanism that the scripts that process
+the directives can use. This mechanism assumes that all templates are
+files in the directory from the `template_dir` setting in the
+configuration file.
 
-The first line of a template file is used as the subject line
-for mail sent by `intelmq-mailgen`. The remaining lines will become
-the mail body. The body may optionally be separated from the subject line
-by one or more empty lines.
+The scripts that come with mailgen simply take the template name from
+the directive they are processing. This means that the name is set by
+the rules used by the rules bot, so see its documentation and
+configuration for which templates you need.
+
+
+Template Format
+---------------
+
+The first line of a template file is used as the subject line for mails.
+The remaining lines will become the mail body. The body may optionally
+be separated from the subject line by one or more empty lines.
 
 Both subject and body text will be interpreted as
 [Python3 Template strings](https://docs.python.org/3/library/string.html#template-strings)
-and may allow some substitutions depending on the format.
+and may allow some substitutions depending on the format. Subject and
+body allow the same substitutions.
 
-The subject line allows for
- * `${ticket_number}`
- * `${asn}` for emails grouped by as-number.
+Typically supported substitutions:
 
-For instance, CSV-based formats replace the above two
-values and `${events_as_csv}` in the body
-with the CSV-formatted event data.
+  - All formats:
 
+     - `${ticket_number}`
 
-Feed-specific Templates
------------------------
+  - Addtional substitutions for CSV-based formats:
 
-For the format `feed_specific` IntelMQ Mailgen ignores the template that may
-have been set by the Contact DB bot and chooses a template based on the feed's
-`feed.name`. Please note that this only works for feeds explicitely supported by
-Mailgen.
+     - `${events_as_csv}` for the CSV-formatted event data. This is only
+        useful in the body.
 
-Feed-specific template file names follow the pattern `template-FEEDNAME.txt`
-where `FEEDNAME` is replaced by the events' `feed.name` attributes.
+  - When aggregating by event fields the event fields can also be used.
+    E.g. if a directive aggregates by `source.asn` you can use
+    `${source.asn}`
 
-Mailgen is capable of aggregating data from different feeds into one email.
-Currently this is done for Shadowservers "Sinkhole-HTTP-Drone",
-"Botnet-Drone-Hadoop" and ""Microsoft-Sinkhole" feeds. Use a template named
-"template-generic_malware.txt" in oder to address these feeds.
-Some example templates are distributed with Mailgen.
+    Like the template name, aggregation is determined by the rules bot,
+    so see there for details.
 
 
 Operation manual
@@ -227,16 +244,15 @@ tries to start up, may appear interwoven with the error conditions.
 
 #### Mailgen tries to continue
 
-Mailgen will try to continue sending mails,
+Mailgen will try to continue processing directives and sending mails,
 even if some batch of mails could not be send for several reasons.
 
-If it can't find templates, for instance, it will continue with the next e-mail
-and log an error message and the stacktrace.
-The error message contains information about the emails
-that could not be sent. The `idmap` within the json part is a json dict
-of database ids for events in the `events` table.
-Each with a list of database ids for the corresponding rows of
-the `notifications` table.
+If it can't find templates, for instance, it will continue with the next
+directive and log an error message and the stacktrace. The error message
+contains information about the directives that could not be processed.
+The `directive_ids` part in the output is a list with the IDs of the
+rows in the `directives` table and `event_ids` a list with ids for
+events in the `events` table.
 
 This information can be used by an administrator to see which events and emails
 may not have gone out in detail, to deal with them later, possibily with
@@ -273,10 +289,12 @@ an adaptive-plaintext attack.
 Column Names
 ------------
 
-It is possible to define names for the CSV-columns in code. This can be
-achieved by altering the `feed_specific_formats` dictionary.
-We already configured some feeds.
-Each pair consists of the IntelMQ-internal identifier and the column title.
+It is possible to define names for the CSV-columns in code. For instance
+in `example_scripts/10shadowservercsv.py`, the dictionary
+`standard_column_titles` maps event field names to column titles. These
+are used by most of the CSV formats later defined in `table_formats`.
+The formats specified there can still use special column titles if
+necessary.
 
 
 Transformations
