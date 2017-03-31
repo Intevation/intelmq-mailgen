@@ -33,7 +33,7 @@ template = Template.from_strings("CB-Report#${ticket_number}",
 
 def create_notifications(context):
     # If there are some additional substitions to be performed in the
-    # above template, add them to the substitition dictionary. By
+    # above template, add them to the substitutions dictionary. By
     # passing it to the mail_format_as_csv method below they will be
     # substituted into the template when the mail is created.
     substitutions = dict()
