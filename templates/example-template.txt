@@ -1,4 +1,4 @@
-CB-Report#${ticket_number} Botnet Report about AS${source.asn}
+${ticket_prefix}${ticket_number} Example Report about ${asn_or_cidr}
 
 EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE 
 
@@ -15,23 +15,19 @@ We would like to ask you to check the issues reported and to take
 appropriate steps to get the infected hosts cleaned up or notify
 your customers accordingly.
 
-This message is digitally signed using OpenPGP.
-Details on the signature key used are available on our website at:
 
-example.com
+${note_pgp_signature_en}
+
 
 Please note:
-This is the automatically generated message CB-Report#${ticket_number}.
+This is the automatically generated message ${ticket_prefix}${ticket_number}.
 Replying to the sender address is not possible.
 
 
------------------------------------------------------------------------
-
-Betroffene Systeme in Ihrem Netzbereich:
-Affected systems on your network:
+${data_inline_separator_en}
 
 ${events_as_csv}
 
 
-Mit freundlichen Grüßen / Kind regards
+${signature_en}
 

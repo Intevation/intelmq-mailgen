@@ -1,0 +1,21 @@
+{
+    "common_strings": {
+        "ticket_prefix": "IntelMQ-Mailgen#",
+        "data_location_inline_de": "Nachfolgend",
+        "data_location_attached_de": "Im Anhang",
+        "data_location_inline_en": "below",
+        "data_location_attached_en": "attached"
+    },
+    "substitutions": {
+        "signature_de": "Mit freundlichen Grüßen\ndie IntelMQ-Mailgen Entwickler\n",
+        "signature_de_en": "Mit freundlichen Grüßen / Kind regards\nTeam CERT-Bund\n\ndie IntelMQ-Mailgen Entwickler\nthe developers of IntelMQ-Mailgen\n",
+        "signature_en": "Kind regards\nthe developers of IntelMQ-Mailgen\n",
+        "note_automated_de": "Bitte beachten Sie:\nDies ist eine automatisch generierte Nachricht.\n",
+        "note_automated_en": "Please note:\nThis is an automatically generated message.\n",
+        "note_pgp_signature_de": "Diese E-Mail ist mittels OpenPGP digital signiert.",
+        "note_pgp_signature_en": "This message is digitally signed using OpenPGP.",
+        "data_inline_separator_de": "======================================================================\n\nBetroffene Systeme\n\n",
+        "data_inline_separator_de_en": "======================================================================\n\nBetroffene Systeme\nAffected hosts\n\n",
+        "data_inline_separator_en": "======================================================================\n\nAffected hosts\n\n"
+    }
+}

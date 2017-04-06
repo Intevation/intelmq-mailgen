@@ -1,5 +1,5 @@
 from intelmqmail.tableformat import build_table_formats, ExtraColumn
-
+import json
 
 standard_column_titles = {
     # column titles for standard event attributes
@@ -204,8 +204,28 @@ def create_notifications(context):
     Returns:
 
     """
+
+    # Read Some Substitutions from a File
+    js = None
+    with open('/etc/intelmq/mailgen/formats/variables.json', 'r') as j:
+        js = json.load(j)
+
+    substitution_variables = js.get("substitutions")
+    if substitution_variables:
+        substitution_variables["ticket_prefix"] = js.get("common_strings").get("ticket_prefix")
+
+    ## Determine the kind of Aggregation.
+    aggregation = dict(context.directive["aggregate_identifier"])
+    asn_or_cidr = ""
+    if "source.asn" in aggregation:
+        asn_or_cidr += "about AS %s" % aggregation["source.asn"]
+    elif "cidr" in aggregation:
+        asn_or_cidr = "about CIDR %s" % aggregation["cidr"]
+
+    substitution_variables["asn_or_cidr"] = asn_or_cidr
+
     if context.directive["notification_format"] == "text":
         format_spec = table_formats.get(context.directive["event_data_format"])
         if format_spec is not None:
-            return context.mail_format_as_csv(format_spec)
+            return context.mail_format_as_csv(format_spec, substitutions=substitution_variables)
     return None
