@@ -77,6 +77,41 @@ class ScriptContext:
 
     def mail_format_as_csv(self, format_spec, template=None,
                            substitutions=None, attach_event_data=False):
+        """Create an email with the event data formatted as CSV.
+
+        The subject and body of the mail are taken from a template. The
+        template can use the following substitutions by default:
+
+            ticket_number: The ticket number assigned by mailgen for the
+                notification.
+            events_as_csv: The event data formatted as CSV
+
+        If the notification directives specify special aggregation
+        criteria, these are also available. Which these are precisely
+        depends on the directives, but a common case is to aggregate
+        notifications for events that share some information, so if the
+        directives specify aggregation by source.asn, this substition is
+        also available.
+
+        Args:
+            format_spec (TableFormat): a description of the CSV format
+                as an instance of :py:class:`TableFormat`.
+            template (Template): The template object for the subject and
+                body of the mail. If omitted or None, the directive's
+                template_name will be used to load the template. See
+                :py:meth:`read_template`.
+            substitutions (dict): Dictionary mapping strings to strings
+                with substitutions. These will be available in templates
+                in addition to the ones made available by this method.
+            attach_event_data (bool): If true the CSV formatted event
+                data will be included in the mail as attachment.
+
+        Return:
+            list of EmailNotification instances. The list has one
+            element. It's a list so that it can be used directly as a
+            return value of a notification script's create_notifications
+            function.
+        """
         events = self.load_events(format_spec.event_table_columns())
 
         events_as_csv = format_as_csv(format_spec, events)
