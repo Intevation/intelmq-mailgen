@@ -76,7 +76,7 @@ class ScriptContext:
         return body
 
     def mail_format_as_csv(self, format_spec, template=None,
-                           substitutions=None):
+                           substitutions=None, attach_event_data=False):
         events = self.load_events(format_spec.event_table_columns())
 
         events_as_csv = format_as_csv(format_spec, events)
@@ -102,10 +102,15 @@ class ScriptContext:
 
         subject, body = template.substitute(substitutions)
 
+        attachments = []
+        if attach_event_data:
+            attachments.append(((events_as_csv,),
+                                dict(subtype="csv", filename="events.csv")))
+
         mail = create_mail(sender=self.config["sender"],
                            recipient=self.directive["recipient_address"],
                            subject=subject, body=body,
-                           attachments=[], gpgme_ctx=self.gpgme_ctx)
+                           attachments=attachments, gpgme_ctx=self.gpgme_ctx)
         return [EmailNotification(self.directive, mail, ticket)]
 
     def mail_format_as_xarf(self, xarf_schema):
