@@ -102,12 +102,10 @@ class ScriptContext:
 
         subject, body = template.substitute(substitutions)
 
-        body = self.maybe_sign(body)
-
         mail = create_mail(sender=self.config["sender"],
                            recipient=self.directive["recipient_address"],
                            subject=subject, body=body,
-                           attachments=[])
+                           attachments=[], gpgme_ctx=self.gpgme_ctx)
         return [EmailNotification(self.directive, mail, ticket)]
 
     def mail_format_as_xarf(self, xarf_schema):
