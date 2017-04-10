@@ -127,7 +127,8 @@ class ScriptContext:
             substitutions = substitutions.copy()
 
         substitutions["ticket_number"] = ticket
-        substitutions["events_as_csv"] = events_as_csv
+        substitutions["events_as_csv"] = (events_as_csv if not attach_event_data
+                                          else "")
 
         # Add the information on which the aggregation was based. These are
         # the same in all directives and events that led to this
