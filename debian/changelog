@@ -1,3 +1,10 @@
+intelmq-mailgen (0.99~rc2) unstable; urgency=high
+
+  * CSV attachments
+  * OpenPGP/MIME signatures
+
+ -- Gernot Schulz <gernot@intevation.de>  Mon, 10 Apr 2017 15:53:10 +0200
+
 intelmq-mailgen (0.99~rc1) unstable; urgency=high
 
   * The functionality from db-api was removed and moved to new repo (and
