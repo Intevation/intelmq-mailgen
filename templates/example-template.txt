@@ -4,7 +4,7 @@ EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE EXAMPLE
 
 Dear Sir or Madam,
 
-Please find below a list of affected systems on your network AS${source.asn}.
+Please find ${data_location} a list of affected systems.
 Each record includes the IP address of the affected system, a timestamp
 and the name of the related malware family. If available, the record
 also includes the source port, target IP, target port and target
