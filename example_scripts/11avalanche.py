@@ -49,6 +49,7 @@ def create_notifications(context):
         elif data_format == "avalanche_csv_attachment":
             # If Inline-Messages are wanted
             # TODO There is no attachment, yet!
-            return context.mail_format_as_csv(format, substitutions=substitution_variables)
+            return context.mail_format_as_csv(format, substitutions=substitution_variables,
+                                              attach_event_data=True)
 
     return None
