@@ -44,14 +44,17 @@ def create_notifications(context):
 
         if data_format == "avalanche_csv_inline":
             # If Inline-Messages are wanted
-            substitution_variables["data_location"] = js["common_strings"]["data_location_inline_en"]
+            substitution_variables["data_location_en"] = js["common_strings"]["data_location_inline_en"]
+            substitution_variables["data_location_de"] = js["common_strings"]["data_location_inline_de"]
             return context.mail_format_as_csv(format,substitutions=substitution_variables)
 
         elif data_format == "avalanche_csv_attachment":
             # If Inline-Messages are wanted
             # TODO There is no attachment, yet!
-            substitution_variables["data_location"] = js["common_strings"]["data_location_attached_en"]
+            substitution_variables["data_location_en"] = js["common_strings"]["data_location_attached_en"]
+            substitution_variables["data_location_de"] = js["common_strings"]["data_location_attached_de"]
             substitution_variables["data_inline_separator_en"] = ""
+            substitution_variables["data_inline_separator_de"] = ""
             return context.mail_format_as_csv(format, substitutions=substitution_variables,
                                               attach_event_data=True)
 
