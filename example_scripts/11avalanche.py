@@ -13,7 +13,7 @@ def create_notifications(context):
 
         substitution_variables = js.get("substitutions")
         if substitution_variables:
-            substitution_variables["ticket_prefix"] = js.get("common_strings").get("ticket_prefix")
+            substitution_variables["ticket_prefix"] = js["common_strings"]["ticket_prefix"]
 
         ## Determine the kind of Aggregation.
         aggregation = dict(context.directive["aggregate_identifier"])

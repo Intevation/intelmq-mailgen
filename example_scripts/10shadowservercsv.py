@@ -212,7 +212,7 @@ def create_notifications(context):
 
         substitution_variables = js.get("substitutions")
         if substitution_variables:
-            substitution_variables["ticket_prefix"] = js.get("common_strings").get("ticket_prefix")
+            substitution_variables["ticket_prefix"] = js["common_strings"]["ticket_prefix"]
 
         ## Determine the kind of Aggregation.
         aggregation = dict(context.directive["aggregate_identifier"])
@@ -226,6 +226,8 @@ def create_notifications(context):
 
         format_spec = table_formats.get(context.directive["event_data_format"])
         if format_spec is not None:
+            substitution_variables["data_location_en"] = js["common_strings"]["data_location_inline_en"]
+            substitution_variables["data_location_de"] = js["common_strings"]["data_location_inline_de"]
             return context.mail_format_as_csv(format_spec, substitutions=substitution_variables)
 
     return None
