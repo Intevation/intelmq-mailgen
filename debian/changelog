@@ -1,3 +1,9 @@
+intelmq-mailgen (0.99~rc3) unstable; urgency=medium
+
+  * Updates avalanche rules.
+
+ -- Sascha Wilde <wilde@intevation.de>  Thu, 20 Apr 2017 13:07:57 +0200
+
 intelmq-mailgen (0.99~rc2) unstable; urgency=high
 
   * CSV attachments
