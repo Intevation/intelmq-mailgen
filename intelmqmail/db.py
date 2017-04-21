@@ -28,13 +28,13 @@ def open_db_connection(config, connection_factory=None):
 
 
 PENDING_DIRECTIVES_QUERY = """\
-   SELECT d.recipient_address as recipient_address,
-          d.template_name as template_name,
-          d.notification_format as notification_format,
-          d.event_data_format as event_data_format,
-          d.aggregate_identifier as aggregate_identifier,
-          array_agg(d.events_id) as event_ids,
-          array_agg(d.id) as directive_ids
+   SELECT d.recipient_address AS recipient_address,
+          d.template_name AS template_name,
+          d.notification_format AS notification_format,
+          d.event_data_format AS event_data_format,
+          d.aggregate_identifier AS aggregate_identifier,
+          array_agg(d.events_id) AS event_ids,
+          array_agg(d.id) AS directive_ids
      FROM (SELECT id, events_id, recipient_address, template_name,
                   notification_format, event_data_format, notification_interval,
                   aggregate_identifier
@@ -42,11 +42,11 @@ PENDING_DIRECTIVES_QUERY = """\
             WHERE sent_id IS NULL
               AND medium = 'email'
               AND endpoint = 'source'
-            FOR UPDATE NOWAIT) d
+            FOR UPDATE NOWAIT) AS d
  GROUP BY d.recipient_address, d.template_name, d.notification_format,
           d.event_data_format, d.aggregate_identifier
    HAVING coalesce((SELECT max(s.sent_at)
-                      FROM directives d2
+                      FROM directives AS d2
                       JOIN sent s ON d2.sent_id = s.id
                      WHERE d2.recipient_address = d.recipient_address
                        AND d2.template_name = d.template_name
