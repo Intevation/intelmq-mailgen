@@ -1,5 +1,5 @@
 from intelmqmail.tableformat import build_table_formats, ExtraColumn
-import json
+import copy
 
 standard_column_titles = {
     # column titles for standard event attributes
@@ -205,29 +205,16 @@ def create_notifications(context):
 
     """
     if context.directive["notification_format"] == "shadowserver":
-        # Read Some Substitutions from a File
-        js = None
-        with open('/etc/intelmq/mailgen/formats/variables.json', 'r') as j:
-            js = json.load(j)
 
-        substitution_variables = js.get("substitutions")
-        if substitution_variables:
-            substitution_variables["ticket_prefix"] = js["common_strings"]["ticket_prefix"]
-
-        ## Determine the kind of Aggregation.
-        aggregation = dict(context.directive["aggregate_identifier"])
-        asn_or_cidr = ""
-        if "source.asn" in aggregation:
-            asn_or_cidr += "about AS %s" % aggregation["source.asn"]
-        elif "cidr" in aggregation:
-            asn_or_cidr = "about CIDR %s" % aggregation["cidr"]
-
-        substitution_variables["asn_or_cidr"] = asn_or_cidr
+        # Copy substitutions from the context.
+        # This way we can edit the variables in this script
+        # without changing the context.
+        substitution_variables = copy.copy(context.substitutions)
 
         format_spec = table_formats.get(context.directive["event_data_format"])
         if format_spec is not None:
-            substitution_variables["data_location_en"] = js["common_strings"]["data_location_inline_en"]
-            substitution_variables["data_location_de"] = js["common_strings"]["data_location_inline_de"]
+            substitution_variables["data_location_en"] = substitution_variables["data_location_inline_en"]
+            substitution_variables["data_location_de"] = substitution_variables["data_location_inline_de"]
             return context.mail_format_as_csv(format_spec, substitutions=substitution_variables)
 
     return None

@@ -1,12 +1,10 @@
 {
-    "common_strings": {
+    "substitutions": {
         "ticket_prefix": "IntelMQ-Mailgen#",
         "data_location_inline_de": "Nachfolgend",
         "data_location_attached_de": "Im Anhang",
         "data_location_inline_en": "below",
-        "data_location_attached_en": "attached"
-    },
-    "substitutions": {
+        "data_location_attached_en": "attached",
         "signature_de": "Mit freundlichen Grüßen\ndie IntelMQ-Mailgen Entwickler\n",
         "signature_de_en": "Mit freundlichen Grüßen / Kind regards\nTeam CERT-Bund\n\ndie IntelMQ-Mailgen Entwickler\nthe developers of IntelMQ-Mailgen\n",
         "signature_en": "Kind regards\nthe developers of IntelMQ-Mailgen\n",
