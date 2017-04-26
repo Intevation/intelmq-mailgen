@@ -1,6 +1,3 @@
-from intelmqmail.tableformat import build_table_format
-
-from intelmqmail.tableformat import build_table_format
 import json
 
 
