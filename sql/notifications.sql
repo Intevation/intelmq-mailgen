@@ -72,9 +72,9 @@ CREATE TABLE directives (
 
 
 CREATE INDEX directives_grouping_idx
-          ON directives (medium, recipient_address, template_name,
+          ON directives (recipient_address, template_name,
                          notification_format, event_data_format,
-                         aggregate_identifier, endpoint);
+                         aggregate_identifier);
 CREATE INDEX directives_events_id_idx
           ON directives (events_id);
 CREATE INDEX directives_sent_id_idx

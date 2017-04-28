@@ -1,3 +1,22 @@
+== Adapt directives_grouping_idx to actually used grouping columns
+
+=== forward
+
+DROP INDEX directives_grouping_idx;
+CREATE INDEX directives_grouping_idx
+          ON directives (recipient_address, template_name,
+                         notification_format, event_data_format,
+                         aggregate_identifier);
+
+== backward
+
+DROP INDEX directives_grouping_idx;
+CREATE INDEX directives_grouping_idx
+          ON directives (medium, recipient_address, template_name,
+                         notification_format, event_data_format,
+                         aggregate_identifier, endpoint);
+
+
 == New notification handling
 
 TODO
