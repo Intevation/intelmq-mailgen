@@ -31,6 +31,7 @@ standard_column_titles = {
     "extra:freak_cipher_suite": "freak_cipher_suite",
 }
 
+
 def add_default_titles(columns):
     """
     Add the standard title to each of the columns.
@@ -176,6 +177,7 @@ table_formats = table_formats_with_default_titles([
         "extra:issuer_common_name",
         ]),
     ])
+
 
 def create_notifications(context):
 
