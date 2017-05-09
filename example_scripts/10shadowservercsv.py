@@ -1,4 +1,6 @@
 from intelmqmail.tableformat import build_table_formats, ExtraColumn
+from intelmqmail.notification import Postponed
+
 import copy
 
 standard_column_titles = {
@@ -213,6 +215,9 @@ def create_notifications(context):
 
         format_spec = table_formats.get(context.directive["event_data_format"])
         if format_spec is not None:
+            if not context.notification_interval_exceeded():
+                return Postponed
+
             substitution_variables["data_location_en"] = substitution_variables["data_location_inline_en"]
             substitution_variables["data_location_de"] = substitution_variables["data_location_inline_de"]
             return context.mail_format_as_csv(format_spec, substitutions=substitution_variables)

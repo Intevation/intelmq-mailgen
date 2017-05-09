@@ -1,4 +1,6 @@
 from intelmqmail.tableformat import build_table_formats, ExtraColumn
+from intelmqmail.notification import Postponed
+
 import copy
 
 standard_column_titles = {
@@ -182,6 +184,9 @@ table_formats = table_formats_with_default_titles([
 def create_notifications(context):
 
     if context.directive["notification_format"] == "vulnerable-service":
+
+        if not context.notification_interval_exceeded():
+            return Postponed
 
         # Copy Substitutions from the context to this script.
         # This way we can edit the variables in this script

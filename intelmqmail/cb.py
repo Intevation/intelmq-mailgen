@@ -46,7 +46,7 @@ from psycopg2.extras import RealDictConnection
 
 from intelmqmail.db import open_db_connection, get_pending_notifications
 from intelmqmail.script import load_scripts
-from intelmqmail.notification import SendContext, ScriptContext
+from intelmqmail.notification import SendContext, ScriptContext, Postponed
 
 
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
@@ -150,6 +150,7 @@ def send_notifications(config, directives, cur, scripts):
     :rtype: int
     """
     sent_mails = 0
+    postponed = 0
     gpgme_ctx = None
 
     if config["openpgp"]["always_sign"]:
@@ -183,9 +184,11 @@ def send_notifications(config, directives, cur, scripts):
                 notifications = create_notifications(cur, directive, config,
                                                      scripts, gpgme_ctx)
 
-                if len(notifications) < 1:
+                if not notifications:
                     log.warning("No emails for sending were generated for %r!",
                                 directive)
+                elif notifications is Postponed:
+                    postponed += 1
                 else:
                     context = SendContext(cur, smtp)
                     for notification in notifications:
@@ -207,7 +210,7 @@ def send_notifications(config, directives, cur, scripts):
                     raise
             finally:
                 cur.execute("RELEASE SAVEPOINT sendmail;")
-    return sent_mails
+    return (sent_mails, postponed)
 
 
 def generate_notifications_interactively(config, cur, directives, scripts):
@@ -249,8 +252,9 @@ def generate_notifications_interactively(config, cur, directives, scripts):
                 pending = []
 
             print("Sending mails for %d entries... " % (len(to_send),))
-            sent_mails = send_notifications(config, to_send, cur, scripts)
-            print("%d mails sent. " % (sent_mails,))
+            sent_mails, postponed = send_notifications(config, to_send, cur,
+                                                       scripts)
+            print("%d mails sent, %d postponed. " % (sent_mails, postponed))
 
 
 def mailgen(args, config, scripts):
@@ -267,8 +271,9 @@ def mailgen(args, config, scripts):
             return
 
         if args.all:
-            sent_mails = send_notifications(config, directives, cur, scripts)
-            log.info("{:d} mails sent.".format(sent_mails))
+            sent_mails, postponed = send_notifications(config, directives, cur,
+                                                       scripts)
+            log.info("%d mails sent, %d postponed.", sent_mails, postponed)
         else:
             generate_notifications_interactively(config, cur, directives,
                                                  scripts)

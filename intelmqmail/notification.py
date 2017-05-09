@@ -1,5 +1,6 @@
 import os
 import tempfile
+import datetime
 
 import pyxarf
 
@@ -57,6 +58,33 @@ class ScriptContext:
         self.gpgme_ctx = gpgme_ctx
         self.directive = directive
         self.logger = logger
+        self._now = None
+
+    def notification_interval_exceeded(self):
+        """Return whether the notification interval has been exceeded.
+        This method looks at the directive atttributes last_sent and
+        notification_interval and returns whether more time than the
+        notification_interval has passed since the last_sent time. A
+        last_sent time of None, indicating that no similar notification
+        has been sent yet, counts as the interval having been exceeded,
+        i.e. this method returns true in that case.
+        """
+        last_sent = self.directive["last_sent"]
+        notification_interval = self.directive["notification_interval"]
+
+        # Determine the current time only once per instance so that the
+        # same current time is used for all scripts for one set of
+        # directives. Otherwise there would be a slight chance that one
+        # script sees the notification interval as not yet exceeded but
+        # a later script does which might result in the wrong
+        # notifications being sent.
+        if last_sent is not None and self._now is None:
+            self._now = datetime.datetime.now(last_sent.tzinfo)
+
+        return (last_sent is not None
+                and (last_sent + notification_interval
+                     < datetime.datetime.now(last_sent.tzinfo)))
+
 
     def new_ticket_number(self):
         return new_ticket_number(self.db_cursor)
@@ -272,3 +300,34 @@ class EmailNotification(Notification):
     def send(self, send_context):
         send_context.smtp.send_message(self.email)
         send_context.mark_as_sent(self.directive["directive_ids"], self.ticket)
+
+
+
+class _Postponed:
+
+    """Represents a script result for postponed directives.
+
+    There's one predefined instance, Postponed, which should be used as
+    the return value of the create_notifications function in scripts to
+    indicate that the script could produce emails for the directive
+    being processed but that it did not actually produce any mails
+    because the directive cannot be processed yet because not all
+    condititions have been met yet.
+
+    A common condition is that sufficient time (> notification_interval)
+    must have passed since the previous similar notification. The
+    create_notifications function can use the context's
+    notification_interval_exceeded method to determine whether enough
+    time has passed and in case it hasn't, return Postponed.
+    """
+
+    def __bool__(self):
+        return True
+
+    def __len__(self):
+        return 0
+
+    def __iter__(self):
+        return iter([])
+
+Postponed = _Postponed()

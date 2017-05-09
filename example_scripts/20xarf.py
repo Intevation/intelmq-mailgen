@@ -12,6 +12,8 @@ an *IntelMQ CertBUND-Contact Rule Expert* like::
 
 from email.utils import formatdate  # required for RFC2822 date-conversion
 
+from intelmqmail.notification import Postponed
+
 
 class Formatter:
     """A Formatter which converts data into an other representation.
@@ -201,6 +203,9 @@ def create_notifications(context):
     """
     if context.directive["notification_format"] != "xarf":
         return None
+
+    if not context.notification_interval_exceeded():
+        return Postponed
 
     schema_name = context.directive["event_data_format"]
 

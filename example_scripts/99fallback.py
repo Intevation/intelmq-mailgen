@@ -7,6 +7,8 @@ to event attributes that should be present in almost all events.
 
 from intelmqmail.tableformat import build_table_format
 from intelmqmail.templates import Template
+from intelmqmail.notification import Postponed
+
 
 table_format = build_table_format(
     "Fallback",
@@ -32,6 +34,9 @@ template = Template.from_strings("CB-Report#${ticket_number}",
                                  "${events_as_csv}")
 
 def create_notifications(context):
+    if not context.notification_interval_exceeded():
+        return Postponed
+
     # If there are some additional substitions to be performed in the
     # above template, add them to the substitutions dictionary. By
     # passing it to the mail_format_as_csv method below they will be
