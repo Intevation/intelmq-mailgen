@@ -1,10 +1,12 @@
+import os
+import tempfile
+
+import pyxarf
+
 from intelmqmail.db import load_events, new_ticket_number, mark_as_sent
 from intelmqmail.templates import read_template
 from intelmqmail.tableformat import format_as_csv
 from intelmqmail.mail import create_mail, clearsign
-import pyxarf
-import tempfile
-import os
 
 
 class NotificationError(Exception):
