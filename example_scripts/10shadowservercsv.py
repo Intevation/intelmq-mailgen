@@ -1,7 +1,8 @@
+import copy
+
 from intelmqmail.tableformat import build_table_formats, ExtraColumn
 from intelmqmail.notification import Postponed
 
-import copy
 
 standard_column_titles = {
     # column titles for standard event attributes
