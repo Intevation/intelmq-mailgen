@@ -66,6 +66,8 @@ CREATE TABLE directives (
     notification_interval INTERVAL NOT NULL,
     endpoint ip_endpoint NOT NULL,
 
+    inserted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     FOREIGN KEY (events_id) REFERENCES events(id),
     FOREIGN KEY (sent_id) REFERENCES sent(id)
 );

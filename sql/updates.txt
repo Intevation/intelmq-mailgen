@@ -1,3 +1,22 @@
+== Directive Insertion time-stamp
+
+=== forward
+
+ALTER TABLE directives
+    ADD COLUMN inserted_at TIMESTAMP WITH TIME ZONE;
+UPDATE directives
+SET inserted_at = (SELECT "time.observation" FROM events WHERE id = events_id);
+ALTER TABLE directives
+    ALTER COLUMN inserted_at SET NOT NULL,
+    ALTER COLUMN inserted_at SET DEFAULT CURRENT_TIMESTAMP;
+
+
+
+=== backward
+
+ALTER TABLE DROP COLUMN inserted_at;
+
+
 == Adapt directives_grouping_idx to actually used grouping columns
 
 === forward
