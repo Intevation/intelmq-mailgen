@@ -81,10 +81,8 @@ class ScriptContext:
         if last_sent is not None and self._now is None:
             self._now = datetime.datetime.now(last_sent.tzinfo)
 
-        return (last_sent is not None
-                and (last_sent + notification_interval
-                     < datetime.datetime.now(last_sent.tzinfo)))
-
+        return (last_sent is None
+                or (last_sent + notification_interval < self._now))
 
     def new_ticket_number(self):
         return new_ticket_number(self.db_cursor)
