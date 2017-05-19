@@ -46,7 +46,8 @@ from psycopg2.extras import RealDictConnection
 
 from intelmqmail.db import open_db_connection, get_pending_notifications
 from intelmqmail.script import load_scripts
-from intelmqmail.notification import SendContext, ScriptContext, Postponed
+from intelmqmail.notification import Directive, SendContext, ScriptContext, \
+    Postponed
 
 
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
@@ -114,7 +115,8 @@ def load_script_entry_points(config):
 
 
 def create_notifications(cur, directive, config, scripts, gpgme_ctx):
-    script_context = ScriptContext(config, cur, gpgme_ctx, directive, log)
+    script_context = ScriptContext(config, cur, gpgme_ctx,
+                                   Directive(**directive), log)
     for script in scripts:
         log.debug("Calling script %r", script.filename)
         try:

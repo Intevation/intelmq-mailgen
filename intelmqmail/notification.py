@@ -37,6 +37,33 @@ class InvalidTemplate(InvalidDirective):
         super().__init__("Invalid template %r" % (self.template_name,))
 
 
+class Directive:
+
+    def __init__(self, recipient_address, template_name, notification_format,
+                 event_data_format, aggregate_identifier, event_ids,
+                 directive_ids, notification_interval, last_sent):
+        self.recipient_address = recipient_address
+        self.template_name = template_name
+        self.notification_format = notification_format
+        self.event_data_format = event_data_format
+        self.aggregate_identifier = dict(aggregate_identifier)
+        self.event_ids = event_ids
+        self.directive_ids = directive_ids
+        self.notification_interval = notification_interval
+        self.last_sent = last_sent
+
+    def __getitem__(self, key):
+        """Dict-like interface for backwards compatibility"""
+        return self.__dict__[key]
+
+    def get(self, key):
+        """Dict-like interface for backwards compatibility"""
+        return self.__dict__.get(key)
+
+    def get_aggregation_item(self, key):
+        return self.aggregate_identifier.get(key)
+
+
 class ScriptContext:
 
     """Provide the context in which scripts are run.
@@ -69,8 +96,8 @@ class ScriptContext:
         has been sent yet, counts as the interval having been exceeded,
         i.e. this method returns true in that case.
         """
-        last_sent = self.directive["last_sent"]
-        notification_interval = self.directive["notification_interval"]
+        last_sent = self.directive.last_sent
+        notification_interval = self.directive.notification_interval
 
         # Determine the current time only once per instance so that the
         # same current time is used for all scripts for one set of
@@ -88,12 +115,12 @@ class ScriptContext:
         return new_ticket_number(self.db_cursor)
 
     def load_events(self, columns=None):
-        return load_events(self.db_cursor, self.directive["event_ids"], columns)
+        return load_events(self.db_cursor, self.directive.event_ids, columns)
 
     def read_template(self):
         template_name = ''
         try:
-            template_name = self.directive["template_name"]
+            template_name = self.directive.template_name
             return read_template(self.config["template_dir"], template_name)
         except Exception as e:
             raise InvalidTemplate(template_name) from e
@@ -161,8 +188,7 @@ class ScriptContext:
         # Add the information on which the aggregation was based. These are
         # the same in all directives and events that led to this
         # notification, so it can be useful to refer to them in the message
-        for key, value in self.directive["aggregate_identifier"]:
-            substitutions[key] = value
+        substitutions.update(self.directive.aggregate_identifier)
 
         subject, body = template.substitute(substitutions)
 
@@ -172,7 +198,7 @@ class ScriptContext:
                                 dict(subtype="csv", filename="events.csv")))
 
         mail = create_mail(sender=self.config["sender"],
-                           recipient=self.directive["recipient_address"],
+                           recipient=self.directive.recipient_address,
                            subject=subject, body=body,
                            attachments=attachments, gpgme_ctx=self.gpgme_ctx)
         return [EmailNotification(self.directive, mail, ticket)]
@@ -260,7 +286,7 @@ class ScriptContext:
                             'utf-8'))
 
         msg.add_header("From", self.config["sender"])
-        msg.add_header("To", self.directive["recipient_address"])
+        msg.add_header("To", self.directive.recipient_address)
         msg.add_header("Subject", subject)
         msg.add_header("Auto-Submitted", "auto-generated")
         msg.add_header("X-ARF", "PLAIN")  # TODO BULK IS NOT SUPPORTED YET
@@ -297,7 +323,7 @@ class EmailNotification(Notification):
 
     def send(self, send_context):
         send_context.smtp.send_message(self.email)
-        send_context.mark_as_sent(self.directive["directive_ids"], self.ticket)
+        send_context.mark_as_sent(self.directive.directive_ids, self.ticket)
 
 
 
