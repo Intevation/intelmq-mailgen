@@ -201,13 +201,13 @@ def create_notifications(context):
 
     Returns:
     """
-    if context.directive["notification_format"] != "xarf":
+    if context.directive.notification_format != "xarf":
         return None
 
     if not context.notification_interval_exceeded():
         return Postponed
 
-    schema_name = context.directive["event_data_format"]
+    schema_name = context.directive.event_data_format
 
     xarf_schema = known_xarf_schema.get(schema_name)
     if xarf_schema is not None:

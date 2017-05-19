@@ -207,14 +207,14 @@ def create_notifications(context):
     Returns:
 
     """
-    if context.directive["notification_format"] == "shadowserver":
+    if context.directive.notification_format == "shadowserver":
 
         # Copy substitutions from the context.
         # This way we can edit the variables in this script
         # without changing the context.
         substitution_variables = copy.copy(context.substitutions)
 
-        format_spec = table_formats.get(context.directive["event_data_format"])
+        format_spec = table_formats.get(context.directive.event_data_format)
         if format_spec is not None:
             if not context.notification_interval_exceeded():
                 return Postponed

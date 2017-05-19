@@ -184,7 +184,7 @@ table_formats = table_formats_with_default_titles([
 
 def create_notifications(context):
 
-    if context.directive["notification_format"] == "vulnerable-service":
+    if context.directive.notification_format == "vulnerable-service":
 
         if not context.notification_interval_exceeded():
             return Postponed
@@ -194,8 +194,8 @@ def create_notifications(context):
         # without changing the context.
         substitution_variables = copy.copy(context.substitutions)
 
-        data_format = context.directive["event_data_format"]
-        template_name = context.directive["template_name"]
+        data_format = context.directive.event_data_format
+        template_name = context.directive.template_name
 
         # The template name is expected to look like
         # openportmapper_provider

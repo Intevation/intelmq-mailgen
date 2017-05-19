@@ -13,7 +13,7 @@ def create_notifications(context):
 
 
     ## Determine the kind of Aggregation.
-    aggregation = dict(context.directive["aggregate_identifier"])
+    aggregation = context.directive.aggregate_identifier
     asn_or_cidr = ""  # Can also be a CC
     if "source.asn" in aggregation:
         asn_or_cidr += "about AS %s" % aggregation["source.asn"]
