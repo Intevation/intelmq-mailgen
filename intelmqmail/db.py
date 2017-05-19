@@ -35,6 +35,7 @@ PENDING_DIRECTIVES_QUERY = """\
           d.aggregate_identifier AS aggregate_identifier,
           array_agg(d.events_id) AS event_ids,
           array_agg(d.id) AS directive_ids,
+          max(d.inserted_at) AS inserted_at,
           max(d.notification_interval) AS notification_interval,
           (SELECT max(s.sent_at)
              FROM directives AS d2
@@ -46,7 +47,7 @@ PENDING_DIRECTIVES_QUERY = """\
               AND d2.aggregate_identifier = d.aggregate_identifier) AS last_sent
      FROM (SELECT id, events_id, recipient_address, template_name,
                   notification_format, event_data_format, notification_interval,
-                  aggregate_identifier
+                  aggregate_identifier, inserted_at
              FROM directives
             WHERE sent_id IS NULL
               AND medium = 'email'

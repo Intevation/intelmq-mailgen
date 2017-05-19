@@ -41,7 +41,7 @@ class Directive:
 
     def __init__(self, recipient_address, template_name, notification_format,
                  event_data_format, aggregate_identifier, event_ids,
-                 directive_ids, notification_interval, last_sent):
+                 directive_ids, inserted_at, notification_interval, last_sent):
         self.recipient_address = recipient_address
         self.template_name = template_name
         self.notification_format = notification_format
@@ -49,6 +49,7 @@ class Directive:
         self.aggregate_identifier = dict(aggregate_identifier)
         self.event_ids = event_ids
         self.directive_ids = directive_ids
+        self.inserted_at = inserted_at
         self.notification_interval = notification_interval
         self.last_sent = last_sent
 
