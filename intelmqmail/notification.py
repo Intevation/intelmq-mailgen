@@ -86,7 +86,7 @@ class ScriptContext:
         self.gpgme_ctx = gpgme_ctx
         self.directive = directive
         self.logger = logger
-        self._now = None
+        self.now = datetime.datetime.now(datetime.timezone.utc)
 
     def notification_interval_exceeded(self):
         """Return whether the notification interval has been exceeded.
@@ -99,18 +99,8 @@ class ScriptContext:
         """
         last_sent = self.directive.last_sent
         notification_interval = self.directive.notification_interval
-
-        # Determine the current time only once per instance so that the
-        # same current time is used for all scripts for one set of
-        # directives. Otherwise there would be a slight chance that one
-        # script sees the notification interval as not yet exceeded but
-        # a later script does which might result in the wrong
-        # notifications being sent.
-        if last_sent is not None and self._now is None:
-            self._now = datetime.datetime.now(last_sent.tzinfo)
-
         return (last_sent is None
-                or (last_sent + notification_interval < self._now))
+                or (last_sent + notification_interval < self.now))
 
     def new_ticket_number(self):
         return new_ticket_number(self.db_cursor)

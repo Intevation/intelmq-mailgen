@@ -4,7 +4,7 @@ Tests for intelmqmail.notifications.
 """
 
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from intelmqmail.notification import ScriptContext, Directive
 
@@ -39,13 +39,13 @@ class TestScriptContext(unittest.TestCase):
     def test_notification_interval_exceeded_last_sent_old_enough(self):
         """Notification interval is exceeded if no mail has been sent before"""
         context = self.context_with_directive(
-            last_sent=datetime.now() - timedelta(hours=3),
+            last_sent=datetime.now(timezone.utc) - timedelta(hours=3),
             notification_interval=timedelta(hours=2))
         self.assertTrue(context.notification_interval_exceeded())
 
     def test_notification_interval_exceeded_last_sent_too_new(self):
         """Notification interval is exceeded if no mail has been sent before"""
         context = self.context_with_directive(
-            last_sent=datetime.now() - timedelta(hours=1),
+            last_sent=datetime.now(timezone.utc) - timedelta(hours=1),
             notification_interval=timedelta(hours=2))
         self.assertFalse(context.notification_interval_exceeded())
