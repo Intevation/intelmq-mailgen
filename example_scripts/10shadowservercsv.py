@@ -1,4 +1,5 @@
 import copy
+import datetime
 
 from intelmqmail.tableformat import build_table_formats, ExtraColumn
 from intelmqmail.notification import Postponed
@@ -198,6 +199,17 @@ table_formats = table_formats_with_default_titles([
     ])
 
 
+# Minimum age of the newest of a group of directives being aggregated
+#
+# The value should be chosen such that it's very unlikely that any more
+# directives will be added to the event database that would end up in
+# the same aggregation when the newest directive has reached at least
+# this age.
+minimum_directive_age = datetime.timedelta(minutes=15)
+
+minimum_observation_age = datetime.timedelta(hours=2)
+
+
 def create_notifications(context):
     """
 
@@ -216,7 +228,13 @@ def create_notifications(context):
 
         format_spec = table_formats.get(context.directive.event_data_format)
         if format_spec is not None:
-            if not context.notification_interval_exceeded():
+            time_observation = context.get_aggregation_item("time.observation")
+            if time_observation is not None:
+                observation_age = context.now - time_observation
+            else:
+                observation_age = 0
+            if (context.age_of_newest_directive() < minimum_directive_age
+                and observation_age < minimum_observation_age):
                 return Postponed
 
             substitution_variables["data_location_en"] = substitution_variables["data_location_inline_en"]
