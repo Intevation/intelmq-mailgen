@@ -102,6 +102,13 @@ class ScriptContext:
         return (last_sent is None
                 or (last_sent + notification_interval < self.now))
 
+    def age_of_newest_directive(self):
+        """Return the age of the newest directive in the group.
+        The age is the difference between now and the directive's
+        inserted_at attribute as a timedelta object.
+        """
+        return self.now - self.directive.inserted_at
+
     def new_ticket_number(self):
         return new_ticket_number(self.db_cursor)
 
