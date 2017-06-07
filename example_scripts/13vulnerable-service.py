@@ -186,6 +186,8 @@ def create_notifications(context):
 
     if context.directive.notification_format == "vulnerable-service":
 
+        # TODO: Update this mechanism!
+        # see 10shadowservercsv,py how it's done!
         if not context.notification_interval_exceeded():
             return Postponed
 
