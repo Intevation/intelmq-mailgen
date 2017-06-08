@@ -228,7 +228,7 @@ def create_notifications(context):
 
         format_spec = table_formats.get(context.directive.event_data_format)
         if format_spec is not None:
-            time_observation = context.get_aggregation_item("time.observation")
+            time_observation = context.directive.get_aggregation_item("time.observation")
             if time_observation is not None:
                 observation_age = context.now - time_observation
             else:

@@ -1,8 +1,17 @@
 import copy
+import datetime
 
 from intelmqmail.tableformat import build_table_formats, ExtraColumn
 from intelmqmail.notification import Postponed
 
+# Minimum age of the newest of a group of directives being aggregated
+#
+# The value should be chosen such that it's very unlikely that any more
+# directives will be added to the event database that would end up in
+# the same aggregation when the newest directive has reached at least
+# this age.
+minimum_directive_age = datetime.timedelta(minutes=15)
+minimum_observation_age = datetime.timedelta(hours=2)
 
 standard_column_titles = {
     # column titles for standard event attributes
@@ -186,9 +195,13 @@ def create_notifications(context):
 
     if context.directive.notification_format == "vulnerable-service":
 
-        # TODO: Update this mechanism!
-        # see 10shadowservercsv,py how it's done!
-        if not context.notification_interval_exceeded():
+        time_observation = context.directive.get_aggregation_item("time.observation")
+        if time_observation is not None:
+            observation_age = context.now - time_observation
+        else:
+            observation_age = 0
+        if (context.age_of_newest_directive() < minimum_directive_age
+            and observation_age < minimum_observation_age):
             return Postponed
 
         # Copy Substitutions from the context to this script.
