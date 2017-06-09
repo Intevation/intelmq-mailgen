@@ -65,6 +65,24 @@ class Directive:
         return self.aggregate_identifier.get(key)
 
 
+
+def parse_timestamp(raw):
+    """Parse a timestamp that was stored in an IntelMQ-event as a string.
+    This applies to e.g. time.observation. In particular, if such values
+    are used for the aggregation of directives because than they are
+    also stored as strings in the database.
+
+    This function assumes that the timestamps use the ISO format
+    produced by the isoformat() method of Python's datetime objects with
+    an explicit time-zone offset of +00:00 but optional microseconds.
+    """
+    try:
+        t = datetime.datetime.strptime(raw, '%Y-%m-%dT%H:%M:%S+00:00')
+    except ValueError:
+        t = datetime.datetime.strptime(raw, '%Y-%m-%dT%H:%M:%S.%f+00:00')
+    return t.replace(tzinfo=datetime.timezone.utc)
+
+
 class ScriptContext:
 
     """Provide the context in which scripts are run.
@@ -108,6 +126,26 @@ class ScriptContext:
         inserted_at attribute as a timedelta object.
         """
         return self.now - self.directive.inserted_at
+
+    def age_of_observation(self):
+        """Return the age of the events that led to the directives.
+        The age of the events is the difference between now and the
+        value of the time.observation field of the events as a timedelta
+        object.
+
+        NOTE: This can only be determined if the directives are
+        aggregated by time.observation. Otherwise the necessary
+        information is available when the directives are processed by
+        mailgen.
+
+        If time.observation cannot be determined this method returns a
+        None.
+        """
+        time_observation = self.directive.get_aggregation_item("time.observation")
+        if time_observation is not None:
+            return self.now - parse_timestamp(time_observation)
+
+        return None
 
     def new_ticket_number(self):
         return new_ticket_number(self.db_cursor)
