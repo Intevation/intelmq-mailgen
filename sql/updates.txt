@@ -2,14 +2,13 @@
 
 === forward
 
-ALTER TABLE directives
-    ADD COLUMN inserted_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE directives ADD COLUMN inserted_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE directives ALTER COLUMN inserted_at SET DEFAULT CURRENT_TIMESTAMP;
 UPDATE directives
-SET inserted_at = (SELECT "time.observation" FROM events WHERE id = events_id);
-ALTER TABLE directives
-    ALTER COLUMN inserted_at SET NOT NULL,
-    ALTER COLUMN inserted_at SET DEFAULT CURRENT_TIMESTAMP;
-
+   SET inserted_at = (SELECT "time.observation" FROM events
+                      WHERE id = events_id)
+ WHERE inserted_at IS NULL;
+ALTER TABLE directives ALTER COLUMN inserted_at SET NOT NULL;
 
 
 === backward
