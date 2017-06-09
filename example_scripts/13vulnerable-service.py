@@ -195,13 +195,8 @@ def create_notifications(context):
 
     if context.directive.notification_format == "vulnerable-service":
 
-        time_observation = context.directive.get_aggregation_item("time.observation")
-        if time_observation is not None:
-            observation_age = context.now - time_observation
-        else:
-            observation_age = 0
         if (context.age_of_newest_directive() < minimum_directive_age
-            and observation_age < minimum_observation_age):
+            or context.age_of_observation() < minimum_observation_age):
             return Postponed
 
         # Copy Substitutions from the context to this script.
