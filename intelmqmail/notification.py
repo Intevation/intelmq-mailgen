@@ -39,6 +39,47 @@ class InvalidTemplate(InvalidDirective):
 
 class Directive:
 
+    """The directives for which notifications have to be created.
+
+    This is the mailgen counterpart to the Directive class in the rule
+    expert bot in IntelMQ which adds notification directives to the
+    events. The main difference is that this class represents a
+    collection of those directives. The directives in the collection
+    share all of the attributes that were assigned to them by the rules
+    in the rule bot and those are available as instance variables with
+    the same name in this class, with few exceptions. The exceptions are
+    that the attribute ``medium`` is not present here because it's
+    always ``'email'`` in mailgen and the ``aggregate_key`` and
+    ``aggregate_fields`` attributes are available as one dictionary in
+    the :py:attr:`aggregate_identifier` attribute (see also the
+    :py:meth:`get_aggregation_item` method). There are also some attributes
+    specific to this class: :py:attr:`inserted_at`,
+    :py:attr:`last_sent`, :py:attr:`event_ids`,
+    :py:attr:`directive_ids`. See below for their documentation.
+
+    Attributes:
+        recipient_address (str): The email address of the recipient.
+        template_name (str): The name of the template for the contents
+            of the notification.
+        notification_format (str): The main format of the notification.
+        event_data_format (str): The format to use for event data
+            included in the notification.
+        aggregate_identifier (dict): Additional key/value pairs used
+            when aggregating directives. Both keys and values are strings.
+        notification_interval (int): Interval between notifications for
+            similar events. Can be used together with last_sent to
+            determine whether this interval has expired.
+        last_sent (datetime): When the last notification with the same
+            attributes was sent.
+        inserted_at (datetime): When the newest of the directive was
+            inserted into the event DB. This can be useful instead of or
+            in addition to last_sent and notification_interval.
+        event_ids (list of int): The database ids of all events for
+            which the directives were created.
+        directive_ids (list of int): The database ids of the directives
+            aggregated in this object.
+    """
+
     def __init__(self, recipient_address, template_name, notification_format,
                  event_data_format, aggregate_identifier, event_ids,
                  directive_ids, inserted_at, notification_interval, last_sent):
@@ -62,6 +103,10 @@ class Directive:
         return self.__dict__.get(key)
 
     def get_aggregation_item(self, key):
+        """Lookup an item in the aggregate_identifier.
+        If the key is present in :py:attr:`aggregate_identifier` return
+        it, return ``None`` otherwise.
+        """
         return self.aggregate_identifier.get(key)
 
 
