@@ -38,6 +38,7 @@ import argparse
 import json
 import locale
 import logging
+import pkg_resources
 import os
 
 import gpgme  # developed for pygpgme 0.3
@@ -72,6 +73,8 @@ USAGE = """
     {appname}
     {appname} --all
 """.format(appname=APPNAME)
+
+VERSION = pkg_resources.get_distribution("intelmqmail").version
 
 
 def read_configuration():
@@ -301,6 +304,9 @@ def main():
         )
     parser.add_argument('-a', '--all', action='store_true',
                         help='Process all events (batch mode)')
+    parser.add_argument('--version', action='version',
+                        version=VERSION,
+                        help='Show version of intelmqmail')
     args = parser.parse_args()
 
     config = read_configuration()

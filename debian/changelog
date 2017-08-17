@@ -1,6 +1,7 @@
 intelmq-mailgen (0.99~rc6) UNRELEASED; urgency=low
 
   * Require runtime-dependency pyxarf
+  * Implement intelmqcbmail --version
 
  -- Sebastian Wagner <wagner@cert.at>  Thu, 17 Aug 2017 10:25:15 +0200
 
