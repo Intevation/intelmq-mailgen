@@ -57,6 +57,7 @@ setup(
     install_requires=[
         'pygpgme>=0.3',
         'psycopg2',
+        'pyxarf',
         # Additional requirements:
         # * GnuPG (v>=2) for pygpgme
     ],

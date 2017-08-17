@@ -1,3 +1,9 @@
+intelmq-mailgen (0.99~rc6) UNRELEASED; urgency=low
+
+  * Require runtime-dependency pyxarf
+
+ -- Sebastian Wagner <wagner@cert.at>  Thu, 17 Aug 2017 10:25:15 +0200
+
 intelmq-mailgen (0.99~rc5) unstable; urgency=medium
 
   * Extended data format for avalanche.
