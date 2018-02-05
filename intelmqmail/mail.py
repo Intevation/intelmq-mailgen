@@ -45,8 +45,7 @@ class FromQuotingContentManager(ContentManager):
     def set_content(self, msg, obj, *args, **kw):
         replace_from = False
 
-        if (
-                isinstance(obj, str)
+        if (isinstance(obj, str)
                 and kw.get("cte") not in ("quoted-printable", "base64")
                 and re.search("^From ", obj, re.MULTILINE) is not None):
             kw["cte"] = "quoted-printable"
@@ -54,8 +53,7 @@ class FromQuotingContentManager(ContentManager):
 
         raw_data_manager.set_content(msg, obj, *args, **kw)
 
-        if (
-                msg.get("content-transfer-encoding") == "quoted-printable"
+        if (msg.get("content-transfer-encoding") == "quoted-printable"
                 and replace_from):
             content = msg.get_payload(decode=False)
             from_escaped = content.replace("From ", "From=20")
