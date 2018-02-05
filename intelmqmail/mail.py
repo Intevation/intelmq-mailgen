@@ -25,9 +25,7 @@ hash_algorithms = {
     }
 
 
-
 class FromQuotingContentManager(ContentManager):
-
     """ContentManager that handles "From " for quoted printable.
 
     This content manager delegates all functionality to the
@@ -37,7 +35,7 @@ class FromQuotingContentManager(ContentManager):
     indicates the beginning of a message and some mail agents therefore
     modify such mails by prepending a '>' character to the line. That
     would break any cryptographic signature, so we force
-    quoted-printable if necessaary and replace "From " with "From=20" in
+    quoted-printable if necessary and replace "From " with "From=20" in
     the quoted printable encoded text.
     """
 
@@ -46,14 +44,19 @@ class FromQuotingContentManager(ContentManager):
 
     def set_content(self, msg, obj, *args, **kw):
         replace_from = False
-        if (isinstance(obj, str)
-            and kw.get("cte") not in ("quoted-printable", "base64")
-            and re.search("^From ", obj, re.MULTILINE) is not None):
+
+        if (
+                isinstance(obj, str)
+                and kw.get("cte") not in ("quoted-printable", "base64")
+                and re.search("^From ", obj, re.MULTILINE) is not None):
             kw["cte"] = "quoted-printable"
             replace_from = True
+
         raw_data_manager.set_content(msg, obj, *args, **kw)
-        if (msg.get("content-transfer-encoding") == "quoted-printable"
-            and replace_from):
+
+        if (
+                msg.get("content-transfer-encoding") == "quoted-printable"
+                and replace_from):
             content = msg.get_payload(decode=False)
             from_escaped = content.replace("From ", "From=20")
             msg.set_payload(from_escaped)
@@ -110,7 +113,7 @@ def clearsign(gpgme_ctx, text):
     signature = io.BytesIO()
 
     try:
-        sigs = gpgme_ctx.sign(plaintext, signature, gpgme.SIG_MODE_CLEAR)
+        gpgme_ctx.sign(plaintext, signature, gpgme.SIG_MODE_CLEAR)
     except:
         log.error("OpenPGP signing failed!")
         raise
