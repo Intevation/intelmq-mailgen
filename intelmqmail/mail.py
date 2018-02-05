@@ -114,7 +114,7 @@ def clearsign(gpgme_ctx, text):
 
     try:
         gpgme_ctx.sign(plaintext, signature, gpgme.SIG_MODE_CLEAR)
-    except:
+    except Exception:
         log.error("OpenPGP signing failed!")
         raise
 
@@ -144,7 +144,7 @@ def detached_signature(gpgme_ctx, plainbytes):
         gpgme_ctx.armor = True
         sigs = gpgme_ctx.sign(io.BytesIO(plainbytes), signature,
                               gpgme.SIG_MODE_DETACH)
-    except:
+    except Exception:
         print("OpenPGP signing for multipart/signed failed!")
         raise
 
