@@ -160,58 +160,58 @@ def send_notifications(config, directives, cur, scripts):
         signing_key = gpgme_ctx.get_key(config["openpgp"]["signing_key"])
         gpgme_ctx.signers = [signing_key]
 
-    with smtplib.SMTP(host=config["smtp"]["host"],
-                      port=config["smtp"]["port"]) as smtp:
-        for directive in directives:
-            # When processing a directive, we set a savepoint in the
-            # database so that we can roll back to it if errors happen
-            # and still retain and later commit the changes made for
-            # directives processed earlier. For this to work, we have to
-            # be careful when handling exceptions. Any exception that
-            # could be an error, particularly exceptions that indicate a
-            # problem with the database transaction must lead to a
-            # "ROLLBACK TO SAVEPOINT". Otherwise, if the transaction has
-            # encountered an error, no statements other than rollbacks
-            # will be accepted by the database and we would lose the
-            # changes we want to commit.
-            #
-            # Among the changes we want to commit are the information
-            # about the sent notifications and the ticket numbers,
-            # including the daily reset of the ticket numebrs. Not
-            # committing this could lead to notifications being sent
-            # twice and the same ticket numbers being reused for
-            # different notifications.
-            cur.execute("SAVEPOINT sendmail;")
-            try:
-                notifications = create_notifications(cur, directive, config,
-                                                     scripts, gpgme_ctx)
+    for directive in directives:
+        # When processing a directive, we set a savepoint in the
+        # database so that we can roll back to it if errors happen
+        # and still retain and later commit the changes made for
+        # directives processed earlier. For this to work, we have to
+        # be careful when handling exceptions. Any exception that
+        # could be an error, particularly exceptions that indicate a
+        # problem with the database transaction must lead to a
+        # "ROLLBACK TO SAVEPOINT". Otherwise, if the transaction has
+        # encountered an error, no statements other than rollbacks
+        # will be accepted by the database and we would lose the
+        # changes we want to commit.
+        #
+        # Among the changes we want to commit are the information
+        # about the sent notifications and the ticket numbers,
+        # including the daily reset of the ticket numebrs. Not
+        # committing this could lead to notifications being sent
+        # twice and the same ticket numbers being reused for
+        # different notifications.
+        cur.execute("SAVEPOINT sendmail;")
+        try:
+            notifications = create_notifications(cur, directive, config,
+                                                 scripts, gpgme_ctx)
 
-                if not notifications:
-                    log.warning("No emails for sending were generated for %r!",
-                                directive)
-                elif notifications is Postponed:
-                    postponed += 1
-                else:
+            if not notifications:
+                log.warning("No emails for sending were generated for %r!",
+                            directive)
+            elif notifications is Postponed:
+                postponed += 1
+            else:
+                with smtplib.SMTP(host=config["smtp"]["host"],
+                                  port=config["smtp"]["port"]) as smtp:
                     context = SendContext(cur, smtp)
                     for notification in notifications:
                         notification.send(context)
                         sent_mails += 1
-            except BaseException as e:
-                cur.execute("ROLLBACK TO SAVEPOINT sendmail;")
-                # if it's a "normal" exception, assume that it's a
-                # problem with the directive or the scripts that process
-                # it. Simply try the next directives. If it's a not a
-                # normal exception, e.g. if it's SystemExit or
-                # KeyboardInterrupt, reraise the exception since it's
-                # likely that
-                if isinstance(e, Exception):
-                    log.exception("Could not create or send mails for %r."
-                                  " Continuing with other notifications.",
-                                  directive)
-                else:
-                    raise
-            finally:
-                cur.execute("RELEASE SAVEPOINT sendmail;")
+        except BaseException as e:
+            cur.execute("ROLLBACK TO SAVEPOINT sendmail;")
+            # if it's a "normal" exception, assume that it's a
+            # problem with the directive or the scripts that process
+            # it. Simply try the next directives. If it's a not a
+            # normal exception, e.g. if it's SystemExit or
+            # KeyboardInterrupt, reraise the exception since it's
+            # likely that
+            if isinstance(e, Exception):
+                log.exception("Could not create or send mails for %r."
+                              " Continuing with other notifications.",
+                              directive)
+            else:
+                raise
+        finally:
+            cur.execute("RELEASE SAVEPOINT sendmail;")
     return (sent_mails, postponed)
 
 
