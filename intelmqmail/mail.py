@@ -25,48 +25,52 @@ hash_algorithms = {
     }
 
 
-class FromQuotingContentManager(ContentManager):
-    """ContentManager that handles "From " for quoted printable.
+class MailgenContentManager(ContentManager):
+    """ContentManager enforcing mailgen specific goals.
 
     This content manager delegates all functionality to the
-    raw_data_manager except when setting text in quoted printable
-    transfer encoding. In text mails, the string "From " at the
-    beginning of the line can be problematic because for some tools it
-    indicates the beginning of a message and some mail agents therefore
-    modify such mails by prepending a '>' character to the line. That
-    would break any cryptographic signature, so we force
-    quoted-printable if necessary and replace "From " with "From=20" in
-    the quoted printable encoded text.
+    raw_data_manager except for these:
+
+     - quoted-printable transfer encoding for text
+
+       Always using quoted-printable has the advantage that the text
+       parts of the generated mail will have only ASCII characters and
+       reasonably short lines, even if the original text does not.
+
+     - Escaping "From " at the beginning of lines in text
+
+       "From " at the beginning of lines can be problematic because for
+       some tools it indicates the beginning of a message and some mail
+       agents therefore modify such mails by prepending a '>' character
+       to the line, breaking cryptographic signatures. Since we're
+       enforcing quoted-printable for all text content, we can simply
+       replace "From " with "From=20" in the quoted printable encoded
+       text.
     """
 
     def get_content(self, msg, *args, **kw):
         return raw_data_manager.get_content(msg, *args, **kw)
 
     def set_content(self, msg, obj, *args, **kw):
-        replace_from = False
-
-        if (isinstance(obj, str) and kw.get("cte") != "base64"
-                and re.search("^From ", obj, re.MULTILINE) is not None):
+        if isinstance(obj, str):
             kw["cte"] = "quoted-printable"
-            replace_from = True
 
         raw_data_manager.set_content(msg, obj, *args, **kw)
 
-        if (msg.get("content-transfer-encoding") == "quoted-printable"
-                and replace_from):
+        if msg.get("content-transfer-encoding") == "quoted-printable":
             content = msg.get_payload(decode=False)
             from_escaped = content.replace("From ", "From=20")
             msg.set_payload(from_escaped)
 
 
-openpgp_policy = SMTP.clone(cte_type="7bit",
-                            content_manager=FromQuotingContentManager())
+mailgen_policy = SMTP.clone(cte_type="7bit",
+                            content_manager=MailgenContentManager())
 
 
 def create_mail(sender, recipient, subject, body, attachments, gpgme_ctx):
     """Create an email either as single or multi-part with attachments.
     """
-    msg = EmailMessage(policy=openpgp_policy)
+    msg = EmailMessage(policy=mailgen_policy)
     msg.set_content(body)
     attachment_parent = msg
     if gpgme_ctx is not None:
