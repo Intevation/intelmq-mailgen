@@ -40,7 +40,7 @@ class FromQuotingContentManager(ContentManager):
     """
 
     def get_content(self, msg, *args, **kw):
-        raw_data_manager.get_content(msg, *args, **kw)
+        return raw_data_manager.get_content(msg, *args, **kw)
 
     def set_content(self, msg, obj, *args, **kw):
         replace_from = False
