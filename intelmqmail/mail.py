@@ -69,15 +69,17 @@ def create_mail(sender, recipient, subject, body, attachments, gpgme_ctx):
     """
     msg = EmailMessage(policy=openpgp_policy)
     msg.set_content(body)
-    msg.make_mixed()
-    signed_part = next(msg.iter_parts())
+    attachment_parent = msg
+    if gpgme_ctx is not None:
+        msg.make_mixed()
+        attachment_parent = next(msg.iter_parts())
 
     if attachments:
         for args, kw in attachments:
-            signed_part.add_attachment(*args, **kw)
+            attachment_parent.add_attachment(*args, **kw)
 
     if gpgme_ctx is not None:
-        signed_bytes = signed_part.as_bytes()
+        signed_bytes = attachment_parent.as_bytes()
         hash_algo, signature = detached_signature(gpgme_ctx, signed_bytes)
 
         msg.add_attachment(signature, "application", "pgp-signature",
