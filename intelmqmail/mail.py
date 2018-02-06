@@ -45,8 +45,7 @@ class FromQuotingContentManager(ContentManager):
     def set_content(self, msg, obj, *args, **kw):
         replace_from = False
 
-        if (isinstance(obj, str)
-                and kw.get("cte") not in ("quoted-printable", "base64")
+        if (isinstance(obj, str) and kw.get("cte") != "base64"
                 and re.search("^From ", obj, re.MULTILINE) is not None):
             kw["cte"] = "quoted-printable"
             replace_from = True
