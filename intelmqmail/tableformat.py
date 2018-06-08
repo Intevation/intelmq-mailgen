@@ -189,7 +189,7 @@ def format_as_csv(table_format, events):
     for event in events:
         row = table_format.row_from_event(event)
         if row.get('time.source'):
-            row['time.source'] = row['time.source'].replace(tzinfo=None)
+            row['time.source'] = row['time.source'].replace(tzinfo=None, microsecond=0)
         writer.writerow(row)
 
     return contents.getvalue()
