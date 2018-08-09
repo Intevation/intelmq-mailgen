@@ -6,7 +6,7 @@ import re
 from email.message import EmailMessage
 from email.contentmanager import ContentManager, raw_data_manager
 from email.policy import SMTP
-from email.utils import formatdate
+from email.utils import formatdate, make_msgid
 
 import gpgme
 
@@ -107,6 +107,15 @@ def create_mail(sender, recipient, subject, body, attachments, gpgme_ctx):
     msg.add_header("To", recipient)
     msg.add_header("Subject", subject)
     msg.add_header("Date", formatdate(timeval=None, localtime=True))
+
+    # take the domain part of sender as the domain part of the message
+    # ID. We assume that sender has the form local@domain, so we can
+    # just the part of sender after the '@'.
+    sender_domain = sender.partition("@")[-1]
+    if not sender_domain:
+        raise RuntimeError("Could not extract the domain from the sender (%r)"
+                           " for the Message-ID" % (sender,))
+    msg.add_header("Message-Id", make_msgid(domain=sender_domain))
 
     return msg
 
