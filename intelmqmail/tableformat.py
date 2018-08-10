@@ -162,15 +162,24 @@ def build_table_format(name, columns):
                               for col in columns])
 
 def build_table_column(col):
-    """Return a Column instance built from a column specification.
-    A column specification may either be a tuple of the form
-    (intelmq_field, column_title) in which case an IntelMQColumn is
-    created from these parameters or an instance of Column which is
-    returned as is.
+    """Return a Column instance built from a column specification. A
+    column specification may either be a tuple of strings of the form
+    (intelmq_field, column_title) or an instance of Column.
+
+    In the former case, if intelmq_field starts with "extra.", an
+    ExtraColumn instance is created using the rest of intelmq_field as
+    the extra_key parameter. Otherwise a IntelMQColumn instance is
+    created.
+
+    Instances of Column will be used as is.
     """
     if isinstance(col, tuple):
         intelmq_field, column_title = col
-        return IntelMQColumn(column_title, intelmq_field)
+        first_component, sep, rest = intelmq_field.partition(".")
+        if first_component == "extra":
+            return ExtraColumn(column_title, rest)
+        else:
+            return IntelMQColumn(column_title, intelmq_field)
     else:
         return col
 
