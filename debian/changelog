@@ -1,3 +1,11 @@
+intelmq-mailgen (1.00~rc2) unstable; urgency=medium
+
+  * No microseconds in time stamps
+  * Explicitly generate a Message-Id for notification mails
+  * Make it easier to use items from the extra field in table formats
+
+ -- Gernot Schulz <gernot@intevation.de>  Mon, 13 Aug 2018 16:12:56 +0200
+
 intelmq-mailgen (1.00~rc1) unstable; urgency=medium
 
   * Enforce quoted-printable for text MIME parts.
