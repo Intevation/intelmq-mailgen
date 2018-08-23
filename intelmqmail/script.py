@@ -29,7 +29,9 @@ class Script:
         return self.entry_point(*args, **kw)
 
 
-def load_scripts(script_directory, entry_point):
+def load_scripts(script_directory, entry_point, logger=None):
+    if logger is None:
+        logger = log
     entry_points = []
     found_errors = False
     glob_pattern = os.path.join(glob.escape(script_directory),
@@ -45,12 +47,12 @@ def load_scripts(script_directory, entry_point):
                     entry_points.append(Script(filename, entry))
                 else:
                     found_errors = True
-                    log.error("Cannot find entry point %r in %r",
-                              entry_point, filename)
+                    logger.error("Cannot find entry point %r in %r",
+                                 entry_point, filename)
         except Exception:
             found_errors = True
-            log.exception("Exception while trying to find entry point %r in %r",
-                          entry_point, filename)
+            logger.exception("Exception while trying to find entry point %r in %r",
+                             entry_point, filename)
     if found_errors:
         raise RuntimeError("Errors found while loading scripts."
                            " See log file for details")

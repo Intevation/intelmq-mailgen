@@ -6,9 +6,13 @@ import os
 import string
 from tempfile import TemporaryDirectory
 import unittest
+import logging
 
 
 from intelmqmail.script import load_scripts
+
+
+log = logging.getLogger(__name__)
 
 
 class LoadScriptTest(unittest.TestCase):
@@ -96,10 +100,13 @@ def eventhandler(event):
 """)]
 
     def test(self):
-        with self.assertLogs("intelmqmail.script") as logs:
+        # use a new logger so that we can test passing an explicit
+        # logger to load_scripts
+        logger = log.getChild(self.__class__.__name__)
+        with self.assertLogs(logger) as logs:
             with self.assertRaises(RuntimeError,
                                    msg="Errors found while loading scripts"):
-                load_scripts(self.tempdir.name, "eventhandler")
+                load_scripts(self.tempdir.name, "eventhandler", logger=logger)
 
         # there should be one log message with some specific content
         # (reproducing the whole content would be hard to maintain
@@ -107,6 +114,6 @@ def eventhandler(event):
         # message.
         self.assertEqual(len(logs.output), 1)
         self.assertTrue(logs.output[0].startswith(
-            "ERROR:intelmqmail.script:"
+            "ERROR:test_script.TestLoadScriptExecErrors:"
             "Exception while trying to find entry point 'eventhandler'"))
         self.assertTrue(logs.output[0].endswith("SyntaxError: invalid syntax"))
