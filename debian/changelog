@@ -1,3 +1,10 @@
+intelmq-mailgen (1.00~rc3) unstable; urgency=medium
+
+  * Allow passing a logger instance to load_scripts.
+    This is needed by current version of intelmq-certbund-contact
+
+ -- Sascha Wilde <wilde@intevation.de>  Wed, 12 Sep 2018 15:45:25 +0200
+
 intelmq-mailgen (1.00~rc2) unstable; urgency=medium
 
   * No microseconds in time stamps
