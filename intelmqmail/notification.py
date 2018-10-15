@@ -180,8 +180,8 @@ class ScriptContext:
 
         NOTE: This can only be determined if the directives are
         aggregated by time.observation. Otherwise the necessary
-        information is available when the directives are processed by
-        mailgen.
+        information is not available when the directives are processed
+        by mailgen.
 
         If time.observation cannot be determined this method returns a
         None.
