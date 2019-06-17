@@ -52,7 +52,7 @@ from intelmqmail.notification import Directive, SendContext, ScriptContext, \
 
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)  # using INFO as default, otherwise it's WARNING
+
 
 if locale.getpreferredencoding() != 'UTF-8':
     log.critical(
@@ -305,11 +305,10 @@ def main():
 
     config = read_configuration()
 
-    if "logging_level" in config:
-        # trying to set the logLevel for all submodules
-        module_logger = logging.getLogger(
-                                    __name__.rsplit(sep=".", maxsplit=1)[0])
-        module_logger.setLevel(config["logging_level"])
+    # Set the logLevel for all submodules
+    module_logger = logging.getLogger(__name__.rsplit(sep=".", maxsplit=1)[0])
+    # using INFO as default, otherwise it's WARNING
+    module_logger.setLevel(config.get("logging_level", "INFO"))
 
     # checking openpgp config
     if "openpgp" not in config or {
