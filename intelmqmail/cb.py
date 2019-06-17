@@ -261,18 +261,24 @@ def generate_notifications_interactively(config, cur, directives, scripts):
 
 def mailgen(args, config, scripts):
     cur = None
+    log.debug("Opening database connection")
     conn = open_db_connection(config, connection_factory=RealDictConnection)
     try:
         cur = conn.cursor()
         cur.execute("SET TIME ZONE 'UTC';")
+        log.debug("Fetching pending directives")
         directives = get_pending_notifications(cur)
         if directives == None:
+            # This case has been logged by get_pending_notifications.
             return
         if len(directives) == 0:
             log.info("No pending notifications to be sent")
             return
 
+        log.debug("Got %d groups of directives", len(directives))
+
         if args.all:
+            log.debug("Start processing directives")
             sent_mails, postponed = send_notifications(config, directives, cur,
                                                        scripts)
             log.info("%d mails sent, %d postponed.", sent_mails, postponed)
