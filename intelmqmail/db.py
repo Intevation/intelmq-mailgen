@@ -40,7 +40,8 @@ PENDING_DIRECTIVES_QUERY = """\
           (SELECT max(s.sent_at)
              FROM directives AS d2
              JOIN sent s ON d2.sent_id = s.id
-            WHERE d2.recipient_address = d.recipient_address
+            WHERE age(d2.inserted_at) <= INTERVAL '4 weeks'
+              AND d2.recipient_address = d.recipient_address
               AND d2.template_name = d.template_name
               AND d2.notification_format = d.notification_format
               AND d2.event_data_format = d.event_data_format

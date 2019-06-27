@@ -52,7 +52,7 @@ from intelmqmail.notification import Directive, SendContext, ScriptContext, \
 
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)  # using INFO as default, otherwise it's WARNING
+
 
 if locale.getpreferredencoding() != 'UTF-8':
     log.critical(
@@ -261,18 +261,24 @@ def generate_notifications_interactively(config, cur, directives, scripts):
 
 def mailgen(args, config, scripts):
     cur = None
+    log.debug("Opening database connection")
     conn = open_db_connection(config, connection_factory=RealDictConnection)
     try:
         cur = conn.cursor()
         cur.execute("SET TIME ZONE 'UTC';")
+        log.debug("Fetching pending directives")
         directives = get_pending_notifications(cur)
         if directives == None:
+            # This case has been logged by get_pending_notifications.
             return
         if len(directives) == 0:
             log.info("No pending notifications to be sent")
             return
 
+        log.debug("Got %d groups of directives", len(directives))
+
         if args.all:
+            log.debug("Start processing directives")
             sent_mails, postponed = send_notifications(config, directives, cur,
                                                        scripts)
             log.info("%d mails sent, %d postponed.", sent_mails, postponed)
@@ -305,11 +311,10 @@ def main():
 
     config = read_configuration()
 
-    if "logging_level" in config:
-        # trying to set the logLevel for all submodules
-        module_logger = logging.getLogger(
-                                    __name__.rsplit(sep=".", maxsplit=1)[0])
-        module_logger.setLevel(config["logging_level"])
+    # Set the logLevel for all submodules
+    module_logger = logging.getLogger(__name__.rsplit(sep=".", maxsplit=1)[0])
+    # using INFO as default, otherwise it's WARNING
+    module_logger.setLevel(config.get("logging_level", "INFO"))
 
     # checking openpgp config
     if "openpgp" not in config or {
