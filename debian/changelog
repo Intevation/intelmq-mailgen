@@ -1,3 +1,11 @@
+intelmq-mailgen (1.01) unstable; urgency=medium
+
+  * To improve speed, determine last_sent over the last month only
+  * Allow log-level to be set for the intelmqmail.cb logger, too and add
+    some more debug log output
+
+ -- Sascha Wilde <wilde@intevation.de>  Thu, 27 Jun 2019 18:08:05 +0200
+
 intelmq-mailgen (1.00~rc3) unstable; urgency=medium
 
   * Allow passing a logger instance to load_scripts.
