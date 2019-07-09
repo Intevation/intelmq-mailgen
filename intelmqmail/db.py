@@ -37,15 +37,16 @@ PENDING_DIRECTIVES_QUERY = """\
           array_agg(d.id) AS directive_ids,
           max(d.inserted_at) AS inserted_at,
           max(d.notification_interval) AS notification_interval,
-          (SELECT max(s.sent_at)
+          (SELECT s.sent_at
              FROM directives AS d2
              JOIN sent s ON d2.sent_id = s.id
-            WHERE age(d2.inserted_at) <= INTERVAL '4 weeks'
-              AND d2.recipient_address = d.recipient_address
+            WHERE d2.recipient_address = d.recipient_address
               AND d2.template_name = d.template_name
               AND d2.notification_format = d.notification_format
               AND d2.event_data_format = d.event_data_format
-              AND d2.aggregate_identifier = d.aggregate_identifier) AS last_sent
+              AND d2.aggregate_identifier = d.aggregate_identifier
+         ORDER BY d2.inserted_at DESC
+            LIMIT 1) AS last_sent
      FROM (SELECT id, events_id, recipient_address, template_name,
                   notification_format, event_data_format, notification_interval,
                   aggregate_identifier, inserted_at
