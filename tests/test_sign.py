@@ -100,4 +100,4 @@ class SignTestCase(GpgHomeTestCase):
         #print("\nTime elapsed for {:d} iterations: {:.3f}".format(n, time_spent))
         #print("That is {:.1f} signatures per second.".format(n/time_spent))
         #we want to process at least 12 per second
-        self.assertTrue(n/time_spent > 12)
+        self.assertGreater(n / time_spent, 12)
