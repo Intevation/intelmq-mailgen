@@ -181,14 +181,20 @@ def last_ticket_number(cur) -> str:
     return _format_ticket(result["day"], result["last_value"])
 
 
-def mark_as_sent(cur, directive_ids, ticket):
-    "Mark notifactions with given ids as sent and set the ticket number."
+def mark_as_sent(cur, directive_ids, ticket, sent_at):
+    """Mark directives as sent.
+    Args:
+        directive_ids (list of int): IDs of the directives to be marked as sent
+        ticket (string): The ticket number
+        sent_at (datetime): When the mail was sent. Should be the value
+            used in the Date header of the mail.
+    """
     log.debug("Marking directive ids {} as sent.".format(directive_ids))
     cur.execute("""\
                   WITH sent_row AS (INSERT INTO sent (intelmq_ticket, sent_at)
-                                         VALUES (%s, now())
+                                         VALUES (%s, %s)
                                       RETURNING id)
                 UPDATE directives
                    SET sent_id = (SELECT id FROM sent_row)
                  WHERE id = ANY (%s);""",
-                (ticket, directive_ids,))
+                (ticket, sent_at, directive_ids,))

@@ -382,8 +382,8 @@ class SendContext:
         self.cur = cur
         self.smtp = smtp
 
-    def mark_as_sent(self, directive_ids, ticket):
-        mark_as_sent(self.cur, directive_ids, ticket)
+    def mark_as_sent(self, directive_ids, ticket, sent_at):
+        mark_as_sent(self.cur, directive_ids, ticket, sent_at)
 
 
 class Notification:
@@ -404,7 +404,8 @@ class EmailNotification(Notification):
 
     def send(self, send_context):
         send_context.smtp.send_message(self.email)
-        send_context.mark_as_sent(self.directive.directive_ids, self.ticket)
+        send_context.mark_as_sent(self.directive.directive_ids, self.ticket,
+                                  self.email["Date"].datetime)
 
 
 
