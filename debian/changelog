@@ -1,3 +1,11 @@
+intelmq-mailgen (1.02) unstable; urgency=medium
+
+  * Improve performance:
+    - Assume newest inserted_at correlates to newest sent_at
+  * Store timestamp of email Date header in sent
+
+ -- Sascha Wilde <wilde@intevation.de>  Fri, 12 Jul 2019 10:04:01 +0200
+
 intelmq-mailgen (1.01) unstable; urgency=medium
 
   * To improve speed, determine last_sent over the last month only
