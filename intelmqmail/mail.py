@@ -6,12 +6,35 @@ import re
 from email.message import EmailMessage
 from email.contentmanager import ContentManager, raw_data_manager
 from email.policy import SMTP
-from email.utils import formatdate, make_msgid
+from email.utils import formatdate, make_msgid, parseaddr
 
 import gpgme
 
 
 log = logging.getLogger(__name__)
+
+
+class DomainNotFound(Exception):
+
+    """Exception raised when no domain could be extracted from the sender"""
+
+
+def domain_from_sender(sender):
+    """Extract the domain of the email address in sender.
+
+    The argument is expected to be a string that could be used as the
+    value of the From: headerfield, e.g. a plain email address or it
+    could include both a display name and the email address.
+
+    If the plain email address included in sender does not have a
+    domain, an exception is raised.
+    """
+    address = parseaddr(sender)[1]
+    domain = address.partition("@")[-1]
+    if not domain:
+        raise DomainNotFound("Could not extract the domain from the sender (%r)"
+                             % (sender,))
+    return domain
 
 
 # Map gpgme hash algorithm IDs to OpenPGP/MIME micalg strings. GPG
@@ -108,14 +131,8 @@ def create_mail(sender, recipient, subject, body, attachments, gpgme_ctx):
     msg.add_header("Subject", subject)
     msg.add_header("Date", formatdate(timeval=None, localtime=True))
 
-    # take the domain part of sender as the domain part of the message
-    # ID. We assume that sender has the form local@domain, so we can
-    # just the part of sender after the '@'.
-    sender_domain = sender.partition("@")[-1]
-    if not sender_domain:
-        raise RuntimeError("Could not extract the domain from the sender (%r)"
-                           " for the Message-ID" % (sender,))
-    msg.add_header("Message-Id", make_msgid(domain=sender_domain))
+    # take the domain part of sender as the domain part of the message ID.
+    msg.add_header("Message-Id", make_msgid(domain=domain_from_sender(sender)))
 
     return msg
 

@@ -7,7 +7,7 @@ import pyxarf
 from intelmqmail.db import load_events, new_ticket_number, mark_as_sent
 from intelmqmail.templates import read_template
 from intelmqmail.tableformat import format_as_csv
-from intelmqmail.mail import create_mail, clearsign
+from intelmqmail.mail import create_mail, clearsign, domain_from_sender
 
 
 class NotificationError(Exception):
@@ -310,7 +310,7 @@ class ScriptContext:
         # xarf_reportdomain was not set in the the config, the senders
         # domain name is used.
         reportid_domain = self.config.get("xarf_reportdomain",
-                                          sender.split("@")[1])
+                                          domain_from_sender(sender))
 
         template = self.read_template()
 

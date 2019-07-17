@@ -23,8 +23,9 @@ class MailCreationTest:
     csv_content = ('"asn","ip","timestamp"\n'
                    '"64496","192.168.33.12","2018-02-06 11:47:55"\n')
 
-    def create_text_mail_with_attachment(self, gpg_context):
-        return create_mail("sender@example.com", "recipient@example.com",
+    def create_text_mail_with_attachment(self, gpg_context,
+                                         sender="sender@example.com"):
+        return create_mail(sender, "recipient@example.com",
                            "Test quoted-printable",
                            self.body_content,
                            [((self.csv_content,),
@@ -82,6 +83,25 @@ class TestCreateUnsignedMail(MailCreationTest, unittest.TestCase):
         body, csv = self.check_unpack_multipart(msg, "mixed")
         self.check_body_part(body)
         self.check_csv_attachment(csv)
+
+    def test_message_id_with_display_name_in_sender(self):
+        """Test Message-ID when sender contains a display name.
+
+        The domain of the Message-ID is derived from the sender.
+        Originally this was done in a naive way because the code assumed
+        the sender to be given in the user@domain form. When the sender
+        includes a display name, this must be done differently.
+        """
+        msg = self.create_text_mail_with_attachment(None,
+                                          sender="Real Name <rn@example.com>")
+        self.assertRegex(msg["Message-ID"], r"@example\.com>$")
+
+    def test_message_id_with_plain_email_address_in_sender(self):
+        """Test Message-ID when sender is a plain email address.
+        """
+        msg = self.create_text_mail_with_attachment(None,
+                                          sender="rn@example.com")
+        self.assertRegex(msg["Message-ID"], r"@example\.com>$")
 
 
 class TestCreateSignedMail(MailCreationTest, GpgHomeTestCase):
