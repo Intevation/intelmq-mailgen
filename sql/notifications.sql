@@ -82,6 +82,16 @@ CREATE INDEX directives_events_id_idx
 CREATE INDEX directives_sent_id_idx
           ON directives (sent_id);
 
+-- Use https://www.postgresql.org/docs/9.5/pgtrgm.html to allow for
+-- fast ILIKE search in tags saved in the aggregate_identifier.
+-- If additional tags are entered there, additional indixes may be advisable.
+CREATE EXTENSION pg_trgm;
+CREATE INDEX directives_recipient_group_idx
+          ON directives USING gist (
+            (json_object(aggregate_identifier) ->> 'recipient_group')
+            gist_trgm_ops
+          );
+
 GRANT SELECT, UPDATE ON directives TO eventdb_send_notifications;
 
 

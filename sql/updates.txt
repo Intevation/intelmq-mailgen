@@ -1,3 +1,31 @@
+(most recent on top)
+
+== Add expression index for recipient_group to directives (2019-10)
+
+For each tag that is saved in the `aggregate_identifier` in the directives
+table, an index is needed if fast substring searches shall be done.
+Note that `intelmq-fody-backend` version>=0.6.4 offers those searches
+for the event statistics.
+
+The PostgreSQL extension `pg_trgm` is
+packaged in `postgresql-contrib-9.5` for Ubuntu 16.04 LTS.
+
+=== forward
+
+
+CREATE EXTENSION pg_trgm;
+CREATE INDEX directives_recipient_group_idx
+          ON directives USING gist (
+            (json_object(aggregate_identifier) ->> 'recipient_group')
+            gist_trgm_ops
+          );
+
+=== backward
+
+DROP INDEX directives_recipient_group_idx;
+DROP EXTENSION pg_trgm CASCADE;
+
+
 == Directive Insertion time-stamp
 
 === forward
