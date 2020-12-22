@@ -242,8 +242,16 @@ If this is the case, the running Mailgen process may still have problems
 and during the nature of log file, the messages of the Mailgen that
 tries to start up, may appear interwoven with the error conditions.
 
-#### Mailgen tries to continue
+#### Mailgen needs to lock db rows
+During a run, if mailgen is started a second time,
+it will fail to lock the necessary rows in the
+database. The `postgres.log` file will record the failed locks, e.g. like
+```
+2020-12-15 09:00:02 UTC ERROR:  could not obtain lock on row in relation "directives"
+```
+which can be ignored.
 
+#### Mailgen tries to continue
 Mailgen will try to continue processing directives and sending mails,
 even if some batch of mails could not be send for several reasons.
 
