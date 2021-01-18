@@ -3,7 +3,7 @@ IntelMQ Mailgen
 
 IntelMQ command line tool to process events.
 
-Call `intelmqcbmail --help` to see the current usage. 
+Call `intelmqcbmail --help` to see the current usage.
 
 Installation
 ============
@@ -17,7 +17,7 @@ in setup.py for its dependencies.
 If you use setuptools, it will check the hard requirements
 and install a runable script. For an installation from source:
 ```
-pip3 install -v e .
+pip3 install -v -e .
 ```
 
 **In order to use IntelMQ Mailgen, you require a working certbund-contact-expert
