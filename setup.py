@@ -1,6 +1,4 @@
-"""Setuptools setup file for intelmqmail.
-
-Initially from https://github.com/pypa/sampleproject.
+"""Setuptools setup file for intelmq-mailgen.
 """
 
 # Always prefer setuptools over distutils
@@ -43,10 +41,10 @@ setup(
         'License :: OSI Approved :: GNU Lesser General Public License v>=2.1',
 
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
 
     # What does your project relate to?
@@ -55,11 +53,15 @@ setup(
     packages=['intelmqmail'],
 
     install_requires=[
-        'pygpgme>=0.3',
         'psycopg2',
+        # we abuse python_version to decide if we want pygpgme or python3-gpg
+        # because python3-gpgme package in Debian and Ubuntu have only be
+        # available for python 3.5~.
+        'pygpgme>=0.3 ; python_version < "3.6"',
+        'gpg ; python_version >= "3.6"', # attention:cannot be installed via pip
         # Additional requirements:
-        # * GnuPG (v>=2) for pygpgme
-        # * pyxarf v>0.0.5 installed for python3
+        # * GnuPG (v>=2) for pygpgme or python3-gpg
+        # * pyxarf v>0.0.5 for python3 installed
         #    https://github.com/xarf/python-xarf
         #    (v==0.0.5 does **not** work)
         #    version 2502a80ae9178a1ba0b76106c800d0e4b779d8da shall work
