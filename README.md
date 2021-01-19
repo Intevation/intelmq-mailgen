@@ -280,15 +280,15 @@ with administration rights.
 we assume that only users with administration rights
 have access to the machine and are allowed to start the interactive variant.
  * The private key material for signing will have
-no extra protection by passphrase, thus the system itself 
+no extra protection by passphrase, thus the system itself
 needs to be secured adequately. (This can include separating
 the setup of intelmq itself on a different machine with only access
 to fill the database.)
 * We should pay attention to preventing that the complete system
-becomes an effective signature (or encryption) oracle. 
-To explain: Consider an attacker who will receive an automatic notification 
-from our system. If this attacker also can trigger a warning over 
-an used feed, she may partly control which plaintext is to be signed 
+becomes an effective signature (or encryption) oracle.
+To explain: Consider an attacker who will receive an automatic notification
+from our system. If this attacker also can trigger a warning over
+an used feed, she may partly control which plaintext is to be signed
 (or somewhere encrypted) and gets the automated result. There is a small
 potential under some circumstances that this can be used for
 an adaptive-plaintext attack.
@@ -319,7 +319,7 @@ Testing
 An easy way to test the actual sending of emails is to use Python's
 `smtpd` module running the `DebuggingServer`:
 
-    python3 -m smtpd -d -n -c DebuggingServer localhost:8025 
+    python3 -m smtpd -d -n -c DebuggingServer localhost:8025
 
 (Don't forget to configure the corresponding
 SMTP host and port in your config.)
