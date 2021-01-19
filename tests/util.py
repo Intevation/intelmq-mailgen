@@ -1,4 +1,4 @@
-"""Support test cases with pygpgme.
+"""Support test cases with GPGME.
 
 Initially imported from https://pypi.python.org/pypi/pygpgme/0.3
   sha256sum pygpgme-0.3.tar.gz
@@ -27,7 +27,7 @@ import shutil
 import tempfile
 import unittest
 
-import gpgme
+import gpg
 
 __all__ = ['GpgHomeTestCase']
 
@@ -49,10 +49,10 @@ class GpgHomeTestCase(unittest.TestCase):
         fp.close()
 
         # import requested keys into the keyring
-        ctx = gpgme.Context()
+        ctx = gpg.Context()
         for key in self.import_keys:
             with self.keyfile(key) as fp:
-                ctx.import_(fp)
+                ctx.key_import(fp)
 
     def tearDown(self):
         del os.environ['GNUPGHOME']
