@@ -54,9 +54,9 @@ setup(
 
     install_requires=[
         'psycopg2',
-        'gpg >= "1.10"; python_version >= "3.6"', # /!\ cannot be installed via pip
+        'gpg >= "1.10"; python_version >= "3.6"', # /!\ can (probably) **not** be installed via pip
         # Additional requirements:
-        # * GnuPG (v>=2) for python3-gpg
+        # * GnuPG (v>=2.2) for python3-gpg
         # * pyxarf v>0.0.5 for python3 installed
         #    https://github.com/xarf/python-xarf
         #    (v==0.0.5 does **not** work)
