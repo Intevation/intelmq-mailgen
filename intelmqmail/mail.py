@@ -1,4 +1,11 @@
-"""Email-related functions"""
+"""Email-related functions
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+
+ * SPDX-FileCopyrightText: 2016-2019,2021 BSI <https://bsi.bund.de>
+ * Software-Engineering: 2016-2019,2021 Intevation GmbH <https://intevation.de>
+Authors:
+ * 2016-2019 Bernhard Herzog <bernhard.herzog@intevation.de>
+"""
 
 import logging
 import io
@@ -8,7 +15,7 @@ from email.contentmanager import ContentManager, raw_data_manager
 from email.policy import SMTP
 from email.utils import formatdate, make_msgid, parseaddr
 
-import gpgme
+import gpg
 
 
 log = logging.getLogger(__name__)
@@ -41,10 +48,10 @@ def domain_from_sender(sender):
 # supports more algorithms than are listed here, but this should cover
 # the algorithms that are likely to be used.
 hash_algorithms = {
-    gpgme.MD_SHA1: "pgp-sha1",
-    gpgme.MD_SHA256: "pgp-sha256",
-    gpgme.MD_SHA384: "pgp-sha384",
-    gpgme.MD_SHA512: "pgp-sha512",
+    gpg._gpgme.GPGME_MD_SHA1: "pgp-sha1",
+    gpg._gpgme.GPGME_MD_SHA256: "pgp-sha256",
+    gpg._gpgme.GPGME_MD_SHA384: "pgp-sha384",
+    gpg._gpgme.GPGME_MD_SHA512: "pgp-sha512",
     }
 
 
@@ -138,17 +145,15 @@ def create_mail(sender, recipient, subject, body, attachments, gpgme_ctx):
 
 
 def clearsign(gpgme_ctx, text):
-    plaintext = io.BytesIO(text.encode())
-    signature = io.BytesIO()
-
     try:
-        gpgme_ctx.sign(plaintext, signature, gpgme.SIG_MODE_CLEAR)
+        signature, signResult = gpgme_ctx.sign(
+                plaintext.encode(),
+                mode=gpg.constants.sig.mode.CLEAR)
     except Exception:
         log.error("OpenPGP signing failed!")
         raise
 
-    signature.seek(0)
-    return signature.read().decode()
+    return signature.decode()
 
 
 def detached_signature(gpgme_ctx, plainbytes):
@@ -167,15 +172,13 @@ def detached_signature(gpgme_ctx, plainbytes):
             relevant constants in gpgme. The signature is a bytestring
             with the signature.
     """
-    signature = io.BytesIO()
-
     try:
         gpgme_ctx.armor = True
-        sigs = gpgme_ctx.sign(io.BytesIO(plainbytes), signature,
-                              gpgme.SIG_MODE_DETACH)
+        signature, signResult = gpgme_ctx.sign(
+                plainbytes,
+                mode=gpg.constants.sig.mode.DETACH)
     except Exception:
         print("OpenPGP signing for multipart/signed failed!")
         raise
 
-    signature.seek(0)
-    return (sigs[0].hash_algo, signature.read())
+    return (signResult.signatures[0].hash_algo, signature)

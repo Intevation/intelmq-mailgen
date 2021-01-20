@@ -1,13 +1,18 @@
-# -*- coding: utf-8 -*-
-"""
-Tests for intelmqmail.mail.
+""" Tests for intelmqmail.mail.
+
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-FileCopyrightText: 2018,2019,2021 BSI <https://bsi.bund.de>
+ * Software-Engineering: 2018,2019.2021 Intevation GmbH <https://intevation.de>
+
+Authors:
+ * 2016,2019 Bernhard Herzog <bernhard.herzog@intevation.de>
 """
 
 import unittest
 import re
 from datetime import datetime, timedelta, timezone
 
-import gpgme
+import gpg
 
 from intelmqmail.mail import create_mail
 
@@ -110,11 +115,13 @@ class TestCreateSignedMail(MailCreationTest, GpgHomeTestCase):
 
     def test_signed_text_mail_with_attachment(self):
         """Test one simple signed notification message with an attachment."""
-        ctx = gpgme.Context()
+        ctx = gpg.Context()
         key = ctx.get_key('5F503EFAC8C89323D54C252591B8CD7E15925678')
         ctx.signers = [key]
 
         msg = self.create_text_mail_with_attachment(ctx)
+        ## print mail
+        # print(msg)
         self.check_no_from(msg)
 
         # the mail itself is multipart/signed with the first part being

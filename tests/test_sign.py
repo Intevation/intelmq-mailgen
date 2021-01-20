@@ -44,10 +44,8 @@ class SignTestCase(GpgHomeTestCase):
         key = ctx.get_key('5F50 3EFA C8C8 9323 D54C  2525 91B8 CD7E 1592 5678')
         ctx.signers = [key]
 
-        plainText = BytesIO(email_body.encode())
-
         signedText, signResult = ctx.sign(
-            plainText, mode=gpg.constants.sig.mode.CLEAR)
+            email_body.encode(), mode=gpg.constants.sig.mode.CLEAR)
         self.assertEqual(len(signResult.signatures), 1)
 
         sig = signResult.signatures[0]
