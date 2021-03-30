@@ -1,8 +1,13 @@
 import os
 import tempfile
 import datetime
+import sys
 
-import pyxarf
+# if we have the optional module pyxarf, we can define more methods
+try:
+    import pyxarf
+except ModuleNotFoundError:
+    pass
 
 from intelmqmail.db import load_events, new_ticket_number, mark_as_sent
 from intelmqmail.templates import read_template
@@ -284,16 +289,17 @@ class ScriptContext:
                            attachments=attachments, gpgme_ctx=self.gpgme_ctx)
         return [EmailNotification(self.directive, mail, ticket)]
 
-    def mail_format_as_xarf(self, xarf_schema):
-        """
-        Create Messages in X-Arf Format
+    if "pyxarf" in sys.modules:
+      def mail_format_as_xarf(self, xarf_schema):
+        """Create Messages in X-Arf Format
+
         Args:
             xarf_schema: an XarfSchema object, like in 20xarf.py
 
+        Only defined, if the optional module pyxarf is available.
+
         Returns:
-
         """
-
         # Load the events and their required columns.
         # xarf_schema.event_columns() returns a dict/set/list of column-names
         events = self.load_events(xarf_schema.event_columns())
@@ -348,11 +354,14 @@ class ScriptContext:
 
         return returnlist_notifications
 
-    def create_xarf_mail(self, subject, body, xarf_object):
+    if "pyxarf" in sys.modules:
+      def create_xarf_mail(self, subject, body, xarf_object):
         """
 
         Args:
             xarf_object:
+
+        Only defined, if the optional module pyxarf is available.
 
         Returns:
 

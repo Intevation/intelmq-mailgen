@@ -8,8 +8,8 @@ Standards-Version: 3.9.5.0
 Package: intelmq-mailgen
 Architecture: all
 Depends: ${misc:Depends}, postgresql, python3-psycopg2, python3 (>=3.6),
- python3-pyxarf (>= 0.0.5), gnupg (>2.2), python3-gpg
-Recommends: pinentry-curses
+ gnupg (>2.2), python3-gpg
+Recommends: pinentry-curses, python3-pyxarf (>= 0.0.5)
 Breaks: intelmq (<< 1.0.0~dev6+intevation.1.2~rc1)
 Description: Generate and send emails using data from the IntelMQ ContactDB.
  .

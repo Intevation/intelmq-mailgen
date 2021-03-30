@@ -5,4 +5,5 @@ As this component is to be used and released together with others, see
 
  * Changed dependency to use the official Python GnuPG bindings
    and drop support for old pygpgme bindings.
- * Dropped support for Python v<=3.5.*
+ * Dropped support for Python `v<=3.5.*`
+ * Make depending on `pyxarf` module optional.

@@ -57,7 +57,7 @@ setup(
         'gpg >= "1.10"; python_version >= "3.6"', # /!\ can (probably) **not** be installed via pip
         # Additional requirements:
         # * GnuPG (v>=2.2) for python3-gpg
-        # * pyxarf v>0.0.5 for python3 installed
+        # * (optional) pyxarf v>0.0.5 for python3 installed
         #    https://github.com/xarf/python-xarf
         #    (v==0.0.5 does **not** work)
         #    version 2502a80ae9178a1ba0b76106c800d0e4b779d8da shall work
