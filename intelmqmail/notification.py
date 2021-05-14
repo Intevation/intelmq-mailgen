@@ -1,3 +1,26 @@
+""" Notification related functionality.
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+SPDX-FileCopyrightText: Copyright (C) 2016, 2021 by Bundesamt für Sicherheit in der Informationstechnik
+Software engineering by Intevation GmbH
+
+This program is Free Software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Authors:
+    * Bernhard Herzog <bernhard.herzog@intevation.de>
+    * Dustin Demuth
+""" # noqa
 import os
 import tempfile
 import datetime
@@ -16,12 +39,10 @@ from intelmqmail.mail import create_mail, clearsign, domain_from_sender
 
 
 class NotificationError(Exception):
-
     """Base class for notification related exceptions"""
 
 
 class InvalidDirective(NotificationError):
-
     """Indicates an invalid notification directive.
 
     Scripts should raise this exception while processing a directive if
@@ -33,7 +54,6 @@ class InvalidDirective(NotificationError):
 
 
 class InvalidTemplate(InvalidDirective):
-
     """Indicates a problem with a template needed for a directive.
     """
 
@@ -43,7 +63,6 @@ class InvalidTemplate(InvalidDirective):
 
 
 class Directive:
-
     """The directives for which notifications have to be created.
 
     This is the mailgen counterpart to the Directive class in the rule
@@ -115,7 +134,6 @@ class Directive:
         return self.aggregate_identifier.get(key)
 
 
-
 def parse_timestamp(raw):
     """Parse a timestamp that was stored in an IntelMQ-event as a string.
     This applies to e.g. time.observation. In particular, if such values
@@ -134,7 +152,6 @@ def parse_timestamp(raw):
 
 
 class ScriptContext:
-
     """Provide the context in which scripts are run.
 
     The ScriptContext objects provide access to the details of the
@@ -191,7 +208,8 @@ class ScriptContext:
         If time.observation cannot be determined this method returns a
         None.
         """
-        time_observation = self.directive.get_aggregation_item("time.observation")
+        time_observation = self.directive.get_aggregation_item(
+                "time.observation")
         if time_observation is not None:
             return self.now - parse_timestamp(time_observation)
 
@@ -268,8 +286,8 @@ class ScriptContext:
             substitutions = substitutions.copy()
 
         substitutions["ticket_number"] = ticket
-        substitutions["events_as_csv"] = (events_as_csv if not attach_event_data
-                                          else "")
+        substitutions["events_as_csv"] = (
+            events_as_csv if not attach_event_data else "")
 
         # Add the information on which the aggregation was based. These are
         # the same in all directives and events that led to this
@@ -290,7 +308,7 @@ class ScriptContext:
         return [EmailNotification(self.directive, mail, ticket)]
 
     if "pyxarf" in sys.modules:
-      def mail_format_as_xarf(self, xarf_schema):
+      def mail_format_as_xarf(self, xarf_schema): # noqa
         """Create Messages in X-Arf Format
 
         Args:
@@ -334,7 +352,7 @@ class ScriptContext:
                 'schema_cache': schema_cache,
                 'reported_from': sender,
                 'report_id': report_id,
-                # 'useragent': "IntelMQ-Mailgen,  # Useragent is set by pyxarf __useragent__
+                # 'useragent': "IntelMQ-Mailgen,  # Useragent is set by pyxarf __useragent__  # noqa
                 }
             # now, as we know the events data and the intelmq-fields and
             # the mapping of these fields to the X-ARF Schema, pass the
@@ -355,7 +373,7 @@ class ScriptContext:
         return returnlist_notifications
 
     if "pyxarf" in sys.modules:
-      def create_xarf_mail(self, subject, body, xarf_object):
+      def create_xarf_mail(self, subject, body, xarf_object): # noqa
         """
 
         Args:
@@ -417,9 +435,7 @@ class EmailNotification(Notification):
                                   self.email["Date"].datetime)
 
 
-
 class _Postponed:
-
     """Represents a script result for postponed directives.
 
     There's one predefined instance, Postponed, which should be used as
@@ -444,5 +460,6 @@ class _Postponed:
 
     def __iter__(self):
         return iter([])
+
 
 Postponed = _Postponed()

@@ -266,7 +266,7 @@ def mailgen(args, config, scripts):
         cur.execute("SET TIME ZONE 'UTC';")
         log.debug("Fetching pending directives")
         directives = get_pending_notifications(cur)
-        if directives == None:
+        if directives is None:
             # This case has been logged by get_pending_notifications.
             return
         if len(directives) == 0:
@@ -322,7 +322,6 @@ def main():
         exit(1)
     # setting up gnupg
     os.environ['GNUPGHOME'] = config["openpgp"]["gnupg_home"]
-
 
     scripts = load_script_entry_points(config)
     if not scripts:
