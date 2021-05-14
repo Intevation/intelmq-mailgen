@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Command line tool to send notfications for intelmq events.
 
-
-Copyright (C) 2016 by Bundesamt für Sicherheit in der Informationstechnik
+Copyright (C) 2016, 2021 by Bundesamt für Sicherheit in der Informationstechnik
 Software engineering by Intevation GmbH
 
 This program is Free Software: you can redistribute it and/or modify
@@ -40,7 +38,7 @@ import locale
 import logging
 import os
 
-import gpgme  # developed for pygpgme 0.3
+import gpg
 from psycopg2.extras import RealDictConnection
 
 
@@ -156,7 +154,7 @@ def send_notifications(config, directives, cur, scripts):
     gpgme_ctx = None
 
     if config["openpgp"]["always_sign"]:
-        gpgme_ctx = gpgme.Context()
+        gpgme_ctx = gpg.Context()
         signing_key = gpgme_ctx.get_key(config["openpgp"]["signing_key"])
         gpgme_ctx.signers = [signing_key]
 
