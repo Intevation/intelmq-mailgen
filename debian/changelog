@@ -1,3 +1,12 @@
+intelmq-mailgen (1.3.0) unstable; urgency=medium
+
+  * Changed dependency to use the official Python GnuPG bindings
+   and drop support for old pygpgme bindings.
+  * Dropped support for Python `v<=3.5.*`
+  * Make depending on `pyxarf` module optional.
+
+ -- Sascha Wilde <wilde@intevation.de>  Mon, 24 May 2021 19:16:13 +0200
+
 intelmq-mailgen (1.02) unstable; urgency=medium
 
   * Improve performance:
