@@ -325,12 +325,11 @@ An easy way to test the actual sending of emails is to use Python's
 SMTP host and port in your config.)
 
 If you want to capture emails in Maildir format you can use
+https://pypi.org/project/dsmtpd/, e.g.
 ```sh
-git clone https://github.com/bernhardreiter/dsmtpd.git
+git clone git://github.com/matrixise/dsmtpd.git
 cd dsmtpd
-# now you need to have python3-docopt installed
-# or drop docopt.py in from https://github.com/docopt/docopt
-python3 -c 'from dsmtpd._dsmtpd import *; main()' -i localhost -p 8025 -d /path/to/Maildir
+python3 -m dsmtpd -i localhost -p 8025 -d /path/to/Maildir
 ```
 
 `/path/to/Maildir` has to be either an existing
