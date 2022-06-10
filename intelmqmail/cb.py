@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Command line tool to send notfications for intelmq events.
 
 Copyright (C) 2016, 2021 by Bundesamt für Sicherheit in der Informationstechnik
