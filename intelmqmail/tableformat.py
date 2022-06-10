@@ -61,7 +61,6 @@ class TableFormat:
                     for col in self.columns)
 
 
-
 class Column:
 
     """Specifies a single column for a TableFormat.
@@ -137,9 +136,9 @@ class ExtraColumn(Column):
         return value.get(self.extra_key)
 
 
-
 # convenience functions for building the format datastructures in a more
 # declarative way.
+
 
 def build_table_formats(formats):
     """Return a dictionary mapping format names to format specifications.
@@ -152,6 +151,7 @@ def build_table_formats(formats):
     return dict((name, build_table_format(name, columns))
                 for name, columns in formats)
 
+
 def build_table_format(name, columns):
     """Build a TableFormat instance for name.
     The columns parameter should be a list of column specifications
@@ -160,6 +160,7 @@ def build_table_format(name, columns):
     """
     return TableFormat(name, [build_table_column(col)
                               for col in columns])
+
 
 def build_table_column(col):
     """Return a Column instance built from a column specification. A
@@ -182,7 +183,6 @@ def build_table_column(col):
             return IntelMQColumn(column_title, intelmq_field)
     else:
         return col
-
 
 
 def format_as_csv(table_format, events):

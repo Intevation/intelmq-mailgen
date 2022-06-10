@@ -8,8 +8,6 @@ Authors:
 """
 
 import logging
-import io
-import re
 from email.message import EmailMessage
 from email.contentmanager import ContentManager, raw_data_manager
 from email.policy import SMTP
@@ -147,8 +145,8 @@ def create_mail(sender, recipient, subject, body, attachments, gpgme_ctx):
 def clearsign(gpgme_ctx, text):
     try:
         signature, signResult = gpgme_ctx.sign(
-                text.encode(),
-                mode=gpg.constants.sig.mode.CLEAR)
+            text.encode(),
+            mode=gpg.constants.sig.mode.CLEAR)
     except Exception:
         log.error("OpenPGP signing failed!")
         raise
@@ -175,8 +173,8 @@ def detached_signature(gpgme_ctx, plainbytes):
     try:
         gpgme_ctx.armor = True
         signature, signResult = gpgme_ctx.sign(
-                plainbytes,
-                mode=gpg.constants.sig.mode.DETACH)
+            plainbytes,
+            mode=gpg.constants.sig.mode.DETACH)
     except Exception:
         print("OpenPGP signing for multipart/signed failed!")
         raise

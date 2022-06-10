@@ -1,7 +1,6 @@
 """Access to the event/notification database."""
 
 import string
-import json
 import logging
 
 import psycopg2
@@ -58,6 +57,7 @@ PENDING_DIRECTIVES_QUERY = """\
  GROUP BY d.recipient_address, d.template_name, d.notification_format,
           d.event_data_format, d.aggregate_identifier;
 """
+
 
 def get_pending_notifications(cur):
     """Retrieve all pending directives from the database.
@@ -139,14 +139,14 @@ def new_ticket_number(cur):
     if date_str != result[0]["init_date"]:
         if date_str < result[0]["init_date"]:
             raise RuntimeError(
-                    "initialized_for_day='{}' is in the future from now(). "
-                    "Stopping to avoid reusing "
-                    "ticket numbers".format(result[0]["init_date"]))
+                "initialized_for_day='{}' is in the future from now(). "
+                "Stopping to avoid reusing "
+                "ticket numbers".format(result[0]["init_date"]))
 
         log.debug("We have a new day, resetting the ticket generator.")
         cur.execute("ALTER SEQUENCE intelmq_ticket_seq RESTART;")
         cur.execute("UPDATE ticket_day SET initialized_for_day=%s;",
-                    (date_str,));
+                    (date_str,))
 
         cur.execute(sqlQuery)
         result = cur.fetchall()
@@ -156,6 +156,7 @@ def new_ticket_number(cur):
     log.debug('New ticket number "{}".'.format(ticket,))
 
     return ticket
+
 
 def _format_ticket(date_str, sequence_number: int) -> str:
     # num_str from integer: fill with 0s and cut out 8 chars from the right

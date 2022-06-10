@@ -184,8 +184,8 @@ class ScriptContext:
         """
         last_sent = self.directive.last_sent
         notification_interval = self.directive.notification_interval
-        return (last_sent is None
-                or (last_sent + notification_interval < self.now))
+        return (last_sent is None or
+                (last_sent + notification_interval < self.now))
 
     def age_of_newest_directive(self):
         """Return the age of the newest directive in the group.
@@ -209,7 +209,7 @@ class ScriptContext:
         None.
         """
         time_observation = self.directive.get_aggregation_item(
-                "time.observation")
+            "time.observation")
         if time_observation is not None:
             return self.now - parse_timestamp(time_observation)
 
