@@ -147,7 +147,7 @@ def create_mail(sender, recipient, subject, body, attachments, gpgme_ctx):
 def clearsign(gpgme_ctx, text):
     try:
         signature, signResult = gpgme_ctx.sign(
-                plaintext.encode(),
+                text.encode(),
                 mode=gpg.constants.sig.mode.CLEAR)
     except Exception:
         log.error("OpenPGP signing failed!")
