@@ -24,13 +24,12 @@ Authors:
 import os
 import tempfile
 import datetime
-import sys
 
 # if we have the optional module pyxarf, we can define more methods
 try:
     import pyxarf
 except ModuleNotFoundError:
-    pass
+    pyxarf = None
 
 from intelmqmail.db import load_events, new_ticket_number, mark_as_sent
 from intelmqmail.templates import read_template
@@ -307,7 +306,7 @@ class ScriptContext:
                            attachments=attachments, gpgme_ctx=self.gpgme_ctx)
         return [EmailNotification(self.directive, mail, ticket)]
 
-    if "pyxarf" in sys.modules:
+    if pyxarf:
       def mail_format_as_xarf(self, xarf_schema): # noqa
         """Create Messages in X-Arf Format
 
@@ -372,7 +371,7 @@ class ScriptContext:
 
         return returnlist_notifications
 
-    if "pyxarf" in sys.modules:
+    if pyxarf:
       def create_xarf_mail(self, subject, body, xarf_object): # noqa
         """
 
