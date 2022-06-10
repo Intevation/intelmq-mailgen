@@ -1,4 +1,4 @@
-"""Command line tool to send notfications for intelmq events.
+"""Command line tool to send notifications for intelmq events.
 
 Copyright (C) 2016, 2021 by Bundesamt für Sicherheit in der Informationstechnik
 Software engineering by Intevation GmbH
@@ -172,7 +172,7 @@ def send_notifications(config, directives, cur, scripts):
         #
         # Among the changes we want to commit are the information
         # about the sent notifications and the ticket numbers,
-        # including the daily reset of the ticket numebrs. Not
+        # including the daily reset of the ticket numbers. Not
         # committing this could lead to notifications being sent
         # twice and the same ticket numbers being reused for
         # different notifications.

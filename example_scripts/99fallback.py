@@ -37,7 +37,7 @@ def create_notifications(context):
     if not context.notification_interval_exceeded():
         return Postponed
 
-    # If there are some additional substitions to be performed in the
+    # If there are some additional substitutions to be performed in the
     # above template, add them to the substitutions dictionary. By
     # passing it to the mail_format_as_csv method below they will be
     # substituted into the template when the mail is created.

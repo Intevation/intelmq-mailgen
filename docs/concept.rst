@@ -228,7 +228,7 @@ When mailgen processes a group of directives, it calls the
 ``create_notifications`` function of each of the scripts in turn in
 alphabetical order of the script name (hence the two leading digits that
 provide a simple way to order the scripts). Mailgen stops once one of
-the functins returns something other than None. If the return value is a
+the functions returns something other than None. If the return value is a
 list of ``EmailNotification`` objects, mailgen sends those mails as
 described in :ref:`mailgen_sending_mails`.
 
@@ -279,7 +279,7 @@ Rule-Expert Bot
 ---------------
 
 This expert bot makes the decisions about the notifications. It takes an
-event with contact informaion added by the contact db bot and generates
+event with contact information added by the contact db bot and generates
 directives based on that contact information and the event data.
 
 In order to be flexible this bot uses python scripts in very much the

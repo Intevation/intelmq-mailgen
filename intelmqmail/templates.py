@@ -60,7 +60,7 @@ def read_template(template_dir, template_name):
 
         The resulting string is used as template string in a Python
         Template object, thus allowing some simple substitutions. See
-        the different formatter implementations for the substitions they
+        the different formatter implementations for the substitutions they
         support.
 
     The return value is an instance of the Template class.
@@ -112,7 +112,7 @@ class Template:
         The substitutions parameter should be a dictionary mapping the
         keys that might be in the template to the respective values.
         This is done by passing the dictionary to the subject/body's
-        subtitute method.
+        substitute method.
 
         The return value is a pair (subject, body) with the filled in
         subject and body.

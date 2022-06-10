@@ -88,7 +88,7 @@ class XarfSchema:
         Generates a dictionary of key-value pairs, where key is the name
         of the X-ARF field, and value is the data of the IntelMQ-Event.
         The function formats the data to the correct format, by using
-        the formatting funtions which have been provided within the
+        the formatting functions which have been provided within the
         schema-definitions below.
 
         Args:

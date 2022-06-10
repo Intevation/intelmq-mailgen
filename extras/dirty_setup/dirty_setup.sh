@@ -11,7 +11,7 @@
 # packages of intelmq-mailgen, intelmq-manager installed with
 #  bash -x
 #
-# To use another than the build-in configuration for intelmq
+# To use another than the built-in configuration for intelmq
 # place the common configuration files for /opt/intelmq/etc
 # in a directory named "ds-templates" in your CWD.
 #

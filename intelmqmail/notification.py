@@ -175,7 +175,7 @@ class ScriptContext:
 
     def notification_interval_exceeded(self):
         """Return whether the notification interval has been exceeded.
-        This method looks at the directive atttributes last_sent and
+        This method looks at the directive attributes last_sent and
         notification_interval and returns whether more time than the
         notification_interval has passed since the last_sent time. A
         last_sent time of None, indicating that no similar notification
@@ -249,7 +249,7 @@ class ScriptContext:
         criteria, these are also available. Which these are precisely
         depends on the directives, but a common case is to aggregate
         notifications for events that share some information, so if the
-        directives specify aggregation by source.asn, this substition is
+        directives specify aggregation by source.asn, this substitution is
         also available.
 
         Args:

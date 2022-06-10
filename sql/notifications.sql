@@ -103,7 +103,7 @@ GRANT SELECT, UPDATE ON directives TO eventdb_send_notifications;
 --     GROUP BY the aggregate_identifier column
 --
 --  2. The value must be chosen to preserve the equivalence relation on
---     the abstact aggregate identifier, meaning
+--     the abstract aggregate identifier, meaning
 --
 --      (a) Equal aggregate identifiers have to be mapped to the equal
 --          values

@@ -143,7 +143,7 @@ def new_ticket_number(cur):
                     "Stopping to avoid reusing "
                     "ticket numbers".format(result[0]["init_date"]))
 
-        log.debug("We have a new day, reseting the ticket generator.")
+        log.debug("We have a new day, resetting the ticket generator.")
         cur.execute("ALTER SEQUENCE intelmq_ticket_seq RESTART;")
         cur.execute("UPDATE ticket_day SET initialized_for_day=%s;",
                     (date_str,));

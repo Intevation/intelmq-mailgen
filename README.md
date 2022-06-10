@@ -202,7 +202,7 @@ Typically supported substitutions:
 
      - `${ticket_number}`
 
-  - Addtional substitutions for CSV-based formats:
+  - Additional substitutions for CSV-based formats:
 
      - `${events_as_csv}` for the CSV-formatted event data. This is only
         useful in the body.
@@ -263,7 +263,7 @@ rows in the `directives` table and `event_ids` a list with ids for
 events in the `events` table.
 
 This information can be used by an administrator to see which events and emails
-may not have gone out in detail, to deal with them later, possibily with
+may not have gone out in detail, to deal with them later, possibly with
 a small script depending on the problem cause.
 
 
