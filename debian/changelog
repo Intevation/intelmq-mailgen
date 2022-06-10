@@ -1,3 +1,9 @@
+intelmq-mailgen (1.3.0-1) UNRELEASED; urgency=medium
+
+  * Add revision.
+
+ -- Sebastian Wagner <sebix@sebix.at>  Fri, 10 Jun 2022 17:36:29 +0200
+
 intelmq-mailgen (1.3.0) unstable; urgency=medium
 
   * Changed dependency to use the official Python GnuPG bindings
