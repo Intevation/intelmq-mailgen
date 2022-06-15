@@ -11,11 +11,19 @@ Installation
 Dependencies
 ------------
 
+These libraries and programs are required:
+- The python library `psycopg2` (`python3-psycopg2`) for PostgreSQL communication.
+- The python library `gpg` (`python3-gpg`), part of the library gpgme.
+  Due to issues with Ubuntu 20.04, this dependency is not installed when installed with `pip` or `setup.py`
+  Other means of distributions (deb packages) are not affected by this bug.
+- GnuPG (v>=2.2) for `python3-gpg`.
+
 As a Python3 application, see the `install_requires` section
 in setup.py for its dependencies.
 
-If you use setuptools, it will check the hard requirements
-and install a runable script. For an installation from source:
+If you install the deb-packages, the package management handles all dependencies.
+
+For an installation from source use this command:
 ```
 pip3 install -v -e .
 ```

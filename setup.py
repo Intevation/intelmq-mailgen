@@ -48,9 +48,13 @@ setup(
 
     install_requires=[
         'psycopg2',
-        'gpg >= 1.10',  # /!\ can (probably) **not** be installed via pip
-        # Additional requirements:
-        # * GnuPG (v>=2.2) for python3-gpg
+        # Ubuntu 20.04 focal's python3-gpg does not correctly provide the python-package's metadata.
+        # Requiring gpg here would result in
+        # > pkg_resources.DistributionNotFound: The 'gpg>=1.10' distribution was not found and is required by intelmqmail
+        # https://bugs.launchpad.net/ubuntu/+source/gpgme1.0/+bug/1977645
+        # The dependency can be reactivated when the bug is fixed upstream
+        # 'gpg >= 1.10',  # /!\ can (probably) **not** be installed via pip
+
         # * (optional) pyxarf v>0.0.5 for python3 installed
         #    https://github.com/xarf/python-xarf
         #    (v==0.0.5 does **not** work)
