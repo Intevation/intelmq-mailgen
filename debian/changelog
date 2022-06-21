@@ -1,3 +1,10 @@
+intelmq-mailgen (1.3.0-3) UNRELEASED; urgency=medium
+
+  * Remove postgresql dependency. mailgen only needs the client on the same
+    machine, not the server.
+
+ -- Sebastian Wagner <swagner@intevation.de>  Tue, 21 Jun 2022 18:21:11 +0200
+
 intelmq-mailgen (1.3.0-2) stable; urgency=medium
 
   * Remove python package's dependency on 'gpg'.
