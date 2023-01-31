@@ -1,9 +1,12 @@
-intelmq-mailgen (1.3.0-3) UNRELEASED; urgency=medium
+intelmq-mailgen (1.3.0-3) stable; urgency=medium
 
   * Remove postgresql dependency. mailgen only needs the client on the same
     machine, not the server.
+  * remove recommended python3-pyxarf, is unavailable
+    fixes #45
+  * Add pkg-resources as runtime dependency
 
- -- Sebastian Wagner <swagner@intevation.de>  Tue, 21 Jun 2022 18:21:11 +0200
+ -- Sebastian Wagner <swagner@intevation.de>  Tue, 31 Jan 2023 09:51:07 +0100
 
 intelmq-mailgen (1.3.0-2) stable; urgency=medium
 
