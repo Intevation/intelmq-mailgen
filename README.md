@@ -129,13 +129,16 @@ Configuration
 
 `intelmq-mailgen` currently searches for configuration files in two places:
 
- 1. `$HOME/.intelmq/intelmq-mailgen.conf` and
- 2. `/etc/intelmq/intelmq-mailgen.conf`.
+ 1. `$HOME/.intelmq/intelmq-mailgen.conf` (user configuration file) and
+ 2. `/etc/intelmq/intelmq-mailgen.conf` (system configuration file).
 
 Settings are read from both files with the one in the user's home directory
 taking precedence.
 
-Both files must be in JSON format.  A complete example can be found in
+The sytem configuration file path can be overridden with the `--config`
+command line parameter.
+
+Both files must be in JSON format. A complete example can be found in
 `intelmq-mailgen.conf.example`.
 
 OpenPGP Signatures

@@ -46,6 +46,8 @@ from intelmqmail.script import load_scripts
 from intelmqmail.notification import Directive, SendContext, ScriptContext, \
     Postponed
 
+from typing import Optional
+
 
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
@@ -67,6 +69,12 @@ the batch or sending all pending notifications.
 """
 
 EPILOG = """
+The configuration is read from
+~/.intelmq/intelmq-mailgen.conf (user configuration file) and
+/etc/intelmq/intelmq-mailgen.conf (system configuration file)
+If --config is given, the parameter file is used instead of the
+system configuration file. The user configuration file is always active.
+
 Documentation:
 https://github.com/Intevation/intelmq-mailgen#readme
 https://github.com/Intevation/intelmq-mailgen/blob/master/docs/concept.rst
@@ -79,20 +87,26 @@ USAGE = """
 """.format(appname=APPNAME)
 
 
-def read_configuration():
+def read_configuration(conf_file_path: Optional[str] = None):
     """Read configuration from user and system settings.
     The return value is a dictionary containing the merged settings read
     from the configuration files.
+
+    Parameters:
+        conf_file_path: The path to the system configuration file.
+            The user configuration file is always used additionally.
+            default: /etc/intelmq/intelmq-mailgen.conf
     """
     # Construct a single configuration dictionary with the contents of
     # the different conf files
     home = os.path.expanduser("~")  # needed for OSX
     user_conf_file = os.path.expanduser(home +
                                         '/.intelmq/intelmq-mailgen.conf')
-    sys_conf_file = os.path.expanduser('/etc/intelmq/intelmq-mailgen.conf')
+    if conf_file_path is None:
+        conf_file_path = '/etc/intelmq/intelmq-mailgen.conf'
+    sys_conf_file = os.path.expanduser(conf_file_path)
     if os.path.isfile(user_conf_file):
-        with open(user_conf_file) \
-             as conf_handle:
+        with open(user_conf_file) as conf_handle:
             user_config = json.load(conf_handle)
     else:
         user_config = dict()
@@ -312,9 +326,11 @@ def main():
         )
     parser.add_argument('-a', '--all', action='store_true',
                         help='Process all events (batch mode) non-interactively')
+    parser.add_argument('-c', '--config',
+                        help='Alternative system configuration file')
     args = parser.parse_args()
 
-    config = read_configuration()
+    config = read_configuration(conf_file_path=args.config)
 
     # Set the logLevel for all submodules
     module_logger = logging.getLogger(__name__.rsplit(sep=".", maxsplit=1)[0])
