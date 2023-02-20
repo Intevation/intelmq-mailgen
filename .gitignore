@@ -12,3 +12,6 @@ intelmqmail.egg-info/
 debian/files
 debian/intelmq-mailgen.substvars
 debian/intelmq-mailgen/
+
+# docs
+docs/_build/
