@@ -59,15 +59,23 @@ if locale.getpreferredencoding() != 'UTF-8':
 
 APPNAME = "intelmqcbmail"
 DESCRIPTION = """
+Searches for all unprocessed e-mail notifications and sends them.
+
+Without --all, the program enters an interactive mode,
+showing batches of 10 notifications and options to skip, sending
+the batch or sending all pending notifications.
 """
 
 EPILOG = """
-Searches for all unprocessed notifications and sends them.
+Documentation:
+https://github.com/Intevation/intelmq-mailgen#readme
+https://github.com/Intevation/intelmq-mailgen/blob/master/docs/concept.rst
 """
 
 USAGE = """
     {appname}
     {appname} --all
+
 """.format(appname=APPNAME)
 
 
@@ -229,7 +237,7 @@ def generate_notifications_interactively(config, cur, directives, scripts):
                           len(i["event_ids"])))
         valid_answers = ("c", "s", "a", "q")
         while True:
-            answer = input("Options: [c]ontinue, "
+            answer = input("Options: [c]ontinue (skip), "
                            "[s]end this batch, "
                            "send [a]ll, "
                            "[q]uit? ").strip()
@@ -303,7 +311,7 @@ def main():
         epilog=EPILOG,
         )
     parser.add_argument('-a', '--all', action='store_true',
-                        help='Process all events (batch mode)')
+                        help='Process all events (batch mode) non-interactively')
     args = parser.parse_args()
 
     config = read_configuration()
