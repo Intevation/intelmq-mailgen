@@ -287,7 +287,8 @@ def mailgen(args, config, scripts):
         cur = conn.cursor()
         cur.execute("SET TIME ZONE 'UTC';")
         log.debug("Fetching pending directives")
-        directives = get_pending_notifications(cur)
+        directives = get_pending_notifications(cur,
+                                               additional_directive_where=config['database'].get('additional_directive_where'))
         if directives is None:
             # This case has been logged by get_pending_notifications.
             return

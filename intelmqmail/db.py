@@ -6,6 +6,8 @@ import logging
 import psycopg2
 import psycopg2.errorcodes
 
+from typing import Optional
+
 
 log = logging.getLogger(__name__)
 
@@ -53,13 +55,14 @@ PENDING_DIRECTIVES_QUERY = """\
             WHERE sent_id IS NULL
               AND medium = 'email'
               AND endpoint = 'source'
+              {additional_directive_where}
             FOR UPDATE NOWAIT) AS d
  GROUP BY d.recipient_address, d.template_name, d.notification_format,
           d.event_data_format, d.aggregate_identifier;
 """
 
 
-def get_pending_notifications(cur):
+def get_pending_notifications(cur, additional_directive_where: Optional[str] = None):
     """Retrieve all pending directives from the database.
     Directives are pending if the notification they describe hasn't been
     sent yet and the last time a similar notification has been sent was
@@ -70,7 +73,11 @@ def get_pending_notifications(cur):
     :rtype: list
     """
     try:
-        cur.execute(PENDING_DIRECTIVES_QUERY)
+        if additional_directive_where:
+            additional_directive_where = f"AND {additional_directive_where}"
+        else:
+            additional_directive_where = ""
+        cur.execute(PENDING_DIRECTIVES_QUERY.format(additional_directive_where=additional_directive_where))
     except psycopg2.OperationalError as e:
         if e.pgcode == psycopg2.errorcodes.LOCK_NOT_AVAILABLE:
             log.info("Could not get db lock for pending notifications. "

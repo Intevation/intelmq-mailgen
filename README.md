@@ -225,6 +225,30 @@ Typically supported substitutions:
     Like the template name, aggregation is determined by the rules bot,
     so see there for details.
 
+Database
+--------
+
+The database section in the configuration may look like:
+
+```
+    "database": {
+        "event": {
+            "name": "intelmq-events",
+            "username": "intelmq_mailgen",
+            "password": "your DB password",
+            "host": "localhost",
+            "port": 5432
+        },
+        "additional_directive_where": ""
+    },
+```
+
+
+
+`additional_directive_where` parameter is optional and can contain SQL code
+appended to the `WHERE` clause of the `SELECT` operation on the table
+`directives`. The `AND` is appended automatically.
+
 
 Operation manual
 ================
