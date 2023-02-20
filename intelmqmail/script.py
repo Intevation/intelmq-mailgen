@@ -39,6 +39,7 @@ def load_scripts(script_directory, entry_point, logger=None):
     for filename in sorted(glob.glob(glob_pattern)):
         try:
             with open(filename, "r") as scriptfile:
+                logger.debug("Loading script %r.", filename)
                 my_globals = {}
                 exec(compile(scriptfile.read(), filename, "exec"),
                      my_globals)

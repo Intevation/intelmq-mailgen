@@ -130,7 +130,8 @@ def read_configuration(conf_file_path: Optional[str] = None):
 
 
 def load_script_entry_points(config):
-    return load_scripts(config["script_directory"], "create_notifications")
+    return load_scripts(config["script_directory"], "create_notifications",
+                        logger=log)
 
 
 def create_notifications(cur, directive, config, scripts, gpgme_ctx):
@@ -328,6 +329,8 @@ def main():
                         help='Process all events (batch mode) non-interactively')
     parser.add_argument('-c', '--config',
                         help='Alternative system configuration file')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Activate verbose debug logging')
     args = parser.parse_args()
 
     config = read_configuration(conf_file_path=args.config)
@@ -336,6 +339,8 @@ def main():
     module_logger = logging.getLogger(__name__.rsplit(sep=".", maxsplit=1)[0])
     # using INFO as default, otherwise it's WARNING
     module_logger.setLevel(config.get("logging_level", "INFO"))
+    if args.verbose:
+        log.setLevel(logging.DEBUG)
 
     # checking openpgp config
     if "openpgp" not in config or {
