@@ -17,8 +17,8 @@
     "script_directory": "/etc/intelmq/mailgen/formats",
     "sender": "noreply@example.com",
     "smtp": {
-    "host": "localhost",
-    "port": 25
+        "host": "localhost",
+        "port": 25
     },
     "logging_level": "INFO"
 }
