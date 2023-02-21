@@ -48,10 +48,11 @@ PENDING_DIRECTIVES_QUERY = """\
               AND d2.aggregate_identifier = d.aggregate_identifier
          ORDER BY d2.inserted_at DESC
             LIMIT 1) AS last_sent
-     FROM (SELECT id, events_id, recipient_address, template_name,
+     FROM (SELECT d3.id, events_id, recipient_address, template_name,
                   notification_format, event_data_format, notification_interval,
                   aggregate_identifier, inserted_at
-             FROM directives
+             FROM directives AS d3
+             {additional_directive_join}
             WHERE sent_id IS NULL
               AND medium = 'email'
               AND endpoint = 'source'
@@ -73,11 +74,15 @@ def get_pending_notifications(cur, additional_directive_where: Optional[str] = N
     :rtype: list
     """
     try:
+        additional_directive_join = ""
         if additional_directive_where:
+            if 'events.' in additional_directive_where:
+                additional_directive_join = "JOIN events ON d3.events_id = events.id"
             additional_directive_where = f"AND {additional_directive_where}"
         else:
             additional_directive_where = ""
-        cur.execute(PENDING_DIRECTIVES_QUERY.format(additional_directive_where=additional_directive_where))
+        cur.execute(PENDING_DIRECTIVES_QUERY.format(additional_directive_where=additional_directive_where,
+                                                    additional_directive_join=additional_directive_join))
     except psycopg2.OperationalError as e:
         if e.pgcode == psycopg2.errorcodes.LOCK_NOT_AVAILABLE:
             log.info("Could not get db lock for pending notifications. "

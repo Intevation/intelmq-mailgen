@@ -248,7 +248,21 @@ The database section in the configuration may look like:
 `additional_directive_where` parameter is optional and can contain SQL code
 appended to the `WHERE` clause of the `SELECT` operation on the table
 `directives`. The `AND` is appended automatically.
-
+The columns of table `directives` are available as `d3` and the columns of
+table `events` as `events`. Normally the table `events` is not queried and
+only joined for the where statement if `additional_directive_where` contains
+`events.`.
+Examples:
+```json
+        "additional_directive_where": "\"template_name\" = 'qakbot_provider'"
+        "additional_directive_where": "events.\"feed.code\" = 'oneshot'"
+```
+Mind the correct quoting.
+If access to the table events is required, the used postgres user needs
+`UPDATE` permissions access to the table. This is by default not the case
+for mailgen-installations!
+This imperfection is a result of the update-locking on the table `directives`
+and the join of `events` in the same sub-statement.
 
 Operation manual
 ================
