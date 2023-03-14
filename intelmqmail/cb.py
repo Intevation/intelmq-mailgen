@@ -36,6 +36,7 @@ import json
 import locale
 import logging
 import os
+import sys
 
 import gpg
 from psycopg2.extras import RealDictConnection
@@ -57,7 +58,7 @@ if locale.getpreferredencoding() != 'UTF-8':
     log.critical(
         'The preferred encoding of your locale setting is not UTF-8'
         ' but "{}". Exiting.'.format(locale.getpreferredencoding()))
-    exit(1)
+    sys.exit(1)
 
 APPNAME = "intelmqcbmail"
 DESCRIPTION = """
