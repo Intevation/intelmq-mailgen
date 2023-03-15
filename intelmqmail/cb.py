@@ -349,7 +349,7 @@ def main():
             "always_sign", "gnupg_home", "signing_key"
             } != config["openpgp"].keys():
         log.critical("Config section openpgp missing or incomplete. Exiting.")
-        exit(1)
+        sys.exit(1)
     # setting up gnupg
     os.environ['GNUPGHOME'] = config["openpgp"]["gnupg_home"]
 
@@ -357,7 +357,7 @@ def main():
     if not scripts:
         log.error("Could not load any scripts from %r"
                   % (config["script_directory"],))
-        exit(1)
+        sys.exit(1)
 
     mailgen(args, config, scripts)
 
