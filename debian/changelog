@@ -21,7 +21,7 @@ intelmq-mailgen (1.3.0-1) stable; urgency=medium
 
   * Add revision.
 
- -- Sebastian Wagner <sebix@sebix.at>  Fri, 10 Jun 2022 17:36:29 +0200
+ -- Sebastian Wagner <swagner@intevation.de>  Fri, 10 Jun 2022 17:36:29 +0200
 
 intelmq-mailgen (1.3.0) unstable; urgency=medium
 
