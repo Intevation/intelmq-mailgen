@@ -174,6 +174,7 @@ def send_notifications(config, directives, cur, scripts):
     """
     sent_mails = 0
     postponed = 0
+    errors = 0
     gpgme_ctx = None
 
     if config["openpgp"]["always_sign"]:
@@ -229,11 +230,12 @@ def send_notifications(config, directives, cur, scripts):
                 log.exception("Could not create or send mails for %r."
                               " Continuing with other notifications.",
                               directive)
+                errors += 1
             else:
                 raise
         finally:
             cur.execute("RELEASE SAVEPOINT sendmail;")
-    return (sent_mails, postponed)
+    return (sent_mails, postponed, errors)
 
 
 def generate_notifications_interactively(config, cur, directives, scripts):
@@ -275,9 +277,9 @@ def generate_notifications_interactively(config, cur, directives, scripts):
                 pending = []
 
             print("Sending mails for %d entries... " % (len(to_send),))
-            sent_mails, postponed = send_notifications(config, to_send, cur,
-                                                       scripts)
-            print("%d mails sent, %d postponed. " % (sent_mails, postponed))
+            sent_mails, postponed, errors = send_notifications(config, to_send, cur,
+                                                               scripts)
+            print("%d mails sent, %d postponed, %r errors." % (sent_mails, postponed, errors))
 
 
 def mailgen(config: dict, scripts: list, process_all: bool = False):
@@ -302,10 +304,10 @@ def mailgen(config: dict, scripts: list, process_all: bool = False):
 
         if process_all:
             log.debug("Start processing directives")
-            sent_mails, postponed = send_notifications(config, directives, cur,
-                                                       scripts)
-            log.info("%d mails sent, %d postponed.", sent_mails, postponed)
-            result = "%d mails sent, %d postponed." % (sent_mails, postponed)
+            sent_mails, postponed, errors = send_notifications(config, directives, cur,
+                                                               scripts)
+            log.info("%d mails sent, %d postponed, %d errors.", sent_mails, postponed, errors)
+            result = "%d mails sent, %d postponed, %d errors." % (sent_mails, postponed, errors)
         else:
             generate_notifications_interactively(config, cur, directives,
                                                  scripts)
