@@ -1,4 +1,4 @@
-intelmq-mailgen (1.3.1-1) UNRELEASED; urgency=medium
+intelmq-mailgen (1.3.1-1) stable; urgency=medium
 
   * use sys.exit instead of exit
   * `additional_directive_where`: allow to use events
@@ -7,7 +7,7 @@ intelmq-mailgen (1.3.1-1) UNRELEASED; urgency=medium
   * add option to load custom config file per parameter
   * better help messages in program
 
- -- Sebastian Wagner <swagner@intevation.de>  Tue, 14 Mar 2023 11:25:14 +0100
+ -- Sebastian Wagner <swagner@intevation.de>  Wed, 15 Mar 2023 11:28:24 +0100
 
 intelmq-mailgen (1.3.0-3) stable; urgency=medium
 
