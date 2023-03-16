@@ -280,10 +280,11 @@ def generate_notifications_interactively(config, cur, directives, scripts):
             print("%d mails sent, %d postponed. " % (sent_mails, postponed))
 
 
-def mailgen(args, config, scripts):
+def mailgen(config: dict, scripts: list, process_all: bool = False):
     cur = None
     log.debug("Opening database connection")
     conn = open_db_connection(config, connection_factory=RealDictConnection)
+    result = None
     try:
         cur = conn.cursor()
         cur.execute("SET TIME ZONE 'UTC';")
@@ -292,22 +293,25 @@ def mailgen(args, config, scripts):
                                                additional_directive_where=config['database'].get('additional_directive_where'))
         if directives is None:
             # This case has been logged by get_pending_notifications.
-            return
+            return "No directives"
         if len(directives) == 0:
             log.info("No pending notifications to be sent")
-            return
+            return "No pending notifications to be sent"
 
         log.debug("Got %d groups of directives", len(directives))
 
-        if args.all:
+        if process_all:
             log.debug("Start processing directives")
             sent_mails, postponed = send_notifications(config, directives, cur,
                                                        scripts)
             log.info("%d mails sent, %d postponed.", sent_mails, postponed)
+            result = "%d mails sent, %d postponed." % (sent_mails, postponed)
         else:
             generate_notifications_interactively(config, cur, directives,
                                                  scripts)
 
+    except:
+        raise
     finally:
         if cur is not None:
             cur.close()
@@ -318,8 +322,14 @@ def mailgen(args, config, scripts):
         conn.commit()
         conn.close()
 
+    if result:
+        return result
+
 
 def main():
+    """
+    Start mailgen interactively, parsing command line args
+    """
     parser = argparse.ArgumentParser(
         prog=APPNAME,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -344,6 +354,14 @@ def main():
     if args.verbose:
         log.setLevel(logging.DEBUG)
 
+    start(config, process_all=args.all)
+
+
+def start(config: dict, process_all=False):
+    """
+    Start mailgen
+    can be used by other programs
+    """
     # checking openpgp config
     if "openpgp" not in config or {
             "always_sign", "gnupg_home", "signing_key"
@@ -359,7 +377,9 @@ def main():
                   % (config["script_directory"],))
         sys.exit(1)
 
-    mailgen(args, config, scripts)
+    return mailgen(config, scripts, process_all=process_all)
+
+
 
 # to lower the chance of problems like
 # http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html#the-double-import-trap
