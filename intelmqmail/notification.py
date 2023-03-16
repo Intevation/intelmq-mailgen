@@ -234,7 +234,8 @@ class ScriptContext:
         return body
 
     def mail_format_as_csv(self, format_spec, template=None,
-                           substitutions=None, attach_event_data=False):
+                           substitutions=None, attach_event_data=False,
+                           template_name=None):
         """Create an email with the event data formatted as CSV.
 
         The subject and body of the mail are taken from a template. The
@@ -263,6 +264,8 @@ class ScriptContext:
                 in addition to the ones made available by this method.
             attach_event_data (bool): If true the CSV formatted event
                 data will be included in the mail as attachment.
+            template_name: The file name of the template inside
+                "template_dir"
 
         Return:
             list of EmailNotification instances. The list has one
@@ -274,7 +277,9 @@ class ScriptContext:
 
         events_as_csv = format_as_csv(format_spec, events)
 
-        if template is None:
+        if template is None and template_name:
+            template = read_template(self.config["template_dir"], template_name)
+        elif template is None:
             template = self.read_template()
 
         ticket = self.new_ticket_number()
