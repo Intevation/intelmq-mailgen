@@ -156,7 +156,8 @@ def create_notifications(cur, directive, config, scripts, gpgme_ctx, template: O
                                % (directive,)))
 
 
-def send_notifications(config, directives, cur, scripts, template: Optional[Template] = None):
+def send_notifications(config, directives, cur, scripts, template: Optional[Template] = None,
+                       dry_run: bool = False) -> int:
     """
     Create and send notification mails for all items in directives.
 
@@ -170,9 +171,10 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
     :param config script configuration
     :param directives a list of aggregated_directives
     :param cur database cursor to use when loading event information
+    :param template
+    :param dry_run if true, don't send the mail, rollback database changes
 
-    :returns: number of send mails
-    :rtype: int
+    :returns: number of sent mails
     """
     sent_mails = 0
     postponed = 0
@@ -218,7 +220,10 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
                                   port=config["smtp"]["port"]) as smtp:
                     context = SendContext(cur, smtp)
                     for notification in notifications:
-                        notification.send(context)
+                        if dry_run:
+                            log.debug("Skip sending notification (to %r with subject %r) because of dry run.", notification.email.get('To'), notification.email.get('Subject'))
+                        else:
+                            notification.send(context)
                         sent_mails += 1
         except BaseException as e:
             cur.execute("ROLLBACK TO SAVEPOINT sendmail;")
@@ -236,11 +241,14 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
             else:
                 raise
         finally:
-            cur.execute("RELEASE SAVEPOINT sendmail;")
+            if dry_run:
+                cur.execute("ROLLBACK TO SAVEPOINT sendmail;")
+            else:
+                cur.execute("RELEASE SAVEPOINT sendmail;")
     return (sent_mails, postponed, errors)
 
 
-def generate_notifications_interactively(config, cur, directives, scripts):
+def generate_notifications_interactively(config, cur, directives, scripts, dry_run: bool = False):
     batch_size = 10
 
     pending = directives[:]
@@ -280,11 +288,14 @@ def generate_notifications_interactively(config, cur, directives, scripts):
 
             print("Sending mails for %d entries... " % (len(to_send),))
             sent_mails, postponed, errors = send_notifications(config, to_send, cur,
-                                                               scripts)
-            print("%d mails sent, %d postponed, %r errors." % (sent_mails, postponed, errors))
+                                                               scripts, dry_run=dry_run)
+            print("%s%d mails sent, %d postponed, %r errors." % ('Simulation: ' if dry_run else '', sent_mails, postponed, errors))
 
 
-def mailgen(config: dict, scripts: list, process_all: bool = False, template: Optional[str] = None):
+def mailgen(config: dict, scripts: list, process_all: bool = False, template: Optional[str] = None,
+            dry_run: bool = False) -> str:
+    if dry_run:
+        log.info("Running dry-run mode. Not sending mails and not writing changes to the database. Simulation only.")
     cur = None
     log.debug("Opening database connection")
     conn = open_db_connection(config, connection_factory=RealDictConnection)
@@ -314,12 +325,12 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
         if process_all:
             log.debug("Start processing directives")
             sent_mails, postponed, errors = send_notifications(config, directives, cur,
-                                                               scripts, template)
-            log.info("%d mails sent, %d postponed, %d errors.", sent_mails, postponed, errors)
-            result = "%d mails sent, %d postponed, %d errors." % (sent_mails, postponed, errors)
+                                                               scripts, template, dry_run=dry_run)
+            result = "%s%d mails sent, %d postponed, %d errors." % ('Simulation: ' if dry_run else '', sent_mails, postponed, errors)
+            log.info(result)
         else:
             generate_notifications_interactively(config, cur, directives,
-                                                 scripts)
+                                                 scripts, dry_run=dry_run)
 
     except:
         raise
@@ -354,6 +365,8 @@ def main():
                         help='Alternative system configuration file')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Activate verbose debug logging')
+    parser.add_argument('-n', '--dry-run', action='store_true',
+                        help='Dry run. Simulate only.')
     args = parser.parse_args()
 
     config = read_configuration(conf_file_path=args.config)
@@ -365,10 +378,11 @@ def main():
     if args.verbose:
         log.setLevel(logging.DEBUG)
 
-    start(config, process_all=args.all)
+    start(config, process_all=args.all, dry_run=args.dry_run)
 
 
-def start(config: dict, process_all=False, template: Optional[str] = None):
+def start(config: dict, process_all=False, template: Optional[str] = None,
+          dry_run: bool = False):
     """
     Start mailgen
     can be used by other programs
@@ -388,7 +402,7 @@ def start(config: dict, process_all=False, template: Optional[str] = None):
                   % (config["script_directory"],))
         sys.exit(1)
 
-    return mailgen(config, scripts, process_all=process_all, template=template)
+    return mailgen(config, scripts, process_all=process_all, template=template, dry_run=dry_run)
 
 
 
