@@ -34,7 +34,7 @@ except ModuleNotFoundError:
     pyxarf = None
 
 from intelmqmail.db import load_events, new_ticket_number, mark_as_sent
-from intelmqmail.templates import read_template
+from intelmqmail.templates import read_template, Template
 from intelmqmail.tableformat import format_as_csv
 from intelmqmail.mail import create_mail, clearsign, domain_from_sender
 
@@ -166,7 +166,7 @@ class ScriptContext:
         logger: the logger the script should use for logging
     """
 
-    def __init__(self, config, cur, gpgme_ctx, directive, logger, template: Optional[str] = None):
+    def __init__(self, config, cur, gpgme_ctx, directive, logger, template: Optional[Template] = None):
         self.config = config
         self.db_cursor = cur
         self.gpgme_ctx = gpgme_ctx
@@ -283,7 +283,7 @@ class ScriptContext:
         # default: use parameter `template`
         if template is None and template_name:  # Use template name if given
             template = read_template(self.config["template_dir"], template_name)
-        elif template is None and self.template:  # Fallback to fallback template of Context
+        elif template is None and self.fallback_template:  # Fallback to fallback template of Context
             template = self.fallback_template
         elif template is None:
             template = self.read_template()

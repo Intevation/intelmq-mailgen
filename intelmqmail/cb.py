@@ -46,6 +46,7 @@ from intelmqmail.db import open_db_connection, get_pending_notifications
 from intelmqmail.script import load_scripts
 from intelmqmail.notification import Directive, SendContext, ScriptContext, \
     Postponed
+from intelmqmail.templates import Template
 
 from typing import Optional
 
@@ -135,7 +136,7 @@ def load_script_entry_points(config):
                         logger=log)
 
 
-def create_notifications(cur, directive, config, scripts, gpgme_ctx, template: Optional[str] = None):
+def create_notifications(cur, directive, config, scripts, gpgme_ctx, template: Optional[Template] = None):
     script_context = ScriptContext(config, cur, gpgme_ctx,
                                    Directive(**directive), log, template=template)
     for script in scripts:
@@ -155,7 +156,7 @@ def create_notifications(cur, directive, config, scripts, gpgme_ctx, template: O
                                % (directive,)))
 
 
-def send_notifications(config, directives, cur, scripts, template: Optional[str] = None):
+def send_notifications(config, directives, cur, scripts, template: Optional[Template] = None):
     """
     Create and send notification mails for all items in directives.
 
@@ -288,6 +289,13 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
     log.debug("Opening database connection")
     conn = open_db_connection(config, connection_factory=RealDictConnection)
     result = None
+    if template:
+        # convert string template to Template object
+        template = template.strip()
+        subject = template[:template.find('\n')]  # first line
+        body = template[template.find('\n') + 1:] + '\n'  # rest plus trailing newline
+        template = Template.from_strings(subject, body)
+
     try:
         cur = conn.cursor()
         cur.execute("SET TIME ZONE 'UTC';")
