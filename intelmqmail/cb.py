@@ -135,9 +135,9 @@ def load_script_entry_points(config):
                         logger=log)
 
 
-def create_notifications(cur, directive, config, scripts, gpgme_ctx):
+def create_notifications(cur, directive, config, scripts, gpgme_ctx, template: Optional[str] = None):
     script_context = ScriptContext(config, cur, gpgme_ctx,
-                                   Directive(**directive), log)
+                                   Directive(**directive), log, template=template)
     for script in scripts:
         log.debug("Calling script %r", script.filename)
         try:
@@ -147,14 +147,15 @@ def create_notifications(cur, directive, config, scripts, gpgme_ctx):
                           script.filename)
             continue
         else:
-            log.debug("Script finished.")
+            print("Script %r finished. Result: %r" % (script.filename, notifications))
+            log.debug("Script finished. Result: %r", notifications)
         if notifications:
             return notifications
     raise NotImplementedError(("Cannot generate emails for directive %r"
                                % (directive,)))
 
 
-def send_notifications(config, directives, cur, scripts):
+def send_notifications(config, directives, cur, scripts, template: Optional[str] = None):
     """
     Create and send notification mails for all items in directives.
 
@@ -204,7 +205,7 @@ def send_notifications(config, directives, cur, scripts):
         cur.execute("SAVEPOINT sendmail;")
         try:
             notifications = create_notifications(cur, directive, config,
-                                                 scripts, gpgme_ctx)
+                                                 scripts, gpgme_ctx, template=template)
 
             if not notifications:
                 log.warning("No emails for sending were generated for %r!",
@@ -282,7 +283,7 @@ def generate_notifications_interactively(config, cur, directives, scripts):
             print("%d mails sent, %d postponed, %r errors." % (sent_mails, postponed, errors))
 
 
-def mailgen(config: dict, scripts: list, process_all: bool = False):
+def mailgen(config: dict, scripts: list, process_all: bool = False, template: Optional[str] = None):
     cur = None
     log.debug("Opening database connection")
     conn = open_db_connection(config, connection_factory=RealDictConnection)
@@ -305,7 +306,7 @@ def mailgen(config: dict, scripts: list, process_all: bool = False):
         if process_all:
             log.debug("Start processing directives")
             sent_mails, postponed, errors = send_notifications(config, directives, cur,
-                                                               scripts)
+                                                               scripts, template)
             log.info("%d mails sent, %d postponed, %d errors.", sent_mails, postponed, errors)
             result = "%d mails sent, %d postponed, %d errors." % (sent_mails, postponed, errors)
         else:
@@ -359,7 +360,7 @@ def main():
     start(config, process_all=args.all)
 
 
-def start(config: dict, process_all=False):
+def start(config: dict, process_all=False, template: Optional[str] = None):
     """
     Start mailgen
     can be used by other programs
@@ -379,7 +380,7 @@ def start(config: dict, process_all=False):
                   % (config["script_directory"],))
         sys.exit(1)
 
-    return mailgen(config, scripts, process_all=process_all)
+    return mailgen(config, scripts, process_all=process_all, template=template)
 
 
 

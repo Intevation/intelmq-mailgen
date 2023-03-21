@@ -13,6 +13,7 @@ Contents:
 
    concept
 
+For the integration with IntelMQ Webinput CSV, see the documentation `there <https://github.com/Intevation/intelmq-webinput-csv/blob/master/docs/User-Guide.md#user-content-integration-with-mailgen>`_.
 
 Indices and tables
 ==================

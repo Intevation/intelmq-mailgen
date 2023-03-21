@@ -25,6 +25,8 @@ import os
 import tempfile
 import datetime
 
+from typing import Optional
+
 # if we have the optional module pyxarf, we can define more methods
 try:
     import pyxarf
@@ -164,13 +166,14 @@ class ScriptContext:
         logger: the logger the script should use for logging
     """
 
-    def __init__(self, config, cur, gpgme_ctx, directive, logger):
+    def __init__(self, config, cur, gpgme_ctx, directive, logger, template: Optional[str] = None):
         self.config = config
         self.db_cursor = cur
         self.gpgme_ctx = gpgme_ctx
         self.directive = directive
         self.logger = logger
         self.now = datetime.datetime.now(datetime.timezone.utc)
+        self.fallback_template: Optional[str] = template
 
     def notification_interval_exceeded(self):
         """Return whether the notification interval has been exceeded.
@@ -277,8 +280,11 @@ class ScriptContext:
 
         events_as_csv = format_as_csv(format_spec, events)
 
-        if template is None and template_name:
+        # default: use parameter `template`
+        if template is None and template_name:  # Use template name if given
             template = read_template(self.config["template_dir"], template_name)
+        elif template is None and self.template:  # Fallback to fallback template of Context
+            template = self.fallback_template
         elif template is None:
             template = self.read_template()
 
