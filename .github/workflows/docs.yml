@@ -1,0 +1,26 @@
+#SPDX-FileCopyrightText: 2023 Intevation GmbH
+#SPDX-License-Identifier: AGPL-3.0-or-later
+#
+name: "Build documentation"
+on: [push, pull_request]
+
+jobs:
+  docs:
+    runs-on: ubuntu-20.04
+    name: Build the documentation
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+
+    - name: Install Sphinx
+      run: pip install Sphinx
+
+    - name: Build docs
+      run: make -C docs html
+
