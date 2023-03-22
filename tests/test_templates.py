@@ -17,13 +17,13 @@ import unittest
 
 from intelmqmail import templates
 
-class TemplatesTest(unittest.TestCase):
 
+class TemplatesTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         "Sets up a directory structure for all template tests."
-        cls.top_dir_obj = TemporaryDirectory() # will clean itself up
+        cls.top_dir_obj = TemporaryDirectory()  # will clean itself up
         cls.template_dir = os.path.join(cls.top_dir_obj.name, 'templates')
         os.mkdir(cls.template_dir)
 
@@ -37,8 +37,8 @@ ${events}"""
 
     def test_full_template_filename(self):
         self.assertEqual(
-          templates.full_template_filename(self.template_dir, "test-template"),
-          os.path.join(self.template_dir, "test-template"))
+            templates.full_template_filename(self.template_dir, "test-template"),
+            os.path.join(self.template_dir, "test-template"))
 
         self.assertRaises(ValueError,
                           templates.full_template_filename,

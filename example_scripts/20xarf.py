@@ -145,7 +145,7 @@ known_xarf_schema = {
         'destination_type': 'ip-address',
         'attachment': None,
     },
-    {
+        {
         'source': 'source.ip',
         'source_port': 'source.port',
         'source_asn': 'source.asn',

@@ -358,7 +358,7 @@ def main():
         usage=USAGE,
         description=DESCRIPTION,
         epilog=EPILOG,
-        )
+    )
     parser.add_argument('-a', '--all', action='store_true',
                         help='Process all events (batch mode) non-interactively')
     parser.add_argument('-c', '--config',
@@ -390,7 +390,7 @@ def start(config: dict, process_all=False, template: Optional[str] = None,
     # checking openpgp config
     if "openpgp" not in config or {
             "always_sign", "gnupg_home", "signing_key"
-            } != config["openpgp"].keys():
+    } != config["openpgp"].keys():
         log.critical("Config section openpgp missing or incomplete. Exiting.")
         sys.exit(1)
     # setting up gnupg
@@ -403,7 +403,6 @@ def start(config: dict, process_all=False, template: Optional[str] = None,
         sys.exit(1)
 
     return mailgen(config, scripts, process_all=process_all, template=template, dry_run=dry_run)
-
 
 
 # to lower the chance of problems like

@@ -27,6 +27,7 @@ if 'ALLTESTS' in environ:
     if environ['ALLTESTS'] == '1':
         run_all_tests = True
 
+
 class SignTestCase(GpgHomeTestCase):
     import_keys = ['test1.sec']
 
@@ -52,8 +53,8 @@ class SignTestCase(GpgHomeTestCase):
         self.assertEqual(sig.type, gpg.constants.sig.mode.CLEAR)
         self.assertIsInstance(sig, gpg.results.NewSignature)
 
-        ## print out the unicode string of the signed email body
-        #print('\n' + signedText.decode())
+        # print out the unicode string of the signed email body
+        # print('\n' + signedText.decode())
 
         # let us verify the signature
         newPlainText, results = ctx.verify(signedText)
@@ -91,8 +92,8 @@ class SignTestCase(GpgHomeTestCase):
             self.assertIsInstance(sig, gpg.results.NewSignature)
 
         end = timer()
-        time_spent = end - start # in fractions of seconds
-        #print("\nTime elapsed for {:d} iterations: {:.3f}".format(n, time_spent))
-        #print("That is {:.1f} signatures per second.".format(n/time_spent))
-        #we want to process at least 12 per second
+        time_spent = end - start  # in fractions of seconds
+        # print("\nTime elapsed for {:d} iterations: {:.3f}".format(n, time_spent))
+        # print("That is {:.1f} signatures per second.".format(n/time_spent))
+        # we want to process at least 12 per second
         self.assertGreater(n / time_spent, 12)

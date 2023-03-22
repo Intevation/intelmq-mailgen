@@ -11,8 +11,7 @@ def create_notifications(context):
 
     substitution_variables = js.get("substitutions")
 
-
-    ## Determine the kind of Aggregation.
+    # Determine the kind of Aggregation.
     aggregation = context.directive.aggregate_identifier
     asn_or_cidr = ""  # Can also be a CC
     if "source.asn" in aggregation:

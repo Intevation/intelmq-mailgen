@@ -98,14 +98,14 @@ class TestCreateUnsignedMail(MailCreationTest, unittest.TestCase):
         includes a display name, this must be done differently.
         """
         msg = self.create_text_mail_with_attachment(None,
-                                          sender="Real Name <rn@example.com>")
+                                                    sender="Real Name <rn@example.com>")
         self.assertRegex(msg["Message-ID"], r"@example\.com>$")
 
     def test_message_id_with_plain_email_address_in_sender(self):
         """Test Message-ID when sender is a plain email address.
         """
         msg = self.create_text_mail_with_attachment(None,
-                                          sender="rn@example.com")
+                                                    sender="rn@example.com")
         self.assertRegex(msg["Message-ID"], r"@example\.com>$")
 
 
@@ -120,7 +120,7 @@ class TestCreateSignedMail(MailCreationTest, GpgHomeTestCase):
         ctx.signers = [key]
 
         msg = self.create_text_mail_with_attachment(ctx)
-        ## print mail
+        # print mail
         # print(msg)
         self.check_no_from(msg)
 
@@ -135,4 +135,3 @@ class TestCreateSignedMail(MailCreationTest, GpgHomeTestCase):
         body, csv = self.check_unpack_multipart(signed, "mixed")
         self.check_body_part(body)
         self.check_csv_attachment(csv)
-

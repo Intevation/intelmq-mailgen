@@ -33,6 +33,7 @@ template = Template.from_strings("CB-Report#${ticket_number}",
                                  "Events:\n"
                                  "${events_as_csv}")
 
+
 def create_notifications(context):
     if not context.notification_interval_exceeded():
         return Postponed

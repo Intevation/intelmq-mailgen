@@ -81,29 +81,30 @@ def table_formats_with_default_titles(formats):
     return build_table_formats([(name, add_default_titles(columns))
                                 for name, columns in formats])
 
+
 table_formats = table_formats_with_default_titles([
     ("opendns", [
         "source.asn",
         "source.ip",
         "time.source",
-        ]),
+    ]),
     ("openportmapper", [
         "source.asn",
         "source.ip",
         "time.source",
-        ]),
+    ]),
     ("opensnmp", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:system_desc",
-        ]),
+    ]),
     ("openldap", [
         "source.asn",
         "source.ip",
         "time.source",
         ("source.local_hostname", "dns_hostname"),
-        ]),
+    ]),
     ("openmssql", [
         "source.asn",
         "source.ip",
@@ -111,66 +112,66 @@ table_formats = table_formats_with_default_titles([
         "extra:mssql_version",
         "source.local_hostname",
         ExtraColumn("instance_name", "instance_name"),
-        ]),
+    ]),
     ("openmongodb", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:mongodb_version",
-        ]),
+    ]),
     ("openchargen", [
         "source.asn",
         "source.ip",
         "time.source",
-        ]),
+    ]),
     ("openipmi", [
         "source.asn",
         "source.ip",
         "time.source",
-        ]),
+    ]),
     ("opennetbios", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:workgroup_name",
         "extra:machine_name",
-        ]),
+    ]),
     ("openntp", [
         "source.asn",
         "source.ip",
         "time.source",
-        ]),
+    ]),
     ("openelasticsearch", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:elasticsearch_version",
         ExtraColumn("instance_name", "name"),
-        ]),
+    ]),
     ("openmdns", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:workstation_info",
-        ]),
+    ]),
     ("openmemcached", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:memcached_version",
-        ]),
+    ]),
     ("openredis", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:redis_version",
-        ]),
+    ]),
     ("openssdp", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:ssdp_server",
-        ]),
+    ]),
     ("ssl-freak", [
         "source.asn",
         "source.ip",
@@ -179,7 +180,7 @@ table_formats = table_formats_with_default_titles([
         "extra:subject_common_name",
         "extra:issuer_common_name",
         "extra:freak_cipher_suite",
-        ]),
+    ]),
     ("ssl-poodle", [
         "source.asn",
         "source.ip",
@@ -187,16 +188,16 @@ table_formats = table_formats_with_default_titles([
         "source.reverse_dns",
         "extra:subject_common_name",
         "extra:issuer_common_name",
-        ]),
-    ])
+    ]),
+])
 
 
 def create_notifications(context):
 
     if context.directive.notification_format == "vulnerable-service":
 
-        if (context.age_of_newest_directive() < minimum_directive_age
-            or context.age_of_observation() < minimum_observation_age):
+        if (context.age_of_newest_directive() < minimum_directive_age or
+                context.age_of_observation() < minimum_observation_age):
             return Postponed
 
         # Copy Substitutions from the context to this script.

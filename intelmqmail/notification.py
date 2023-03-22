@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 Authors:
     * Bernhard Herzog <bernhard.herzog@intevation.de>
     * Dustin Demuth
-""" # noqa
+"""  # noqa
 import os
 import tempfile
 import datetime
@@ -318,99 +318,99 @@ class ScriptContext:
         return [EmailNotification(self.directive, mail, ticket)]
 
     if pyxarf:
-      def mail_format_as_xarf(self, xarf_schema): # noqa
-        """Create Messages in X-Arf Format
+        def mail_format_as_xarf(self, xarf_schema):  # noqa
+            """Create Messages in X-Arf Format
 
-        Args:
-            xarf_schema: an XarfSchema object, like in 20xarf.py
+            Args:
+                xarf_schema: an XarfSchema object, like in 20xarf.py
 
-        Only defined, if the optional module pyxarf is available.
+            Only defined, if the optional module pyxarf is available.
 
-        Returns:
-        """
-        # Load the events and their required columns.
-        # xarf_schema.event_columns() returns a dict/set/list of column-names
-        events = self.load_events(xarf_schema.event_columns())
+            Returns:
+            """
+            # Load the events and their required columns.
+            # xarf_schema.event_columns() returns a dict/set/list of column-names
+            events = self.load_events(xarf_schema.event_columns())
 
-        sender = self.config["sender"]
+            sender = self.config["sender"]
 
-        # Read the path to cache X-Arf Schemata from conf
-        # if the variable was not set use a tempdir
-        schema_cache = self.config.get("xarf_schemacache",
-                                       tempfile.gettempdir() + os.sep)
+            # Read the path to cache X-Arf Schemata from conf
+            # if the variable was not set use a tempdir
+            schema_cache = self.config.get("xarf_schemacache",
+                                           tempfile.gettempdir() + os.sep)
 
-        # This automatism is setting the Domain-Part within the
-        # report_id of the X-ARF Report. If the parameter
-        # xarf_reportdomain was not set in the the config, the senders
-        # domain name is used.
-        reportid_domain = self.config.get("xarf_reportdomain",
-                                          domain_from_sender(sender))
+            # This automatism is setting the Domain-Part within the
+            # report_id of the X-ARF Report. If the parameter
+            # xarf_reportdomain was not set in the the config, the senders
+            # domain name is used.
+            reportid_domain = self.config.get("xarf_reportdomain",
+                                              domain_from_sender(sender))
 
-        template = self.read_template()
+            template = self.read_template()
 
-        returnlist_notifications = []
+            returnlist_notifications = []
 
-        # Create an X-Arf Message for every event
-        for event in events:
-            # Get a new ticketnumber for each event
-            ticket = self.new_ticket_number()
-            report_id = "{}@{}".format(ticket, reportid_domain)
+            # Create an X-Arf Message for every event
+            for event in events:
+                # Get a new ticketnumber for each event
+                ticket = self.new_ticket_number()
+                report_id = "{}@{}".format(ticket, reportid_domain)
 
-            subject, body = template.substitute({"ticket_number": ticket})
+                subject, body = template.substitute({"ticket_number": ticket})
 
-            params = {
-                'schema_cache': schema_cache,
-                'reported_from': sender,
-                'report_id': report_id,
-                # 'useragent': "IntelMQ-Mailgen,  # Useragent is set by pyxarf __useragent__  # noqa
-                }
-            # now, as we know the events data and the intelmq-fields and
-            # the mapping of these fields to the X-ARF Schema, pass the
-            # event into the XarfSchema's xarf_params function in order
-            # to resolve mapping of the events data to the X-Arf-Key
-            params.update(xarf_schema.xarf_params(event))
+                params = {
+                    'schema_cache': schema_cache,
+                    'reported_from': sender,
+                    'report_id': report_id,
+                    # 'useragent': "IntelMQ-Mailgen,  # Useragent is set by pyxarf __useragent__  # noqa
+                    }
+                # now, as we know the events data and the intelmq-fields and
+                # the mapping of these fields to the X-ARF Schema, pass the
+                # event into the XarfSchema's xarf_params function in order
+                # to resolve mapping of the events data to the X-Arf-Key
+                params.update(xarf_schema.xarf_params(event))
 
-            # Create an X-ARF Message using the pyxarf library.
-            # The lib downloads the schema from schema_url automagically
-            # and stores it in the schema_cache
-            xarf_object = pyxarf.Xarf(**params)
+                # Create an X-ARF Message using the pyxarf library.
+                # The lib downloads the schema from schema_url automagically
+                # and stores it in the schema_cache
+                xarf_object = pyxarf.Xarf(**params)
 
-            mail = self.create_xarf_mail(subject, body, xarf_object)
+                mail = self.create_xarf_mail(subject, body, xarf_object)
 
-            returnlist_notifications.append(EmailNotification(self.directive,
-                                                              mail, ticket))
+                returnlist_notifications.append(EmailNotification(self.directive,
+                                                                  mail, ticket))
 
-        return returnlist_notifications
+            return returnlist_notifications
 
     if pyxarf:
-      def create_xarf_mail(self, subject, body, xarf_object): # noqa
-        """
+        def create_xarf_mail(self, subject, body, xarf_object):  # noqa
+            """
 
-        Args:
-            xarf_object:
+            Args:
+                xarf_object:
 
-        Only defined, if the optional module pyxarf is available.
+            Only defined, if the optional module pyxarf is available.
 
-        Returns:
+            Returns:
 
-        """
-        from email.mime.text import MIMEText
-        from email.mime.multipart import MIMEMultipart
-        from email.utils import formatdate
+            """
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+            from email.utils import formatdate
 
-        msg = MIMEMultipart()
-        msg.attach(MIMEText(body))
-        msg.attach(MIMEText(xarf_object.to_yaml('machine_readable'), 'plain',
-                            'utf-8'))
+            msg = MIMEMultipart()
+            msg.attach(MIMEText(body))
+            msg.attach(MIMEText(xarf_object.to_yaml('machine_readable'), 'plain',
+                                'utf-8'))
 
-        msg.add_header("From", self.config["sender"])
-        msg.add_header("To", self.directive.recipient_address)
-        msg.add_header("Subject", subject)
-        msg.add_header("Auto-Submitted", "auto-generated")
-        msg.add_header("X-ARF", "PLAIN")  # TODO BULK IS NOT SUPPORTED YET
-        msg.add_header("Date", formatdate(timeval=None, localtime=True))
+            msg.add_header("From", self.config["sender"])
+            msg.add_header("To", self.directive.recipient_address)
+            msg.add_header("Subject", subject)
+            msg.add_header("Auto-Submitted", "auto-generated")
+            msg.add_header("X-ARF", "PLAIN")  # TODO BULK IS NOT SUPPORTED YET
+            msg.add_header("Date", formatdate(timeval=None, localtime=True))
 
-        return msg
+            return msg
 
 
 class SendContext:

@@ -50,7 +50,7 @@ hash_algorithms = {
     gpg._gpgme.GPGME_MD_SHA256: "pgp-sha256",
     gpg._gpgme.GPGME_MD_SHA384: "pgp-sha384",
     gpg._gpgme.GPGME_MD_SHA512: "pgp-sha512",
-    }
+}
 
 
 class MailgenContentManager(ContentManager):

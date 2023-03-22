@@ -69,7 +69,7 @@ As database-superuser (usually via system user postgres):
     ```
     psql -c "GRANT eventdb_insert TO intelmq" intelmq-events
     ```
-    
+
 4. Grant the new user the right to send out notifications:
     ```
     psql -c "GRANT eventdb_send_notifications TO intelmq_mailgen" intelmq-events

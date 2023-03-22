@@ -89,29 +89,29 @@ table_formats = table_formats_with_default_titles([
         "destination.port",
         "destination.fqdn",
         "protocol.transport",
-        ]),
+    ]),
     ("csv_DNS-open-resolvers", [
         "source.asn",
         "source.ip",
         "time.source",
-        ]),
+    ]),
     ("csv_Open-Portmapper", [
         "source.asn",
         "source.ip",
         "time.source",
-        ]),
+    ]),
     ("csv_Open-SNMP", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:system_desc",
-        ]),
+    ]),
     ("csv_Open-LDAP", [
         "source.asn",
         "source.ip",
         "time.source",
         ("source.local_hostname", "dns_hostname"),
-        ]),
+    ]),
     ("csv_Open-MSSQL", [
         "source.asn",
         "source.ip",
@@ -119,66 +119,66 @@ table_formats = table_formats_with_default_titles([
         "extra:mssql_version",
         "source.local_hostname",
         ExtraColumn("instance_name", "instance_name"),
-        ]),
+    ]),
     ("csv_Open-MongoDB", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:mongodb_version",
-        ]),
+    ]),
     ("csv_Open-Chargen", [
         "source.asn",
         "source.ip",
         "time.source",
-        ]),
+    ]),
     ("csv_Open-IPMI", [
         "source.asn",
         "source.ip",
         "time.source",
-        ]),
+    ]),
     ("csv_Open-NetBIOS", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:workgroup_name",
         "extra:machine_name",
-        ]),
+    ]),
     ("csv_NTP-Monitor", [
         "source.asn",
         "source.ip",
         "time.source",
-        ]),
+    ]),
     ("csv_Open-Elasticsearch", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:elasticsearch_version",
         ExtraColumn("instance_name", "name"),
-        ]),
+    ]),
     ("csv_Open-mDNS", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:workstation_info",
-        ]),
+    ]),
     ("csv_Open-Memcached", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:memcached_version",
-        ]),
+    ]),
     ("csv_Open-Redis", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:redis_version",
-        ]),
+    ]),
     ("csv_Open-SSDP", [
         "source.asn",
         "source.ip",
         "time.source",
         "extra:ssdp_server",
-        ]),
+    ]),
     ("csv_Ssl-Freak-Scan", [
         "source.asn",
         "source.ip",
@@ -187,7 +187,7 @@ table_formats = table_formats_with_default_titles([
         "extra:subject_common_name",
         "extra:issuer_common_name",
         "extra:freak_cipher_suite",
-        ]),
+    ]),
     ("csv_Ssl-Scan", [
         "source.asn",
         "source.ip",
@@ -195,8 +195,8 @@ table_formats = table_formats_with_default_titles([
         "source.reverse_dns",
         "extra:subject_common_name",
         "extra:issuer_common_name",
-        ]),
-    ])
+    ]),
+])
 
 
 # Minimum age of the newest of a group of directives being aggregated
@@ -228,8 +228,8 @@ def create_notifications(context):
 
         format_spec = table_formats.get(context.directive.event_data_format)
         if format_spec is not None:
-            if (context.age_of_newest_directive() < minimum_directive_age
-                or context.age_of_observation() < minimum_observation_age):
+            if (context.age_of_newest_directive() < minimum_directive_age or
+                    context.age_of_observation() < minimum_observation_age):
                 return Postponed
 
             substitution_variables["data_location_en"] = substitution_variables["data_location_inline_en"]

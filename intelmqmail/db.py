@@ -145,7 +145,7 @@ def new_ticket_number(cur):
                          nextval('intelmq_ticket_seq');"""
     cur.execute(sqlQuery)
     result = cur.fetchall()
-    #log.debug(result)
+    # log.debug(result)
 
     date_str = result[0]["date"]
     if date_str != result[0]["init_date"]:

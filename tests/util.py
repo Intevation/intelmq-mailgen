@@ -33,6 +33,7 @@ __all__ = ['GpgHomeTestCase']
 
 keydir = os.path.join(os.path.dirname(__file__), 'keys')
 
+
 class GpgHomeTestCase(unittest.TestCase):
 
     gpg_conf_contents = ''
