@@ -1,0 +1,38 @@
+#SPDX-FileCopyrightText: 2023 Intevation GmbH
+#SPDX-License-Identifier: AGPL-3.0-or-later
+#
+name: "Unit tests"
+on: [push, pull_request]
+
+jobs:
+  unittests:
+    runs-on: ubuntu-20.04
+    name: Run unit tests with pytest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.7']
+#        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install libgpgme11
+      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get update -qq && DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y libgpgme-dev swig python3-gpg
+
+    - name: Install test dependencies
+      run: pip install pytest gpg
+
+    - name: Install dependencies
+      run: pip install -e .
+
+    - name: Run basic testsuite
+      run: pytest
+
