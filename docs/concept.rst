@@ -24,7 +24,7 @@ from the database, aggregates them when possible, and generates and
 sends mails when the time has come. When mails are sent, the sending
 time and some other information such as the ticket number is stored in
 the database, indicating that the directive has been processed and to
-allow any questions the recipents of the mails may have to be linked to
+allow any questions the recipients of the mails may have to be linked to
 the events the notification was about.
 
 Both the rules expert bot and Mailgen can be configured with python

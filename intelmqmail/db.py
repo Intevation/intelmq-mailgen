@@ -70,7 +70,7 @@ def get_pending_notifications(cur, additional_directive_where: Optional[str] = N
     long enough ago that the notification interval has been exceeded.
     The directives are grouped according to the aggregation identifier.
 
-    :returns: list of aggreated directives
+    :returns: list of aggregated directives
     :rtype: list
     """
     try:

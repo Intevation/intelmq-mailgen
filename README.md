@@ -135,7 +135,7 @@ Configuration
 Settings are read from both files with the one in the user's home directory
 taking precedence.
 
-The sytem configuration file path can be overridden with the `--config`
+The system configuration file path can be overridden with the `--config`
 command line parameter.
 
 Both files must be in JSON format. A complete example can be found in
