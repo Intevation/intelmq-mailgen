@@ -114,6 +114,6 @@ def eventhandler(event):
         # message.
         self.assertEqual(len(logs.output), 1)
         self.assertTrue(logs.output[0].startswith(
-            "ERROR:test_script.TestLoadScriptExecErrors:"
+            "ERROR:tests.test_script.TestLoadScriptExecErrors:"
             "Exception while trying to find entry point 'eventhandler'"))
         self.assertTrue(logs.output[0].endswith("SyntaxError: invalid syntax"))

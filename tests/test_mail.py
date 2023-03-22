@@ -16,7 +16,7 @@ import gpg
 
 from intelmqmail.mail import create_mail
 
-from util import GpgHomeTestCase
+from .util import GpgHomeTestCase
 
 
 class MailCreationTest:

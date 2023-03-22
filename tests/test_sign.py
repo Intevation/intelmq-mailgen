@@ -16,7 +16,7 @@ import unittest
 from io import BytesIO
 
 import gpg
-from util import GpgHomeTestCase
+from .util import GpgHomeTestCase
 
 from os import environ
 
