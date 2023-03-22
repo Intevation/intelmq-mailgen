@@ -1,0 +1,5 @@
+# ./tests/test_sign.py:64:
+        self.assertEqual(vsig.fpr, '5F503EFAC8C89323D54C252591B8CD7E15925678')
+# extras/dirty_setup/dirty_setup.sh 
+  cat - >"$ghome/gpg.conf" <<FOF
+FOF
