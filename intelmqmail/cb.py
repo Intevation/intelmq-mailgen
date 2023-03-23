@@ -337,11 +337,15 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
     finally:
         if cur is not None:
             cur.close()
-        # the only change to the database is marking the sent mails as
-        # actually sent. We always want to commit that information even
-        # when errors occur, so we're calling commit in the finally
-        # block.
-        conn.commit()
+
+        if dry_run:
+            conn.rollback()
+        else:
+            # the only change to the database is marking the sent mails as
+            # actually sent. We always want to commit that information even
+            # when errors occur, so we're calling commit in the finally
+            # block.
+            conn.commit()
         conn.close()
 
     if result:
