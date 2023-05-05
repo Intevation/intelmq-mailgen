@@ -135,6 +135,9 @@ in templates.
 
 .. _aggregation_and_notification_intervals:
 
+Aggregation and notification intervals
+......................................
+
 Aggregation only makes sense if directives are not processed immediately
 in order to let directives accumulate for a while. The main parameter in
 a directive that can be used to control this is the
@@ -296,3 +299,10 @@ means that no further scripts should be executed.
 There are some example scripts in
 `intelmq/bots/experts/certbund_contact/example-rules/` which demonstrate
 how to write such scripts.
+
+.. _mailgen_sending_mails:
+
+Mailgen sending mails
+---------------------
+
+TODO
