@@ -7,6 +7,8 @@ on: [push, pull_request]
 jobs:
   unittests:
     runs-on: ubuntu-20.04
+    env:
+      GPGME_VERSION: 1.20.0
     name: Run unit tests with pytest
     strategy:
       fail-fast: false
@@ -24,15 +26,21 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install libgpgme11
-      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get update -qq && DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y libgpgme-dev swig python3-gpg
+    - name: Install pgpme dev
+      run: DEBIAN_FRONTEND=noninteractive sudo -E apt-get update -qq && DEBIAN_FRONTEND=noninteractive sudo -E apt-get install -y libgpgme-dev swig
 
     - name: Install test dependencies
-      run: pip install pytest gpg
+      run: pip install pytest
+
+    - name: Install gpgme python bindings
+      run: ./.github/workflows/scripts/install-gpgme.sh
 
     - name: Install dependencies
       run: pip install -e .
 
     - name: Run basic testsuite
       run: pytest
+      env:
+        LD_LIBRARY_PATH: $LD_LIBRARY_PATH:/usr/local/lib
+        PYTHONPATH: /usr/local/lib/python3.7/site-packages/
 
