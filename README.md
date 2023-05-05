@@ -5,6 +5,8 @@ IntelMQ command line tool to process events.
 
 Call `intelmqcbmail --help` to see the current usage.
 
+The concept's documentation can be found here: http://intevation.github.io/intelmq-mailgen/
+
 Installation
 ============
 
