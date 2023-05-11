@@ -40,6 +40,7 @@ import sys
 
 import gpg
 from psycopg2.extras import RealDictConnection
+from psycopg2.extensions import connection as psycopg2_connection
 
 
 from intelmqmail.db import open_db_connection, get_pending_notifications
@@ -296,12 +297,26 @@ def generate_notifications_interactively(config, cur, directives, scripts, dry_r
 
 
 def mailgen(config: dict, scripts: list, process_all: bool = False, template: Optional[str] = None,
-            dry_run: bool = False, get_preview: bool = False) -> str:
+            dry_run: bool = False, get_preview: bool = False, conn: Optional[psycopg2_connection] = None) -> str:
+    """
+    Run mailgen either interactively (process_all=False) or non-interactively (process_all=True)
+
+    Parameters:
+        config
+        scripts
+        process_all: See above
+        template: Template as string, optional
+        dry_run: If true, rollbacks at the end
+        get_preview: Returns the result of the first send_notifications call
+        conn: Database connection, optional
+    """
     if dry_run:
         log.info("Running dry-run mode. Not sending mails and not writing changes to the database. Simulation only.")
     cur = None
-    log.debug("Opening database connection")
-    conn = open_db_connection(config, connection_factory=RealDictConnection)
+    if not conn:
+        log.debug("Opening database connection")
+        conn = open_db_connection(config, connection_factory=RealDictConnection)
+
     result = None
     if template:
         # convert string template to Template object
@@ -391,7 +406,7 @@ def main():
 
 
 def start(config: dict, process_all=False, template: Optional[str] = None,
-          dry_run: bool = False, get_preview: bool = False):
+          dry_run: bool = False, get_preview: bool = False, conn: Optional[psycopg2_connection] = None) -> str:
     """
     Start mailgen
     can be used by other programs
@@ -412,7 +427,7 @@ def start(config: dict, process_all=False, template: Optional[str] = None,
         sys.exit(1)
 
     return mailgen(config, scripts, process_all=process_all, template=template, dry_run=dry_run,
-                   get_preview=get_preview)
+                   get_preview=get_preview, conn=conn)
 
 
 # to lower the chance of problems like
