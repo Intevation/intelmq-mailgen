@@ -2,17 +2,18 @@
 
 import string
 import logging
+from typing import Optional
 
 import psycopg2
 import psycopg2.errorcodes
 
-from typing import Optional
+from psycopg2.extensions import connection as psycopg2_connection
 
 
 log = logging.getLogger(__name__)
 
 
-def open_db_connection(config, connection_factory=None):
+def open_db_connection(config, connection_factory=None) -> psycopg2_connection:
     """Opens a psycopg2 database connection.
 
     Does not set autocommit, so using code must take
@@ -145,7 +146,6 @@ def new_ticket_number(cur):
                          nextval('intelmq_ticket_seq');"""
     cur.execute(sqlQuery)
     result = cur.fetchall()
-    # log.debug(result)
 
     date_str = result[0]["date"]
     if date_str != result[0]["init_date"]:

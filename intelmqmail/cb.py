@@ -422,8 +422,8 @@ def start(config: dict, process_all=False, template: Optional[str] = None,
 
     scripts = load_script_entry_points(config)
     if not scripts:
-        log.error("Could not load any scripts from %r"
-                  % (config["script_directory"],))
+        log.error("Could not load any scripts from %r",
+                  config["script_directory"])
         sys.exit(1)
 
     return mailgen(config, scripts, process_all=process_all, template=template, dry_run=dry_run,
