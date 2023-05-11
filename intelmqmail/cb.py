@@ -209,6 +209,8 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
         # twice and the same ticket numbers being reused for
         # different notifications.
         cur.execute("SAVEPOINT sendmail;")
+        if get_preview:
+            preview_notifications = []
         try:
             notifications = create_notifications(cur, directive, config,
                                                  scripts, gpgme_ctx, template=template)
@@ -223,8 +225,8 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
                                   port=config["smtp"]["port"]) as smtp:
                     context = SendContext(cur, smtp)
                     for notification in notifications:
-                        if get_preview:  # FIXME: Return all
-                            return [str(notification.email)]
+                        if get_preview:
+                            preview_notifications.append(str(notification.email))
                         elif dry_run:
                             log.debug("Skip sending notification (to %r with subject %r) because of dry run.", notification.email.get('To'), notification.email.get('Subject'))
                         else:
@@ -250,6 +252,8 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
                 cur.execute("ROLLBACK TO SAVEPOINT sendmail;")
             else:
                 cur.execute("RELEASE SAVEPOINT sendmail;")
+    if get_preview:
+        return preview_notifications
     return (sent_mails, postponed, errors)
 
 
