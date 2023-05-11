@@ -37,6 +37,7 @@ import locale
 import logging
 import os
 import sys
+from typing import Union, List
 
 import gpg
 from psycopg2.extras import RealDictConnection
@@ -158,7 +159,7 @@ def create_notifications(cur, directive, config, scripts, gpgme_ctx, template: O
 
 
 def send_notifications(config, directives, cur, scripts, template: Optional[Template] = None,
-                       dry_run: bool = False, get_preview: bool = False) -> int:
+                       dry_run: bool = False, get_preview: bool = False) -> Union[int, List[str]]:
     """
     Create and send notification mails for all items in directives.
 
@@ -176,7 +177,7 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
     :param dry_run if true, don't send the mail, rollback database changes
     :param get_preview return content of first email
 
-    :returns: number of sent mails
+    :returns: number of sent mails, or if get_preview is True a list of notifications
     """
     sent_mails = 0
     postponed = 0
@@ -222,14 +223,14 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
                                   port=config["smtp"]["port"]) as smtp:
                     context = SendContext(cur, smtp)
                     for notification in notifications:
-                        if get_preview:
-                            return str(notification.email)
+                        if get_preview:  # FIXME: Return all
+                            return [str(notification.email)]
                         elif dry_run:
                             log.debug("Skip sending notification (to %r with subject %r) because of dry run.", notification.email.get('To'), notification.email.get('Subject'))
                         else:
                             notification.send(context)
                         sent_mails += 1
-        except BaseException as e:
+        except BaseException as exc:
             cur.execute("ROLLBACK TO SAVEPOINT sendmail;")
             # if it's a "normal" exception, assume that it's a
             # problem with the directive or the scripts that process
@@ -237,7 +238,7 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
             # normal exception, e.g. if it's SystemExit or
             # KeyboardInterrupt, reraise the exception since it's
             # likely that
-            if isinstance(e, Exception):
+            if isinstance(exc, Exception):
                 log.exception("Could not create or send mails for %r."
                               " Continuing with other notifications.",
                               directive)
