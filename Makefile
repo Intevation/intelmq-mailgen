@@ -8,4 +8,7 @@ check:
 check_all:
 	ALLTESTS=1 python3 -m unittest discover --start-directory tests -v
 
-.PHONY: all check check_all
+.PHONY: all check check_all docs
+
+docs:
+	make -C docs html
