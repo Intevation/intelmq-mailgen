@@ -12,9 +12,6 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
-import os
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -43,10 +40,10 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'IntelMQ Mailgen'
-copyright = u'2023, Intevation GmbH'
+project = 'IntelMQ Mailgen'
+copyright = '2023, Intevation GmbH'
 
-# The version info for the project you're documenting, acts as replacement for
+# The version info for the project yo're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
@@ -196,8 +193,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    ('index', 'IntelMQMailgen.tex', u'IntelMQ Mailgen Documentation',
-     u'Intevation GmbH', 'manual'),
+    ('index', 'IntelMQMailgen.tex', 'IntelMQ Mailgen Documentation',
+     'Intevation GmbH', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -226,8 +223,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'intelmqmailgen', u'IntelMQ Mailgen Documentation',
-     [u'Intevation GmbH'], 1)
+    ('index', 'intelmqmailgen', 'IntelMQ Mailgen Documentation',
+     ['Intevation GmbH'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -240,8 +237,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'IntelMQMailgen', u'IntelMQ Mailgen Documentation',
-     u'Intevation GmbH', 'IntelMQMailgen', 'One line description of project.',
+    ('index', 'IntelMQMailgen', 'IntelMQ Mailgen Documentation',
+     'Intevation GmbH', 'IntelMQMailgen', 'One line description of project.',
      'Miscellaneous'),
 ]
 

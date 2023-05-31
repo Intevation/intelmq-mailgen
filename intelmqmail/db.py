@@ -84,8 +84,8 @@ def get_pending_notifications(cur, additional_directive_where: Optional[str] = N
             additional_directive_where = ""
         cur.execute(PENDING_DIRECTIVES_QUERY.format(additional_directive_where=additional_directive_where,
                                                     additional_directive_join=additional_directive_join))
-    except psycopg2.OperationalError as e:
-        if e.pgcode == psycopg2.errorcodes.LOCK_NOT_AVAILABLE:
+    except psycopg2.OperationalError as exc:
+        if exc.pgcode == psycopg2.errorcodes.LOCK_NOT_AVAILABLE:
             log.info("Could not get db lock for pending notifications. "
                      "Probably another instance of myself is running.")
             return None
@@ -151,9 +151,8 @@ def new_ticket_number(cur):
     if date_str != result[0]["init_date"]:
         if date_str < result[0]["init_date"]:
             raise RuntimeError(
-                "initialized_for_day='{}' is in the future from now(). "
-                "Stopping to avoid reusing "
-                "ticket numbers".format(result[0]["init_date"]))
+                f"initialized_for_day='{result[0]['init_date']}' is in the future from now(). "
+                "Stopping to avoid reusing ticket numbers.")
 
         log.debug("We have a new day, resetting the ticket generator.")
         cur.execute("ALTER SEQUENCE intelmq_ticket_seq RESTART;")
@@ -162,10 +161,9 @@ def new_ticket_number(cur):
 
         cur.execute(sqlQuery)
         result = cur.fetchall()
-        log.debug(result)
 
     ticket = _format_ticket(date_str, result[0]["nextval"])
-    log.debug('New ticket number "{}".'.format(ticket,))
+    log.debug('New ticket number %r.', ticket)
 
     return ticket
 
@@ -203,7 +201,7 @@ def mark_as_sent(cur, directive_ids, ticket, sent_at):
         sent_at (datetime): When the mail was sent. Should be the value
             used in the Date header of the mail.
     """
-    log.debug("Marking directive ids {} as sent.".format(directive_ids))
+    log.debug("Marking directive ids %r as sent.", directive_ids)
     cur.execute("""\
                   WITH sent_row AS (INSERT INTO sent (intelmq_ticket, sent_at)
                                          VALUES (%s, %s)
