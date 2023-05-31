@@ -294,7 +294,8 @@ def generate_notifications_interactively(config, cur, directives, scripts, dry_r
 
 
 def mailgen(config: dict, scripts: list, process_all: bool = False, template: Optional[str] = None,
-            dry_run: bool = False, get_preview: bool = False, conn: Optional[psycopg2_connection] = None) -> str:
+            dry_run: bool = False, get_preview: bool = False, conn: Optional[psycopg2_connection] = None,
+            additional_directive_where=Optional[str]) -> str:
     """
     Run mailgen either interactively (process_all=False) or non-interactively (process_all=True)
 
@@ -306,6 +307,7 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
         dry_run: If true, rollbacks at the end
         get_preview: Returns the result of the first send_notifications call
         conn: Database connection, optional
+        additional_directive_where: Additional WHERE selector for the directives. If not given, use the one from the config. Details see docs.
     """
     if dry_run:
         log.info("Running dry-run mode. Not sending mails and not writing changes to the database. Simulation only.")
@@ -313,6 +315,8 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
     if not conn:
         log.debug("Opening database connection")
         conn = open_db_connection(config, connection_factory=RealDictConnection)
+    if not additional_directive_where:
+        additional_directive_where = config['database'].get('additional_directive_where')
 
     result = None
     if template:
@@ -327,7 +331,7 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
         cur.execute("SET TIME ZONE 'UTC';")
         log.debug("Fetching pending directives")
         directives = get_pending_notifications(cur,
-                                               additional_directive_where=config['database'].get('additional_directive_where'))
+                                               additional_directive_where=additional_directive_where)
         if directives is None:
             # This case has been logged by get_pending_notifications.
             return "No directives"
@@ -403,7 +407,8 @@ def main():
 
 
 def start(config: dict, process_all=False, template: Optional[str] = None,
-          dry_run: bool = False, get_preview: bool = False, conn: Optional[psycopg2_connection] = None) -> str:
+          dry_run: bool = False, get_preview: bool = False, conn: Optional[psycopg2_connection] = None,
+          additional_directive_where: Optional[str] = None) -> str:
     """
     Start mailgen
     can be used by other programs
@@ -424,7 +429,7 @@ def start(config: dict, process_all=False, template: Optional[str] = None,
         sys.exit(1)
 
     return mailgen(config, scripts, process_all=process_all, template=template, dry_run=dry_run,
-                   get_preview=get_preview, conn=conn)
+                   get_preview=get_preview, conn=conn, additional_directive_where=additional_directive_where)
 
 
 # to lower the chance of problems like
