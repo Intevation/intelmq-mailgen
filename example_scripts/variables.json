@@ -6,7 +6,7 @@
         "data_location_inline_en": "below",
         "data_location_attached_en": "attached",
         "signature_de": "Mit freundlichen Grüßen\ndie IntelMQ-Mailgen Entwickler\n",
-        "signature_de_en": "Mit freundlichen Grüßen / Kind regards\nTeam CERT-Bund\n\ndie IntelMQ-Mailgen Entwickler\nthe developers of IntelMQ-Mailgen\n",
+        "signature_de_en": "Mit freundlichen Grüßen / Kind regards\n\ndie IntelMQ-Mailgen Entwickler\nthe developers of IntelMQ-Mailgen\n",
         "signature_en": "Kind regards\nthe developers of IntelMQ-Mailgen\n",
         "note_automated_de": "Bitte beachten Sie:\nDies ist eine automatisch generierte Nachricht.\n",
         "note_automated_en": "Please note:\nThis is an automatically generated message.\n",
