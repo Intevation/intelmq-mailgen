@@ -60,7 +60,7 @@ log = logging.getLogger(__name__)
 if locale.getpreferredencoding() != 'UTF-8':
     log.critical(
         'The preferred encoding of your locale setting is not UTF-8'
-        ' but "{}". Exiting.'.format(locale.getpreferredencoding()))
+        ' but %r. Exiting.', locale.getpreferredencoding())
     sys.exit(1)
 
 APPNAME = "intelmqcbmail"
@@ -150,12 +150,11 @@ def create_notifications(cur, directive, config, scripts, gpgme_ctx, template: O
                           script.filename)
             continue
         else:
-            print("Script %r finished. Result: %r" % (script.filename, notifications))
+            print(f"Script {script.filename!r} finished. Result: {notifications!r}")
             log.debug("Script finished. Result: %r", notifications)
         if notifications:
             return notifications
-    raise NotImplementedError(("Cannot generate emails for directive %r"
-                               % (directive,)))
+    raise NotImplementedError(f"Cannot generate emails for directive {directive!r}")
 
 
 def send_notifications(config, directives, cur, scripts, template: Optional[Template] = None,
@@ -263,15 +262,9 @@ def generate_notifications_interactively(config, cur, directives, scripts, dry_r
     pending = directives[:]
     while pending:
         batch, pending = pending[:batch_size], pending[batch_size:]
-        print('Current batch (%d of %d total):'
-              % (len(batch), len(batch) + len(pending)))
+        print(f'Current batch ({len(batch)} of {len(batch) + len(pending)} total):')
         for i in batch:
-            print('    * {0} {1} ({2}/{3}): {4} events'
-                  .format(i["recipient_address"],
-                          i["template_name"],
-                          i["notification_format"],
-                          i["event_data_format"],
-                          len(i["event_ids"])))
+            print(f'    * {i["recipient_address"]} {i["template_name"]} ({i["notification_format"]}/{i["event_data_format"]}): {len(i["event_ids"])} events')
         valid_answers = ("c", "s", "a", "q")
         while True:
             answer = input("Options: [c]ontinue (skip), "
@@ -279,8 +272,7 @@ def generate_notifications_interactively(config, cur, directives, scripts, dry_r
                            "send [a]ll, "
                            "[q]uit? ").strip()
             if answer not in valid_answers:
-                print("Please enter one of the characters %s"
-                      % ", ".join(valid_answers))
+                print(f'Please enter one of the characters {", ".join(valid_answers)}')
             else:
                 break
         if answer == "c":
@@ -295,10 +287,10 @@ def generate_notifications_interactively(config, cur, directives, scripts, dry_r
                 to_send.extend(pending)
                 pending = []
 
-            print("Sending mails for %d entries... " % (len(to_send),))
+            print(f"Sending mails for {len(to_send)} entries... ")
             sent_mails, postponed, errors = send_notifications(config, to_send, cur,
                                                                scripts, dry_run=dry_run)
-            print("%s%d mails sent, %d postponed, %r errors." % ('Simulation: ' if dry_run else '', sent_mails, postponed, errors))
+            print(f"%s{sent_mails} mails sent, {postponed} postponed, {errors} errors." % ('Simulation: ' if dry_run else ''))
 
 
 def mailgen(config: dict, scripts: list, process_all: bool = False, template: Optional[str] = None,
@@ -351,7 +343,7 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
                 return send_notifications(config, directives, cur, scripts, template, dry_run=dry_run, get_preview=get_preview)
             sent_mails, postponed, errors = send_notifications(config, directives, cur,
                                                                scripts, template, dry_run=dry_run)
-            result = "%s%d mails sent, %d postponed, %d errors." % ('Simulation: ' if dry_run else '', sent_mails, postponed, errors)
+            result = f"%s{sent_mails} mails sent, {postponed} postponed, {errors} errors." % ('Simulation: ' if dry_run else '')
             log.info(result)
         else:
             generate_notifications_interactively(config, cur, directives,

@@ -60,7 +60,7 @@ class InvalidTemplate(InvalidDirective):
 
     def __init__(self, template_name):
         self.template_name = template_name
-        super().__init__("Invalid template %r" % (self.template_name,))
+        super().__init__(f"Invalid template {self.template_name!r}")
 
 
 class Directive:

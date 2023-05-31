@@ -37,9 +37,8 @@ def full_template_filename(template_dir, template_name):
     absbase = os.path.abspath(template_dir) + os.path.sep
     absfilename = os.path.abspath(os.path.join(template_dir, template_name))
     if not absfilename.startswith(absbase):
-        raise ValueError("Invalid template name %r! Full template filename"
-                         " would be outside of the template base directory %r."
-                         % (template_name, template_dir))
+        raise ValueError(f"Invalid template name {template_name!r}! Full template filename"
+                         f" would be outside of the template base directory {template_dir!r}.")
     return absfilename
 
 
@@ -104,7 +103,7 @@ class Template:
                    IntelMQStringTemplate(body))
 
     def __repr__(self):
-        return "Template(%r, %r)" % (self.subject, self.body)
+        return f"Template({self.subject!r}, {self.body!r})"
 
     def substitute(self, substitutions):
         """Fill-in the template with the given substitutions.
