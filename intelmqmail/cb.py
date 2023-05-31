@@ -150,8 +150,7 @@ def create_notifications(cur, directive, config, scripts, gpgme_ctx, template: O
                           script.filename)
             continue
         else:
-            print(f"Script {script.filename!r} finished. Result: {notifications!r}")
-            log.debug("Script finished. Result: %r", notifications)
+            log.debug("Script %r finished. Result: %r", script.filename, notifications)
         if notifications:
             return notifications
     raise NotImplementedError(f"Cannot generate emails for directive {directive!r}")
