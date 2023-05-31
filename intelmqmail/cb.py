@@ -188,6 +188,9 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
         signing_key = gpgme_ctx.get_key(config["openpgp"]["signing_key"])
         gpgme_ctx.signers = [signing_key]
 
+    if get_preview:
+        preview_notifications = []
+
     for directive in directives:
         # When processing a directive, we set a savepoint in the
         # database so that we can roll back to it if errors happen
@@ -208,8 +211,6 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
         # twice and the same ticket numbers being reused for
         # different notifications.
         cur.execute("SAVEPOINT sendmail;")
-        if get_preview:
-            preview_notifications = []
         try:
             notifications = create_notifications(cur, directive, config,
                                                  scripts, gpgme_ctx, template=template)
@@ -334,10 +335,10 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
                                                additional_directive_where=additional_directive_where)
         if directives is None:
             # This case has been logged by get_pending_notifications.
-            return "No directives"
+            return [] if get_preview else "No directives"
         if len(directives) == 0:
             log.info("No pending notifications to be sent")
-            return "No pending notifications to be sent"
+            return [] if get_preview else "No pending notifications to be sent"
 
         log.debug("Got %d groups of directives", len(directives))
 
