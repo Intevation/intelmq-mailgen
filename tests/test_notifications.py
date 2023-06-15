@@ -37,14 +37,14 @@ class TestScriptContext(unittest.TestCase):
         self.assertTrue(context.notification_interval_exceeded())
 
     def test_notification_interval_exceeded_last_sent_old_enough(self):
-        """Notification interval is exceeded if no mail has been sent before"""
+        """Notification interval is exceeded if last mail is too old"""
         context = self.context_with_directive(
             last_sent=datetime.now(timezone.utc) - timedelta(hours=3),
             notification_interval=timedelta(hours=2))
         self.assertTrue(context.notification_interval_exceeded())
 
     def test_notification_interval_exceeded_last_sent_too_new(self):
-        """Notification interval is exceeded if no mail has been sent before"""
+        """Notification interval is not exceeded if last mail was sent in interval"""
         context = self.context_with_directive(
             last_sent=datetime.now(timezone.utc) - timedelta(hours=1),
             notification_interval=timedelta(hours=2))
