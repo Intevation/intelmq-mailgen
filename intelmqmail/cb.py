@@ -37,7 +37,7 @@ import locale
 import logging
 import os
 import sys
-from typing import Union, List
+from typing import Dict, Union, List
 
 import gpg
 from psycopg2.extras import RealDictConnection
@@ -138,9 +138,10 @@ def load_script_entry_points(config):
                         logger=log)
 
 
-def create_notifications(cur, directive, config, scripts, gpgme_ctx, template: Optional[Template] = None):
+def create_notifications(cur, directive, config, scripts, gpgme_ctx, template: Optional[Template] = None,
+                         templates: Optional[Dict[str, Template]] = None):
     script_context = ScriptContext(config, cur, gpgme_ctx,
-                                   Directive(**directive), log, template=template)
+                                   Directive(**directive), log, template=template, templates=templates)
     for script in scripts:
         log.debug("Calling script %r", script.filename)
         try:
@@ -157,6 +158,7 @@ def create_notifications(cur, directive, config, scripts, gpgme_ctx, template: O
 
 
 def send_notifications(config, directives, cur, scripts, template: Optional[Template] = None,
+                       templates: Optional[Dict[str, Template]] = None,
                        dry_run: bool = False, get_preview: bool = False) -> Union[int, List[str]]:
     """
     Create and send notification mails for all items in directives.
@@ -172,6 +174,7 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
     :param directives a list of aggregated_directives
     :param cur database cursor to use when loading event information
     :param template
+    :param templates
     :param dry_run if true, don't send the mail, rollback database changes
     :param get_preview return content of first email
 
@@ -212,7 +215,7 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
         cur.execute("SAVEPOINT sendmail;")
         try:
             notifications = create_notifications(cur, directive, config,
-                                                 scripts, gpgme_ctx, template=template)
+                                                 scripts, gpgme_ctx, template=template, templates=templates)
 
             if not notifications:
                 log.warning("No emails for sending were generated for %r!",
@@ -293,7 +296,7 @@ def generate_notifications_interactively(config, cur, directives, scripts, dry_r
             print(f"%s{sent_mails} mails sent, {postponed} postponed, {errors} errors." % ('Simulation: ' if dry_run else ''))
 
 
-def mailgen(config: dict, scripts: list, process_all: bool = False, template: Optional[str] = None,
+def mailgen(config: dict, scripts: list, process_all: bool = False, template: Optional[str] = None, templates: Optional[Dict[str, str]] = None,
             dry_run: bool = False, get_preview: bool = False, conn: Optional[psycopg2_connection] = None,
             additional_directive_where=Optional[str]) -> str:
     """
@@ -303,7 +306,8 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
         config
         scripts
         process_all: See above
-        template: Template as string, optional
+        template: Fallback template as string, optional
+        templates: Dictionary of templates with items name: body, optional. Overrides any template files in the template directory
         dry_run: If true, rollbacks at the end
         get_preview: Returns the result of the first send_notifications call
         conn: Database connection, optional
@@ -325,6 +329,13 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
         subject = template[:template.find('\n')]  # first line
         body = template[template.find('\n') + 1:] + '\n'  # rest plus trailing newline
         template = Template.from_strings(subject, body)
+    if templates:
+        for template_name in templates:
+            # convert string template to Template object
+            template = templates[template_name].strip()
+            subject = template[:template.find('\n')]  # first line
+            body = template[template.find('\n') + 1:] + '\n'  # rest plus trailing newline
+            templates[template_name] = Template.from_strings(subject, body)
 
     try:
         cur = conn.cursor()
@@ -344,9 +355,9 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
         if process_all:
             log.debug("Start processing directives")
             if get_preview:
-                return send_notifications(config, directives, cur, scripts, template, dry_run=dry_run, get_preview=get_preview)
+                return send_notifications(config, directives, cur, scripts, template, templates, dry_run=dry_run, get_preview=get_preview)
             sent_mails, postponed, errors = send_notifications(config, directives, cur,
-                                                               scripts, template, dry_run=dry_run)
+                                                               scripts, template, templates, dry_run=dry_run)
             result = f"%s{sent_mails} mails sent, {postponed} postponed, {errors} errors." % ('Simulation: ' if dry_run else '')
             log.info(result)
         else:
@@ -406,7 +417,7 @@ def main():
     start(config, process_all=args.all, dry_run=args.dry_run)
 
 
-def start(config: dict, process_all=False, template: Optional[str] = None,
+def start(config: dict, process_all=False, template: Optional[str] = None, templates: Optional[Dict[str, str]] = None,
           dry_run: bool = False, get_preview: bool = False, conn: Optional[psycopg2_connection] = None,
           additional_directive_where: Optional[str] = None) -> str:
     """
@@ -428,7 +439,7 @@ def start(config: dict, process_all=False, template: Optional[str] = None,
                   config["script_directory"])
         sys.exit(1)
 
-    return mailgen(config, scripts, process_all=process_all, template=template, dry_run=dry_run,
+    return mailgen(config, scripts, process_all=process_all, template=template, templates=templates, dry_run=dry_run,
                    get_preview=get_preview, conn=conn, additional_directive_where=additional_directive_where)
 
 

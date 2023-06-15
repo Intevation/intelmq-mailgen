@@ -25,7 +25,7 @@ import os
 import tempfile
 import datetime
 
-from typing import Optional
+from typing import Dict, Optional
 
 # if we have the optional module pyxarf, we can define more methods
 try:
@@ -166,14 +166,15 @@ class ScriptContext:
         logger: the logger the script should use for logging
     """
 
-    def __init__(self, config, cur, gpgme_ctx, directive, logger, template: Optional[Template] = None):
+    def __init__(self, config, cur, gpgme_ctx, directive, logger, template: Optional[Template] = None, templates: Optional[Dict[str, Template]] = None):
         self.config = config
         self.db_cursor = cur
         self.gpgme_ctx = gpgme_ctx
         self.directive = directive
         self.logger = logger
         self.now = datetime.datetime.now(datetime.timezone.utc)
-        self.fallback_template: Optional[str] = template
+        self.fallback_template: Optional[Template] = template
+        self.templates: Optional[Dict[str, Template]] = templates
 
     def notification_interval_exceeded(self):
         """Return whether the notification interval has been exceeded.
@@ -223,11 +224,16 @@ class ScriptContext:
     def load_events(self, columns=None):
         return load_events(self.db_cursor, self.directive.event_ids, columns)
 
-    def read_template(self):
+    def read_template(self, templates: Dict[str, Template]) -> Template:
         template_name = ''
         try:
             template_name = self.directive.template_name
-            return read_template(self.config["template_dir"], template_name)
+            try:
+                return templates[template_name]
+            except KeyError:
+                return read_template(self.config["template_dir"], template_name)
+            finally:
+                self.logger.debug('Using template name %r.', template_name)
         except Exception as e:
             raise InvalidTemplate(template_name) from e
 
@@ -282,11 +288,11 @@ class ScriptContext:
 
         # default: use parameter `template`
         if template is None and template_name:  # Use template name if given
-            template = read_template(self.config["template_dir"], template_name)
+            template = read_template(self.config["template_dir"], template_name, templates=self.templates)
         elif template is None and self.fallback_template:  # Fallback to fallback template of Context
             template = self.fallback_template
         elif template is None:
-            template = self.read_template()
+            template = self.read_template(templates=self.templates)
 
         ticket = self.new_ticket_number()
 
@@ -443,6 +449,9 @@ class EmailNotification(Notification):
         send_context.smtp.send_message(self.email)
         send_context.mark_as_sent(self.directive.directive_ids, self.ticket,
                                   self.email["Date"].datetime)
+
+    def __repr__(self) -> str:
+        return f'EmailNotification(email={self.email!r}, ticket={self.ticket!r})'
 
 
 class _Postponed:
