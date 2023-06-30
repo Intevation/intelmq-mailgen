@@ -332,9 +332,9 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
     if templates:
         for template_name in templates:
             # convert string template to Template object
-            template = templates[template_name].strip()
-            subject = template[:template.find('\n')]  # first line
-            body = template[template.find('\n') + 1:] + '\n'  # rest plus trailing newline
+            template_strip = templates[template_name].strip()
+            subject = template_strip[:template_strip.find('\n')]  # first line
+            body = template_strip[template_strip.find('\n') + 1:] + '\n'  # rest plus trailing newline
             templates[template_name] = Template.from_strings(subject, body)
 
     try:
