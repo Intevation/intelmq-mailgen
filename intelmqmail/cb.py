@@ -49,6 +49,7 @@ from intelmqmail.script import load_scripts
 from intelmqmail.notification import Directive, SendContext, ScriptContext, \
     Postponed
 from intelmqmail.templates import Template
+from intelmqmail.tableformat import TableFormat
 
 from typing import Optional
 
@@ -139,9 +140,11 @@ def load_script_entry_points(config):
 
 
 def create_notifications(cur, directive, config, scripts, gpgme_ctx, template: Optional[Template] = None,
-                         templates: Optional[Dict[str, Template]] = None):
+                         templates: Optional[Dict[str, Template]] = None,
+                         default_format_spec: Optional[TableFormat] = None):
     script_context = ScriptContext(config, cur, gpgme_ctx,
-                                   Directive(**directive), log, template=template, templates=templates)
+                                   Directive(**directive), log, template=template, templates=templates,
+                                   default_format_spec=default_format_spec)
     for script in scripts:
         log.debug("Calling script %r", script.filename)
         try:
@@ -159,7 +162,8 @@ def create_notifications(cur, directive, config, scripts, gpgme_ctx, template: O
 
 def send_notifications(config, directives, cur, scripts, template: Optional[Template] = None,
                        templates: Optional[Dict[str, Template]] = None,
-                       dry_run: bool = False, get_preview: bool = False) -> Union[int, List[str]]:
+                       dry_run: bool = False, get_preview: bool = False,
+                       default_format_spec: Optional[TableFormat] = None) -> Union[int, List[str]]:
     """
     Create and send notification mails for all items in directives.
 
@@ -215,7 +219,8 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
         cur.execute("SAVEPOINT sendmail;")
         try:
             notifications = create_notifications(cur, directive, config,
-                                                 scripts, gpgme_ctx, template=template, templates=templates)
+                                                 scripts, gpgme_ctx, template=template, templates=templates,
+                                                 default_format_spec=default_format_spec)
 
             if not notifications:
                 log.warning("No emails for sending were generated for %r!",
@@ -298,7 +303,7 @@ def generate_notifications_interactively(config, cur, directives, scripts, dry_r
 
 def mailgen(config: dict, scripts: list, process_all: bool = False, template: Optional[str] = None, templates: Optional[Dict[str, str]] = None,
             dry_run: bool = False, get_preview: bool = False, conn: Optional[psycopg2_connection] = None,
-            additional_directive_where=Optional[str]) -> str:
+            additional_directive_where=Optional[str], default_format_spec: Optional[TableFormat] = None) -> str:
     """
     Run mailgen either interactively (process_all=False) or non-interactively (process_all=True)
 
@@ -355,9 +360,11 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
         if process_all:
             log.debug("Start processing directives")
             if get_preview:
-                return send_notifications(config, directives, cur, scripts, template, templates, dry_run=dry_run, get_preview=get_preview)
+                return send_notifications(config, directives, cur, scripts, template, templates, dry_run=dry_run, get_preview=get_preview,
+                                          default_format_spec=default_format_spec)
             sent_mails, postponed, errors = send_notifications(config, directives, cur,
-                                                               scripts, template, templates, dry_run=dry_run)
+                                                               scripts, template, templates, dry_run=dry_run,
+                                                               default_format_spec=default_format_spec)
             result = f"%s{sent_mails} mails sent, {postponed} postponed, {errors} errors." % ('Simulation: ' if dry_run else '')
             log.info(result)
         else:
@@ -419,7 +426,7 @@ def main():
 
 def start(config: dict, process_all=False, template: Optional[str] = None, templates: Optional[Dict[str, str]] = None,
           dry_run: bool = False, get_preview: bool = False, conn: Optional[psycopg2_connection] = None,
-          additional_directive_where: Optional[str] = None) -> str:
+          additional_directive_where: Optional[str] = None, default_format_spec: Optional[TableFormat] = None) -> str:
     """
     Start mailgen
     can be used by other programs
@@ -440,7 +447,8 @@ def start(config: dict, process_all=False, template: Optional[str] = None, templ
         sys.exit(1)
 
     return mailgen(config, scripts, process_all=process_all, template=template, templates=templates, dry_run=dry_run,
-                   get_preview=get_preview, conn=conn, additional_directive_where=additional_directive_where)
+                   get_preview=get_preview, conn=conn, additional_directive_where=additional_directive_where,
+                   default_format_spec=default_format_spec)
 
 
 # to lower the chance of problems like

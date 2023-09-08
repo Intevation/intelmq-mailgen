@@ -35,8 +35,20 @@ except ModuleNotFoundError:
 
 from intelmqmail.db import load_events, new_ticket_number, mark_as_sent
 from intelmqmail.templates import read_template, Template
-from intelmqmail.tableformat import format_as_csv
+from intelmqmail.tableformat import format_as_csv, TableFormat, build_table_format
 from intelmqmail.mail import create_mail, clearsign, domain_from_sender
+
+FALLBACK_FORMAT_SPEC = build_table_format(
+    "Fallback",
+    (("source.asn", "asn"),
+     ("source.ip", "ip"),
+     ("time.source", "timestamp"),
+     ("source.port", "src_port"),
+     ("destination.ip", "dst_ip"),
+     ("destination.port", "dst_port"),
+     ("destination.fqdn", "dst_host"),
+     ("protocol.transport", "proto"),
+     ))
 
 
 class NotificationError(Exception):
@@ -166,7 +178,8 @@ class ScriptContext:
         logger: the logger the script should use for logging
     """
 
-    def __init__(self, config, cur, gpgme_ctx, directive, logger, template: Optional[Template] = None, templates: Optional[Dict[str, Template]] = None):
+    def __init__(self, config, cur, gpgme_ctx, directive, logger, template: Optional[Template] = None, templates: Optional[Dict[str, Template]] = None,
+                 default_format_spec: Optional[TableFormat] = None):
         self.config = config
         self.db_cursor = cur
         self.gpgme_ctx = gpgme_ctx
@@ -175,6 +188,7 @@ class ScriptContext:
         self.now = datetime.datetime.now(datetime.timezone.utc)
         self.fallback_template: Optional[Template] = template
         self.templates: Optional[Dict[str, Template]] = templates
+        self.default_format_spec: Optional[TableFormat] = default_format_spec if default_format_spec else FALLBACK_FORMAT_SPEC
 
     def notification_interval_exceeded(self):
         """Return whether the notification interval has been exceeded.
@@ -242,7 +256,7 @@ class ScriptContext:
             body = clearsign(self.gpgme_ctx, body)
         return body
 
-    def mail_format_as_csv(self, format_spec, template=None,
+    def mail_format_as_csv(self, format_spec: Optional[TableFormat] = None, template=None,
                            substitutions=None, attach_event_data=False,
                            template_name=None):
         """Create an email with the event data formatted as CSV.
@@ -282,6 +296,8 @@ class ScriptContext:
             return value of a notification script's create_notifications
             function.
         """
+        if format_spec is None:
+            format_spec = self.default_format_spec
         events = self.load_events(format_spec.event_table_columns())
 
         events_as_csv = format_as_csv(format_spec, events)
