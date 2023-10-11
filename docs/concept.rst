@@ -68,11 +68,11 @@ attributes are the actual identifiers used in the code):
     :event_data_format: The format to use for event data included in the
                         notification.
     :aggregate_identifier: Additional key/value pairs used when
-			   aggregating directives. Both keys and values
-			   are strings. (See also :ref:`aggregation`)
+               aggregating directives. Both keys and values
+               are strings. (See also :ref:`aggregation`)
     :notification_interval: Interval between notifications for similar
-			    events (see
-			    :ref:`aggregation_and_notification_interval`)
+                events (see
+                :ref:`aggregation_and_notification_interval`)
 
 
 The three attributes ``notification_format``, ``template_name`` and
@@ -176,7 +176,7 @@ For each group of directives some more attributes are read from the
 database in addition to the attributes that were used for aggregation:
 
     :last_sent: When the last similar mail was sent (see
-		:ref:`aggregation_and_notification_interval`)
+        :ref:`aggregation_and_notification_interval`)
     :inserted_at: When the newest of the directives in the group was
                   added to the database.
     :event_ids: A list with the database IDs of all the events whose
@@ -220,11 +220,11 @@ of three possible results:
     ``Postponed``
 
         A predefined constant in the ``intelmqmail.notification``
-	module. This constant indicates that the script would handle the
-	directive if sufficient time has passed. For instance, it may
-	return this constant the time that passed since the
-	``last_sent`` date is shorter than the
-	``notification_interval``.
+        module. This constant indicates that the script would handle the
+        directive if sufficient time has passed. For instance, it may
+        return this constant the time that passed since the
+        ``last_sent`` date is shorter than the
+        ``notification_interval``.
 
 
 When mailgen processes a group of directives, it calls the
