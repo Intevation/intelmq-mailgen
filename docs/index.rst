@@ -16,6 +16,15 @@ Contents:
 
 For the integration with IntelMQ Webinput CSV, see the documentation `there <https://github.com/Intevation/intelmq-webinput-csv/blob/master/docs/User-Guide.md#user-content-integration-with-mailgen>`_.
 
+Source code documentation
+=========================
+
+.. toctree::
+   :maxdepth: 2
+
+   source/modules
+   source/intelmqmail
+
 Indices and tables
 ==================
 

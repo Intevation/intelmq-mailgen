@@ -42,8 +42,8 @@ jobs:
         with:
           python-version: 3.8
 
-      - name: Install Sphinx
-        run: pip install Sphinx
+      - name: Install requirements
+        run: pip install -r docs/requirements.txt
 
       - name: Build docs
         run: make -C docs html

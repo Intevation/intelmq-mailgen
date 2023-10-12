@@ -17,6 +17,14 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 # sys.path.insert(0, os.path.abspath('.'))
 
+import sys
+import os
+import subprocess
+
+
+sys.path.insert(0, os.path.abspath('../'))  # make intelmqmail importable by apidoc
+
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -25,7 +33,9 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
+extensions = [
+    'sphinx.ext.autodoc'
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -253,3 +263,19 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
+
+# -- Custom options -------------------------------------------------------
+
+def run_apidoc(_):
+    subprocess.check_call("sphinx-apidoc --implicit-namespaces -o source ../intelmqmail", shell=True)
+
+# Always document the __init__ methods
+# https://stackoverflow.com/a/5599712/2851664
+def skip(app, what, name, obj, would_skip, options):
+    if name == "__init__":
+        return False
+    return would_skip
+
+def setup(app):
+    app.connect("autodoc-skip-member", skip)
+    app.connect("builder-inited", run_apidoc)
