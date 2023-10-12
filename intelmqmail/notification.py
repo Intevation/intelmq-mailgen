@@ -176,7 +176,14 @@ class ScriptContext:
             produce a notification
         config: the mailgen configuration
         logger: the logger the script should use for logging
-    """
+
+    Parameters:
+     * See below
+     * default_format_spec: Default value (FALLBACK_FORMAT_SPEC):
+
+         * """
+
+    __doc__ += '\n         * '.join(map(lambda column: f'{column.title}: {column.field_name}', FALLBACK_FORMAT_SPEC.columns))
 
     def __init__(self, config, cur, gpgme_ctx, directive, logger, template: Optional[Template] = None, templates: Optional[Dict[str, Template]] = None,
                  default_format_spec: Optional[TableFormat] = None):

@@ -1,5 +1,5 @@
-Handling notifications with IntelMQ Mailgen
-===========================================
+Concept: Handling notifications with IntelMQ Mailgen
+====================================================
 
 Overview
 --------
