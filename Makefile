@@ -12,3 +12,6 @@ check_all:
 
 docs:
 	make -C docs html
+
+pycodestyle:
+	pycodestyle docs/ example_scripts/ extras/ intelmqmail/ sql/ templates/ tests/
