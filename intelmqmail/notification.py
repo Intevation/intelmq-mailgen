@@ -251,7 +251,9 @@ class ScriptContext:
             template_name = self.directive.template_name
             try:
                 return templates[template_name]
-            except KeyError:
+            except (KeyError, TypeError):
+                # TypeError: template_name not in templates
+                # TypeError: templates is not a dict, but None
                 return read_template(self.config["template_dir"], template_name)
             finally:
                 self.logger.debug('Using template name %r.', template_name)
