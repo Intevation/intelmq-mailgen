@@ -190,7 +190,7 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
     gpgme_ctx = None
 
     if config["openpgp"]["always_sign"]:
-        gpgme_ctx = gpg.Context()
+        gpgme_ctx = gpg.Context(home_dir=config["openpgp"]["gnupg_home"])
         signing_key = gpgme_ctx.get_key(config["openpgp"]["signing_key"])
         gpgme_ctx.signers = [signing_key]
 
@@ -437,8 +437,6 @@ def start(config: dict, process_all=False, template: Optional[str] = None, templ
     } != config["openpgp"].keys():
         log.critical("Config section openpgp missing or incomplete. Exiting.")
         sys.exit(1)
-    # setting up gnupg
-    os.environ['GNUPGHOME'] = config["openpgp"]["gnupg_home"]
 
     scripts = load_script_entry_points(config)
     if not scripts:
