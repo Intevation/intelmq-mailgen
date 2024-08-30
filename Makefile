@@ -10,6 +10,9 @@ check_all:
 
 .PHONY: all check check_all docs
 
+sync:
+	rsync -a * .github --exclude '*.pyc' --exclude __pycache__ --exclude dist --exclude intelmqmail.egg-info docker-swa.whale.intevation.de:intelmq-mailgen/
+
 docs:
 	make -C docs html
 
