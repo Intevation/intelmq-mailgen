@@ -377,7 +377,7 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
         if cur is not None:
             cur.close()
 
-        if dry_run:
+        if dry_run or get_preview:
             conn.rollback()
         else:
             # the only change to the database is marking the sent mails as
