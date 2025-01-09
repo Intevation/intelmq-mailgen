@@ -2,19 +2,19 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="1600"
    height="600"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.5 r10040"
-   sodipodi:docname="notification_overview.svg">
+   inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
+   sodipodi:docname="notification_overview.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <title
      id="title3107">IntelMQ-cb-mailgen Notification Mechanism Overview</title>
   <defs
@@ -158,19 +158,27 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
-     inkscape:cx="468.4031"
-     inkscape:cy="360.73688"
+     inkscape:cx="1115.7135"
+     inkscape:cy="360.62446"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1680"
-     inkscape:window-height="1003"
-     inkscape:window-x="-2"
-     inkscape:window-y="-3"
-     inkscape:window-maximized="1">
+     inkscape:window-width="1920"
+     inkscape:window-height="1057"
+     inkscape:window-x="1920"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:showpageshadow="2"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1">
     <inkscape:grid
        type="xygrid"
-       id="grid3100" />
+       id="grid3100"
+       originx="0"
+       originy="0"
+       spacingy="1"
+       spacingx="1"
+       units="px" />
   </sodipodi:namedview>
   <metadata
      id="metadata7">
@@ -235,13 +243,12 @@ dustin.demuth@intevation.de</dc:title>
          style="fill:#ff0000;fill-opacity:1;stroke:#969696;stroke-opacity:1"
          ry="5.0000486" />
       <text
-         sodipodi:linespacing="125%"
          id="text3023"
          y="747.34277"
          x="142.57785"
-         style="font-size:15px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Sans Bold"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"><tspan
-           style="font-weight:bold;text-align:center;text-anchor:middle;fill:#000000;-inkscape-font-specification:Roboto Bold"
+           style="font-weight:bold;font-size:15px;line-height:1.25;-inkscape-font-specification:'Roboto Bold';text-align:center;text-anchor:middle;fill:#000000"
            y="747.34277"
            x="142.57785"
            id="tspan3025"
@@ -263,16 +270,15 @@ dustin.demuth@intevation.de</dc:title>
            ry="5.0000486" />
         <text
            xml:space="preserve"
-           style="font-size:15px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Sans Bold"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
            x="442.57785"
            y="747.26587"
-           id="text3023-5"
-           sodipodi:linespacing="125%"><tspan
+           id="text3023-5"><tspan
              sodipodi:role="line"
              id="tspan3025-3"
              x="442.57785"
              y="747.26587"
-             style="font-weight:bold;text-align:center;text-anchor:middle;fill:#000000;-inkscape-font-specification:Roboto Bold">shadowserver-parser</tspan></text>
+             style="font-weight:bold;font-size:15px;line-height:1.25;-inkscape-font-specification:'Roboto Bold';text-align:center;text-anchor:middle;fill:#000000">shadowserver-parser</tspan></text>
       </g>
     </g>
     <g
@@ -291,16 +297,15 @@ dustin.demuth@intevation.de</dc:title>
            ry="5.0000486" />
         <text
            xml:space="preserve"
-           style="font-size:15px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Sans Bold"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none"
            x="722.57788"
            y="747.26587"
-           id="text3023-5-6"
-           sodipodi:linespacing="125%"><tspan
+           id="text3023-5-6"><tspan
              sodipodi:role="line"
              id="tspan3025-3-2"
              x="722.57788"
              y="747.26587"
-             style="font-weight:bold;text-align:center;text-anchor:middle;fill:#ffffff;-inkscape-font-specification:Roboto Bold">cert-bund-contact-database-expert</tspan></text>
+             style="font-weight:bold;font-size:15px;line-height:1.25;-inkscape-font-specification:'Roboto Bold';text-align:center;text-anchor:middle;fill:#ffffff">cert-bund-contact-database-expert</tspan></text>
       </g>
     </g>
     <g
@@ -315,13 +320,12 @@ dustin.demuth@intevation.de</dc:title>
          style="fill:#0000ff;fill-opacity:1;stroke:#969696;stroke-opacity:1"
          ry="4.9136839" />
       <text
-         sodipodi:linespacing="125%"
          id="text3023-5-6-1"
          y="747.26587"
          x="1022.5779"
-         style="font-size:15px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Sans Bold"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none"
          xml:space="preserve"><tspan
-           style="font-weight:bold;text-align:center;text-anchor:middle;fill:#ffffff;-inkscape-font-specification:Roboto Bold"
+           style="font-weight:bold;font-size:15px;line-height:1.25;-inkscape-font-specification:'Roboto Bold';text-align:center;text-anchor:middle;fill:#ffffff"
            y="747.26587"
            x="1022.5779"
            id="tspan3025-3-2-2"
@@ -339,13 +343,12 @@ dustin.demuth@intevation.de</dc:title>
          style="fill:#ffff00;fill-opacity:1;stroke:#969696;stroke-opacity:1"
          ry="5.0000486" />
       <text
-         sodipodi:linespacing="125%"
          id="text3023-5-6-1-0"
          y="747.19263"
          x="1362.5779"
-         style="font-size:15px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Sans Bold"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"><tspan
-           style="font-weight:bold;text-align:center;text-anchor:middle;fill:#000000;-inkscape-font-specification:Roboto Bold"
+           style="font-weight:bold;font-size:15px;line-height:1.25;-inkscape-font-specification:'Roboto Bold';text-align:center;text-anchor:middle;fill:#000000"
            y="747.19263"
            x="1362.5779"
            id="tspan3025-3-2-2-9"
@@ -508,14 +511,13 @@ dustin.demuth@intevation.de</dc:title>
           <g
              id="g4179">
             <text
-               sodipodi:linespacing="125%"
                id="text4171"
                y="630.11841"
                x="1060.0822"
-               style="font-size:15px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Sans Bold"
+               style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
                xml:space="preserve"
                transform="matrix(0,1.2386117,-1.3551509,0,1481.3405,-315.65479)"><tspan
-                 style="font-weight:bold;fill:#333333;-inkscape-font-specification:Roboto Bold"
+                 style="font-weight:bold;font-size:15px;line-height:1.25;-inkscape-font-specification:'Roboto Bold';fill:#333333"
                  y="630.11841"
                  x="1060.0822"
                  id="tspan4173"
@@ -565,14 +567,13 @@ dustin.demuth@intevation.de</dc:title>
           <g
              id="g4179-9">
             <text
-               sodipodi:linespacing="125%"
                id="text4171-3"
                y="630.11841"
                x="1060.0822"
-               style="font-size:15px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Sans Bold"
+               style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
                xml:space="preserve"
                transform="matrix(0,1.2386117,-1.3551509,0,1481.3405,-315.65479)"><tspan
-                 style="font-weight:bold;fill:#333333;-inkscape-font-specification:Roboto Bold"
+                 style="font-weight:bold;font-size:15px;line-height:1.25;-inkscape-font-specification:'Roboto Bold';fill:#333333"
                  y="630.11841"
                  x="1060.0822"
                  id="tspan4173-7"
@@ -622,14 +623,13 @@ dustin.demuth@intevation.de</dc:title>
           <g
              id="g4179-9-3">
             <text
-               sodipodi:linespacing="125%"
                id="text4171-3-0"
                y="630.11841"
                x="1060.0822"
-               style="font-size:15px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Sans Bold"
+               style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
                xml:space="preserve"
                transform="matrix(0,1.2386117,-1.3551509,0,1481.3405,-315.65479)"><tspan
-                 style="font-weight:bold;fill:#333333;-inkscape-font-specification:Roboto Bold"
+                 style="font-weight:bold;font-size:15px;line-height:1.25;-inkscape-font-specification:'Roboto Bold';fill:#333333"
                  y="630.11841"
                  x="1060.0822"
                  id="tspan4173-7-7"
@@ -704,14 +704,13 @@ dustin.demuth@intevation.de</dc:title>
           </g>
         </g>
         <text
-           transform="matrix(0,-1,1,0,0,0)"
-           sodipodi:linespacing="125%"
+           transform="rotate(-90)"
            id="text4237"
            y="576.37213"
            x="-930.90637"
-           style="font-size:15px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Sans Bold"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
            xml:space="preserve"><tspan
-             style="font-weight:bold;text-align:center;text-anchor:middle;fill:#333333;-inkscape-font-specification:Roboto Bold"
+             style="font-weight:bold;font-size:15px;line-height:1.25;-inkscape-font-specification:'Roboto Bold';text-align:center;text-anchor:middle;fill:#333333"
              y="576.37213"
              x="-930.90637"
              id="tspan4239"
@@ -779,14 +778,13 @@ dustin.demuth@intevation.de</dc:title>
           </g>
         </g>
         <text
-           transform="matrix(0,-1,1,0,0,0)"
-           sodipodi:linespacing="125%"
+           transform="rotate(-90)"
            id="text4237-0"
            y="576.37213"
            x="-930.90637"
-           style="font-size:15px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Sans Bold"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
            xml:space="preserve"><tspan
-             style="font-weight:bold;text-align:center;text-anchor:middle;fill:#333333;-inkscape-font-specification:Roboto Bold"
+             style="font-weight:bold;font-size:15px;line-height:1.25;-inkscape-font-specification:'Roboto Bold';text-align:center;text-anchor:middle;fill:#333333"
              y="576.37213"
              x="-930.90637"
              id="tspan4239-4"
@@ -824,14 +822,13 @@ dustin.demuth@intevation.de</dc:title>
           </g>
         </g>
         <text
-           transform="matrix(0,-1,1,0,0,0)"
-           sodipodi:linespacing="125%"
+           transform="rotate(-90)"
            id="text4237-0-2"
            y="536.37213"
            x="-914.90637"
-           style="font-size:15px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Sans Bold"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
            xml:space="preserve"><tspan
-             style="font-weight:bold;text-align:center;text-anchor:middle;fill:#333333;-inkscape-font-specification:Roboto Bold"
+             style="font-weight:bold;font-size:15px;line-height:1.25;-inkscape-font-specification:'Roboto Bold';text-align:center;text-anchor:middle;fill:#333333"
              y="536.37213"
              x="-914.90637"
              id="tspan4239-4-6"

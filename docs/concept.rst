@@ -1,6 +1,8 @@
 Concept: Handling notifications with IntelMQ Mailgen
 ====================================================
 
+.. image:: notification_overview.svg
+
 Overview
 --------
 
