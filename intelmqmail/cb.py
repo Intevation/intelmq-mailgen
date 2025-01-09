@@ -370,9 +370,6 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
         else:
             generate_notifications_interactively(config, cur, directives,
                                                  scripts, dry_run=dry_run)
-
-    except:
-        raise
     finally:
         if cur is not None:
             cur.close()
