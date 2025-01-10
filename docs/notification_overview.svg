@@ -157,11 +157,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.7732274"
-     inkscape:cx="1030.3247"
-     inkscape:cy="281.68976"
+     inkscape:zoom="1.1974156"
+     inkscape:cx="567.88971"
+     inkscape:cy="212.54107"
      inkscape:document-units="px"
-     inkscape:current-layer="g4179"
+     inkscape:current-layer="g3142"
      showgrid="false"
      inkscape:window-width="1920"
      inkscape:window-height="1032"
@@ -252,7 +252,12 @@ dustin.demuth@intevation.de</dc:title>
            y="747.34277"
            x="142.57785"
            id="tspan3025"
-           sodipodi:role="line">fileinput-collector</tspan></text>
+           sodipodi:role="line">collectors</tspan><tspan
+           style="font-weight:bold;font-size:15px;line-height:1.25;-inkscape-font-specification:'Roboto Bold';text-align:center;text-anchor:middle;fill:#000000"
+           y="755.60901"
+           x="142.57785"
+           sodipodi:role="line"
+           id="tspan1" /></text>
     </g>
     <g
        id="g3147"
@@ -278,7 +283,7 @@ dustin.demuth@intevation.de</dc:title>
              id="tspan3025-3"
              x="442.57785"
              y="747.26587"
-             style="font-weight:bold;font-size:15px;line-height:1.25;-inkscape-font-specification:'Roboto Bold';text-align:center;text-anchor:middle;fill:#000000">shadowserver-parser</tspan></text>
+             style="font-weight:bold;font-size:15px;line-height:1.25;-inkscape-font-specification:'Roboto Bold';text-align:center;text-anchor:middle;fill:#000000">parsers</tspan></text>
       </g>
     </g>
     <g
