@@ -20,6 +20,9 @@ ALTER DATABASE :"DBNAME" OWNER TO eventdb_owner;
 
 ALTER TABLE events OWNER TO eventdb_owner;
 
+-- must be superuser to create type
+CREATE TYPE ip_endpoint AS ENUM ('source', 'destination');
+
 CREATE SEQUENCE intelmq_ticket_seq MINVALUE 10000001;
 ALTER SEQUENCE intelmq_ticket_seq OWNER TO eventdb_send_notifications;
 
@@ -28,10 +31,6 @@ SET ROLE eventdb_owner;
 GRANT INSERT ON events TO eventdb_insert;
 GRANT USAGE ON events_id_seq TO eventdb_insert;
 GRANT SELECT ON events TO eventdb_send_notifications;
-
-
-CREATE TYPE ip_endpoint AS ENUM ('source', 'destination');
-
 
 -- a single row table to save which day we currently use for intelmq_ticket
 CREATE TABLE ticket_day (
