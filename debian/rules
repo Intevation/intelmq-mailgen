@@ -11,8 +11,8 @@ override_dh_install:
 	# Fix paths for Debian
 	mkdir -p debian/intelmq-mailgen/usr/share/doc/intelmq-mailgen
 	sed 's@src/\(intelmq-mailgen/tests/keys/test1.sec\)@/usr/share/\1@; s@sql/notifications.sql@/usr/share/intelmq-mailgen/sql/notifications.sql@; s@intelmq-mailgen.conf.example@/usr/share/doc/intelmq-mailgen/examples/intelmq-mailgen.conf.example@' \
-		README.md \
-		> debian/intelmq-mailgen/usr/share/doc/intelmq-mailgen/README.md
+		README.rst \
+		> debian/intelmq-mailgen/usr/share/doc/intelmq-mailgen/README.rst
 
 
 # Without forcing the correct --install-lib path here, files would get
