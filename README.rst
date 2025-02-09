@@ -6,7 +6,7 @@ IntelMQ command line tool to process events.
 Call ``intelmqcbmail --help`` to see the current usage.
 
 The concept’s documentation can be found here:
-http://intevation.github.io/intelmq-mailgen/
+https://intevation.github.io/intelmq-mailgen/
 
 Installation
 ============
@@ -14,13 +14,14 @@ Installation
 Dependencies
 ------------
 
-These libraries and programs are required: - The python library
-``psycopg2`` (``python3-psycopg2``) for PostgreSQL communication. - The
-python library ``gpg`` (``python3-gpg``), part of the library gpgme. Due
-to issues with Ubuntu 20.04, this dependency is not installed when
-installed with ``pip`` or ``setup.py`` Other means of distributions (deb
-packages) are not affected by this bug. - GnuPG (v>=2.2) for
-``python3-gpg``.
+These libraries and programs are required:
+
+- The python library ``psycopg2`` (``python3-psycopg2``) for PostgreSQL communication.
+- The python library ``gpg`` (``python3-gpg``), part of the library gpgme. Due
+  to issues with Ubuntu 20.04, this dependency is not installed when
+  installed with ``pip`` or ``setup.py`` Other means of distributions (deb
+  packages) are not affected by this bug.
+- GnuPG (v>=2.2) for ``python3-gpg``.
 
 As a Python3 application, see the ``install_requires`` section in
 setup.py for its dependencies.
@@ -55,7 +56,8 @@ Database
 --------
 
 The ``intelmq-events`` database and the ``intelmq`` database-user should
-already have been set up by the configuration of the PostgreSQL output bot.
+already have been set up by the configuration of a PostgreSQL output bot
+(SQL output bot with engine `postgresql`).
 For use with Mailgen this setup has to be extended:
 
 As database-superuser (usually via system user postgres):
