@@ -327,6 +327,15 @@ possibly with a small script depending on the problem cause.
 Developer Information
 =====================
 
+Database schema
+---------------
+
+Generated using pgadmin4's `ERD tool <https://www.pgadmin.org/docs/pgadmin4/latest/erd_tool.html>`_:
+
+.. image:: contactdb-design.png
+
+The source file is at `intelmq-certbund-contact/sql/contactdb.erd <https://github.com/Intevation/intelmq-certbund-contact/blob/master/sql/contactdb.erd>`_.
+
 Security Considerations
 -----------------------
 
