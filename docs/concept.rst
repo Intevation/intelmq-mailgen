@@ -3,6 +3,26 @@ Concept: Handling notifications with IntelMQ Mailgen
 
 .. image:: notification_overview.svg
 
+certbund-contact expert:
+    queries the contact db, adds all resulting contacts, including all tags, to the event
+certbund-rule expert:
+    based on the rules, decides whom to send the notification
+        prioritization of contacts: automatic vs manual contacts, more specific vs less specific contacts
+    how often (notification interval)
+        -> high priority classifications or VIP networks may have shorter intervals
+    which format (CSV inline, CSV attachment, XARF)
+        -> may depend on the contact or data
+    which template
+        -> may depend on the classification/feed and the recipient
+    result: *"Directives"*
+postgresql output and database:
+    allows asynchronous and batched processing of notifications
+intelmqmail (command line) tool
+    formats, applied to directives
+        format the notification (generates e-mail from template, substitutes variables, defines CSV columns)
+        may postpone the sending, e.g. based on the directive age
+    e-mail templates
+
 Overview
 --------
 
