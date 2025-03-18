@@ -14,11 +14,4 @@ override_dh_install:
 		README.rst \
 		> debian/intelmq-mailgen/usr/share/doc/intelmq-mailgen/README.rst
 
-
-# Without forcing the correct --install-lib path here, files would get
-# installed into /usr/lib/python3.4/site-packages.
-override_dh_auto_install:
-	python3 setup.py install --root=debian/intelmq-mailgen \
-		--prefix=/usr --install-lib=/usr/lib/python3/dist-packages
-
 # vim :set noet sts=0 sw=2 ts=2:

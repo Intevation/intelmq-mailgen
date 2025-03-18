@@ -1,17 +1,35 @@
-#SPDX-FileCopyrightText: 2023 Intevation GmbH
+#Github Workflow to build Debian packages for intelmq-api
+#
+#SPDX-FileCopyrightText: 2020 IntelMQ Team <intelmq-team@cert.at>
 #SPDX-License-Identifier: AGPL-3.0-or-later
-
+#
 name: "Build Debian packages"
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
 
 jobs:
-  build-package:
-    runs-on: ubuntu-20.04
+  build:
+    runs-on: ubuntu-24.04
+    env:
+      # Fixes https://github.com/actions/virtual-environments/issues/3080
+      STORAGE_OPTS: overlay.mount_program=/usr/bin/fuse-overlayfs
     name: Build Debian packages
+    strategy:
+      matrix:
+        codename: ['bullseye', 'bookworm']
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Build package
-      run: bash .github/workflows/scripts/debian-package.sh
+      run: bash .github/workflows/scripts/debian-package.sh ${{ matrix.codename }}
+
+    - name: Upload artifact
+      if: ${{ github.event_name == 'push' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: debian-package-${{ matrix.codename }}-${{ github.sha }}
+        path: '~/artifacts'
+        retention-days: 5
