@@ -275,7 +275,8 @@ def generate_notifications_interactively(config, cur, directives, scripts, dry_r
         batch, pending = pending[:batch_size], pending[batch_size:]
         print(f'Current batch ({len(batch)} of {len(batch) + len(pending)} total):')
         for i in batch:
-            print(f'    * {i["recipient_address"]} {i["template_name"]} ({i["notification_format"]}/{i["event_data_format"]}): {len(i["event_ids"])} events')
+            ids = f": {i['event_ids']}" if log.level == logging.DEBUG else ""
+            print(f'    * {i["recipient_address"]} {i["template_name"]} ({i["notification_format"]}/{i["event_data_format"]}): {len(i["event_ids"])} events{ids}')
         valid_answers = ("c", "s", "a", "q")
         while True:
             answer = input("Options: [c]ontinue (skip), "
