@@ -1,4 +1,4 @@
-#SPDX-FileCopyrightText: 2023 Intevation GmbH
+#SPDX-FileCopyrightText: 2023-2025 Intevation GmbH
 #SPDX-License-Identifier: AGPL-3.0-or-later
 #
 name: "Unit tests"
@@ -6,7 +6,7 @@ on: [push, pull_request]
 
 jobs:
   unittests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       GPGME_VERSION: 1.20.0
     name: Run unit tests with pytest
