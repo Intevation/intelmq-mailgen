@@ -56,6 +56,8 @@ setup(
         # https://bugs.launchpad.net/ubuntu/+source/gpgme1.0/+bug/1977645
         # The dependency can be reactivated when the bug is fixed upstream
         # 'gpg >= 1.10',  # /!\ can (probably) **not** be installed via pip
+        # Later versions can use gpgme from pypi
+        # 'gpgme',
 
         # * (optional) pyxarf v>0.0.5 for python3 installed
         #    https://github.com/xarf/python-xarf
