@@ -67,8 +67,8 @@ CREATE TABLE directives (
 
     inserted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (events_id) REFERENCES events(id),
-    FOREIGN KEY (sent_id) REFERENCES sent(id)
+    FOREIGN KEY (events_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (sent_id) REFERENCES sent(id) ON DELETE CASCADE
 );
 
 

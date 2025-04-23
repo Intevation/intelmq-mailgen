@@ -2,6 +2,16 @@
 
 (most recent on top)
 
+## Add `DROP CASCADE` to foreign keys
+
+```sql
+ALTER TABLE directives
+    DROP CONSTRAINT directives_events_id_fkey,
+    DROP CONSTRAINT directives_sent_id_fkey,
+    ADD CONSTRAINT directives_events_id_fkey FOREIGN KEY (events_id) REFERENCES events(id) ON DELETE CASCADE,
+    ADD CONSTRAINT directives_sent_id_fkey FOREIGN KEY (sent_id) REFERENCES sent(id) ON DELETE CASCADE;
+```
+
 ## Adapt to JSONB type of IntelMQ's `extra` field
 
 ```sql

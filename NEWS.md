@@ -1,6 +1,20 @@
 As this component is to be used and released together with others, see
 [intelmq-cb-mailgen/NEWS](https://github.com/Intevation/intelmq-mailgen-release).
 
+## 1.3.8
+
+Add `ON DELETE CASCADE` to the foreign keys of table `directives`
+that allows deleting data from tables events and sent without manually
+deleting the corresponding entries from the directives.
+
+```sql
+ALTER TABLE directives
+    DROP CONSTRAINT directives_events_id_fkey,
+    DROP CONSTRAINT directives_sent_id_fkey,
+    ADD CONSTRAINT directives_events_id_fkey FOREIGN KEY (events_id) REFERENCES events(id) ON DELETE CASCADE,
+    ADD CONSTRAINT directives_sent_id_fkey FOREIGN KEY (sent_id) REFERENCES sent(id) ON DELETE CASCADE;
+```
+
 ## 1.3.7
 
 To use the `JSONB` type of IntelMQ's `extra` field directly without conversion, re-create these adjusted functions:

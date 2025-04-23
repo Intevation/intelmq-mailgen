@@ -4,6 +4,10 @@ intelmq-mailgen (1.3.8-2) UNRELEASED; urgency=medium
   * Raise error when scripts directory is not a directory or cannot be read.
   * Notifications: Handle NULL aggregate_identifier
   * Tableformat: Handle NULL extra
+  * SQL/Database:
+    * Add `ON DELETE CASCADE` to the foreign keys of table `directives` (#50)
+      that allows deleting data from tables events and sent without manually
+      deleting the corresponding entries from the directives.
 
  -- Sebastian Wagner <sebix@sebix.at>  Tue, 10 Jun 2025 16:06:05 +0200
 
