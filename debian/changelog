@@ -146,7 +146,7 @@ intelmq-mailgen (1.00~rc2) unstable; urgency=medium
 intelmq-mailgen (1.00~rc1) unstable; urgency=medium
 
   * Enforce quoted-printable for text MIME parts.
-    This enforces spliting of long lines on transport.
+    This enforces splitting of long lines on transport.
   * Start a new SMTP session more often.  This fixes problems with session
     Tmieouts when big amounts of directives are processerd in a batch.
 
@@ -236,7 +236,7 @@ intelmq-mailgen (0.94~beta5) unstable; urgency=low
 intelmq-mailgen (0.94~beta4) unstable; urgency=low
 
   * New release
-  * Check for approriate intelmq version
+  * Check for appropriate intelmq version
 
  -- Gernot Schulz <gernot@intevation.de>  Thu, 04 Aug 2016 16:06:24 +0200
 
@@ -298,7 +298,7 @@ intelmq-mailgen (0.94~alpha1) unstable; urgency=medium
 
 intelmq-mailgen (0.93~alpha1) unstable; urgency=medium
 
-  * Mark as alpha again, as most functionallity is still inkomplete.
+  * Mark as alpha again, as most functionality is still inkomplete.
   * Merged in xarf and related code changes.
 
  -- Sascha Wilde <wilde@intevation.de>  Fri, 27 May 2016 10:52:55 +0200
