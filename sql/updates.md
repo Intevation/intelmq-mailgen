@@ -1,8 +1,10 @@
+# Update to SQL Database
+
 (most recent on top)
 
-== Adapt to JSONB type of IntelMQ's `extra` field
+## Adapt to JSONB type of IntelMQ's `extra` field
 
-```
+```sql
 CREATE OR REPLACE FUNCTION json_object_as_text_array(obj JSONB)
 RETURNS TEXT[][]
 AS $$
@@ -89,7 +91,7 @@ END
 $$ LANGUAGE plpgsql VOLATILE;
 ```
 
-== Add expression index for recipient_group to directives (2019-10)
+## Add expression index for recipient_group to directives (2019-10)
 
 For each tag that is saved in the `aggregate_identifier` in the directives
 table, an index is needed if fast substring searches shall be done.
@@ -99,26 +101,29 @@ for the event statistics.
 The PostgreSQL extension `pg_trgm` is
 packaged in `postgresql-contrib-9.5` for Ubuntu 16.04 LTS.
 
-=== forward
+### forward
 
-
+```sql
 CREATE EXTENSION pg_trgm;
 CREATE INDEX directives_recipient_group_idx
           ON directives USING gist (
             (json_object(aggregate_identifier) ->> 'recipient_group')
             gist_trgm_ops
           );
+```
 
-=== backward
+### backward
 
+```sql
 DROP INDEX directives_recipient_group_idx;
 DROP EXTENSION pg_trgm CASCADE;
+```
 
+## Directive Insertion time-stamp
 
-== Directive Insertion time-stamp
+### forward
 
-=== forward
-
+```sql
 ALTER TABLE directives ADD COLUMN inserted_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE directives ALTER COLUMN inserted_at SET DEFAULT CURRENT_TIMESTAMP;
 UPDATE directives
@@ -126,43 +131,48 @@ UPDATE directives
                       WHERE id = events_id)
  WHERE inserted_at IS NULL;
 ALTER TABLE directives ALTER COLUMN inserted_at SET NOT NULL;
+```
 
+### backward
 
-=== backward
-
+```sql
 ALTER TABLE DROP COLUMN inserted_at;
+```
 
+## Adapt directives_grouping_idx to actually used grouping columns
 
-== Adapt directives_grouping_idx to actually used grouping columns
+### forward
 
-=== forward
-
+```sql
 DROP INDEX directives_grouping_idx;
 CREATE INDEX directives_grouping_idx
           ON directives (recipient_address, template_name,
                          notification_format, event_data_format,
                          aggregate_identifier);
+```
 
-== backward
+## backward
 
+```sql
 DROP INDEX directives_grouping_idx;
 CREATE INDEX directives_grouping_idx
           ON directives (medium, recipient_address, template_name,
                          notification_format, event_data_format,
                          aggregate_identifier, endpoint);
+```
+
+## New notification handling
+
+See git history
 
 
-== New notification handling
+## adding ticket_number #28
 
-TODO
+### forward
 
-
-== adding ticket_number #28
-
-=== forward
-
+```sql
 CREATE TABLE ticket_day (
-	initialized_for_day DATE
+    initialized_for_day DATE
 );
 GRANT SELECT, UPDATE ON ticket_day TO eventdb_send_notifications;
 
@@ -171,8 +181,11 @@ ALTER TABLE notifications ALTER COLUMN intelmq_ticket TYPE VARCHAR(18);
 DROP SEQUENCE intelmq_ticket_seq;
 CREATE SEQUENCE intelmq_ticket_seq MINVALUE 10000001;
 ALTER SEQUENCE intelmq_ticket_seq OWNER TO eventdb_send_notifications;
+```
 
-=== backwards
+### backwards
+
+```sql
 DROP SEQUENCE intelmq_ticket_seq;
 CREATE SEQUENCE intelmq_ticket_seq;
 GRANT USAGE ON intelmq_ticket_seq TO eventdb_send_notifications;
@@ -181,4 +194,4 @@ DROP TABLE ticket_day;
 
 -- will only work if all old entries can still be converted
 ALTER TABLE notifications ALTER COLUMN intelmq_ticket TYPE BIGINT;
-
+```
