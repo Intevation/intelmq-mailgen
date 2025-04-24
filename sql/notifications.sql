@@ -171,7 +171,7 @@ BEGIN
        AND template_name IS NOT NULL
        AND notification_format IS NOT NULL
        AND event_data_format IS NOT NULL
-       AND notification_interval IS NOT NULL    
+       AND notification_interval IS NOT NULL
        AND notification_interval != interval '-1 second'
     THEN
         INSERT INTO directives (events_id,
