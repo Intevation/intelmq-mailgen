@@ -25,7 +25,7 @@ import os
 import tempfile
 import datetime
 
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 # if we have the optional module pyxarf, we can define more methods
 try:
@@ -267,7 +267,7 @@ class ScriptContext:
 
     def mail_format_as_csv(self, format_spec: Optional[TableFormat] = None, template=None,
                            substitutions=None, attach_event_data=False,
-                           template_name=None):
+                           template_name=None, envelope_tos: Optional[List[str]] = None):
         """Create an email with the event data formatted as CSV.
 
         The subject and body of the mail are taken from a template. The
@@ -298,6 +298,9 @@ class ScriptContext:
                 data will be included in the mail as attachment.
             template_name: The file name of the template inside
                 "template_dir"
+            envelope_tos: Optional. A list of string to send the e-mail to if different to the Header-To.
+                If None, the email will be sent to all To/Cc/Bcc recipients
+                https://docs.python.org/3/library/smtplib.html#smtplib.SMTP.send_message
 
         Return:
             list of EmailNotification instances. The list has one
@@ -346,7 +349,7 @@ class ScriptContext:
                            recipient=self.directive.recipient_address,
                            subject=subject, body=body,
                            attachments=attachments, gpgme_ctx=self.gpgme_ctx)
-        return [EmailNotification(self.directive, mail, ticket)]
+        return [EmailNotification(self.directive, mail, ticket, envelope_tos=envelope_tos)]
 
     if pyxarf:
         def mail_format_as_xarf(self, xarf_schema):  # noqa
@@ -465,13 +468,23 @@ class Notification:
 
 class EmailNotification(Notification):
 
-    def __init__(self, directive, email, ticket):
+    def __init__(self, directive, email, ticket, envelope_tos: Optional[List[str]] = None):
+        """
+        Parameters:
+        * directive
+        * email
+        * ticket
+        * envelope_tos: Optional. A list of string to send the e-mail to if different to the Header-To.
+          If None, the email will be sent to all To/Cc/Bcc recipients
+          https://docs.python.org/3/library/smtplib.html#smtplib.SMTP.send_message
+        """
         self.email = email
         self.ticket = ticket
+        self.envelope_tos = envelope_tos
         super().__init__(directive)
 
     def send(self, send_context):
-        send_context.smtp.send_message(self.email)
+        send_context.smtp.send_message(self.email, to_addrs=self.envelope_tos)
         send_context.mark_as_sent(self.directive.directive_ids, self.ticket,
                                   self.email["Date"].datetime)
 
