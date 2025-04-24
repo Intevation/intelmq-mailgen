@@ -129,7 +129,7 @@ GRANT SELECT, UPDATE ON directives TO eventdb_send_notifications;
 -- 16.4 LTS we go with json_each_text because in most cases the values
 -- will have come from IntelMQ events where the values have been
 -- validated and e.g. ASNs will always be numbers.
-CREATE OR REPLACE FUNCTION json_object_as_text_array(obj JSON)
+CREATE OR REPLACE FUNCTION json_object_as_text_array(obj JSONB)
 RETURNS TEXT[][]
 AS $$
 DECLARE
@@ -138,7 +138,7 @@ DECLARE
     v TEXT;
 BEGIN
     FOR k, v IN
-        SELECT * FROM json_each_text(obj) ORDER BY key
+        SELECT * FROM jsonb_each_text(obj) ORDER BY key
     LOOP
         arr := arr || ARRAY[ARRAY[k, v]];
     END LOOP;
@@ -149,7 +149,7 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION insert_directive(
     event_id BIGINT,
-    directive JSON,
+    directive JSONB,
     endpoint ip_endpoint
 ) RETURNS VOID
 AS $$
@@ -199,16 +199,16 @@ $$ LANGUAGE plpgsql VOLATILE;
 
 CREATE OR REPLACE FUNCTION directives_from_extra(
     event_id BIGINT,
-    extra JSON
+    extra JSONB
 ) RETURNS VOID
 AS $$
 DECLARE
-    json_directives JSON := extra -> 'certbund' -> 'source_directives';
-    directive JSON;
+    json_directives JSONB := extra -> 'certbund' -> 'source_directives';
+    directive JSONB;
 BEGIN
     IF json_directives IS NOT NULL THEN
         FOR directive
-         IN SELECT * FROM json_array_elements(json_directives) LOOP
+         IN SELECT * FROM jsonb_array_elements(json_directives) LOOP
             PERFORM insert_directive(event_id, directive, 'source');
         END LOOP;
     END IF;
