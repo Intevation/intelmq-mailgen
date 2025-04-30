@@ -235,7 +235,10 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
                         if get_preview:
                             preview_notifications.append(str(notification.email))
                         elif dry_run:
-                            log.debug("Skip sending notification (to %r with subject %r) because of dry run.", notification.email.get('To'), notification.email.get('Subject'))
+                            log.debug("Skip sending notification (to %r%s with subject %r) because of dry run.",
+                                      notification.email.get('To'),
+                                      f' with envelope to "{", ".join(notification.envelope_tos)}"' if notification.envelope_tos else '',
+                                      notification.email.get('Subject'))
                         else:
                             notification.send(context)
                         sent_mails += 1
