@@ -11,6 +11,7 @@ intelmq-mailgen (1.3.7-1) UNRELEASED; urgency=medium
     * Fix script to create `ip_endpoint` as superuser
   * tests:
     * fix runners
+  * cli interface: better error message when format scripts did not generate a notification
 
  -- Sebastian Wagner <swagner@intevation.de>  Tue, 18 Mar 2025 09:23:02 +0100
 
