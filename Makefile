@@ -4,7 +4,7 @@ check:
 check_all:
 	ALLTESTS=1 pytest tests/ -v
 
-.PHONY: check
+.PHONY: check docs
 
 docs:
 	make -C docs html
