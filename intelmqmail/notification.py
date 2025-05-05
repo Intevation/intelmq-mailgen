@@ -124,7 +124,7 @@ class Directive:
         self.template_name = template_name
         self.notification_format = notification_format
         self.event_data_format = event_data_format
-        self.aggregate_identifier = dict(aggregate_identifier)
+        self.aggregate_identifier = dict(aggregate_identifier) if aggregate_identifier else {}
         self.event_ids = event_ids
         self.directive_ids = directive_ids
         self.inserted_at = inserted_at

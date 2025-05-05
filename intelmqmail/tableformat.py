@@ -133,6 +133,8 @@ class ExtraColumn(Column):
             # FIXME: This aspect (not having to convert with newer psycopg
             # versions) has not been tested.
             value = json.loads(value)
+        elif value is None:
+            return None
         return value.get(self.extra_key)
 
 
