@@ -2,6 +2,8 @@ intelmq-mailgen (1.3.8-2) UNRELEASED; urgency=medium
 
   * example script to add bcc contacts: handle existing parameters to mail_format_as_csv
   * Raise error when scripts directory is not a directory or cannot be read.
+  * Notifications: Handle NULL aggregate_identifier
+  * Tableformat: Handle NULL extra
 
  -- Sebastian Wagner <sebix@sebix.at>  Tue, 10 Jun 2025 16:06:05 +0200
 
