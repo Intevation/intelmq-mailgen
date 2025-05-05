@@ -5,6 +5,8 @@
 ## Adapt to JSONB type of IntelMQ's `extra` field
 
 ```sql
+SET ROLE eventdb_owner;
+
 CREATE OR REPLACE FUNCTION json_object_as_text_array(obj JSONB)
 RETURNS TEXT[][]
 AS $$
