@@ -34,6 +34,8 @@ def load_scripts(script_directory, entry_point, logger=None):
         logger = log
     entry_points = []
     found_errors = False
+    if not os.path.isdir(script_directory) or not os.access(script_directory, os.R_OK):
+        raise ValueError(f'Scripts directory {script_directory!r} is not a directory or cannot be read!')
     glob_pattern = os.path.join(glob.escape(script_directory),
                                 "[0-9][0-9]*.py")
     for filename in sorted(glob.glob(glob_pattern)):
