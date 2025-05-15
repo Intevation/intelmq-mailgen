@@ -280,7 +280,7 @@ technician soon. It is recommended to use a monitor system to notify
 administrators as soon as such a string occurs in the log.
 
 Log file contents
-^^^^^^^^^^^^^^^^^
+-----------------
 
 There should be no ``Traceback`` or other ERROR information in the log
 of mailgen. Please read the lines in question, often they have good
@@ -295,7 +295,7 @@ messages of the Mailgen that tries to start up, may appear interwoven
 with the error conditions.
 
 Mailgen needs to lock db rows
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------
 
 During a run, if mailgen is started a second time, it will fail to lock
 the necessary rows in the database. The ``postgres.log`` file will
@@ -308,7 +308,7 @@ record the failed locks, e.g. like
 which can be ignored.
 
 Mailgen tries to continue
-^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------
 
 Mailgen will try to continue processing directives and sending mails,
 even if some batch of mails could not be send for several reasons.
