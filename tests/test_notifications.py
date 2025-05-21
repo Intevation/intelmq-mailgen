@@ -70,3 +70,16 @@ class TestScriptContext(unittest.TestCase):
                 import smtplib
                 email_notifications[0].send(SendContext(cur=cursor, smtp=smtplib.SMTP()))
                 mock_smtp.return_value.send_message.assert_called_with(email_notifications[0].email, to_addrs=['contact@example.com'])
+
+    def test_mail_format_as_csv_ticket_number(self):
+        """ Test parameter ticket_number of mail_format_as_csv """
+        with unittest.mock.patch('psycopg2.connect', autospec=True) as mock_connect:
+            cursor = mock_connect.return_value.cursor
+            script_context = self.context_with_directive(cur=cursor)
+            with unittest.mock.patch('intelmqmail.notification.ScriptContext.new_ticket_number') as new_ticket_number:
+                new_ticket_number.return_value = 1
+                email_notifications = script_context.mail_format_as_csv(template=Template.from_strings('${ticket_number} Test Subject', 'Body\n${events_as_csv}'),
+                                                                        ticket_number=2)
+            assert len(email_notifications) == 1
+            assert email_notifications[0].email.get('Subject') == '2 Test Subject'
+            assert email_notifications[0].ticket == 2

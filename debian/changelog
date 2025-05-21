@@ -1,6 +1,7 @@
 intelmq-mailgen (1.3.8-1) UNRELEASED; urgency=medium
 
-  *
+  * notifications:
+    * allow to pass an existing ticket number to mail_format_as_csv
 
  -- Sebastian Wagner <swagner@intevation.de>  Wed, 30 Apr 2025 17:30:43 +0200
 

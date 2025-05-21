@@ -267,7 +267,8 @@ class ScriptContext:
 
     def mail_format_as_csv(self, format_spec: Optional[TableFormat] = None, template=None,
                            substitutions=None, attach_event_data=False,
-                           template_name=None, envelope_tos: Optional[List[str]] = None):
+                           template_name=None, envelope_tos: Optional[List[str]] = None,
+                           ticket_number: Optional[int] = None):
         """Create an email with the event data formatted as CSV.
 
         The subject and body of the mail are taken from a template. The
@@ -301,6 +302,8 @@ class ScriptContext:
             envelope_tos: Optional. A list of string to send the e-mail to if different to the Header-To.
                 If None, the email will be sent to all To/Cc/Bcc recipients
                 https://docs.python.org/3/library/smtplib.html#smtplib.SMTP.send_message
+            ticket_number: Optional integer. Default: get a new ticket number
+                with self.new_ticket_number()
 
         Return:
             list of EmailNotification instances. The list has one
@@ -322,14 +325,15 @@ class ScriptContext:
         elif template is None:
             template = self.read_template(templates=self.templates)
 
-        ticket = self.new_ticket_number()
+        if not ticket_number:
+            ticket_number = self.new_ticket_number()
 
         if substitutions is None:
             substitutions = {}
         else:
             substitutions = substitutions.copy()
 
-        substitutions["ticket_number"] = ticket
+        substitutions["ticket_number"] = ticket_number
         substitutions["events_as_csv"] = (
             events_as_csv if not attach_event_data else "")
 
@@ -349,7 +353,7 @@ class ScriptContext:
                            recipient=self.directive.recipient_address,
                            subject=subject, body=body,
                            attachments=attachments, gpgme_ctx=self.gpgme_ctx)
-        return [EmailNotification(self.directive, mail, ticket, envelope_tos=envelope_tos)]
+        return [EmailNotification(self.directive, mail, ticket_number, envelope_tos=envelope_tos)]
 
     if pyxarf:
         def mail_format_as_xarf(self, xarf_schema):  # noqa
