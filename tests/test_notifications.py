@@ -60,10 +60,12 @@ class TestScriptContext(unittest.TestCase):
             cursor = mock_connect.return_value.cursor
             script_context = self.context_with_directive(cur=cursor)
             with unittest.mock.patch('intelmqmail.notification.ScriptContext.new_ticket_number') as new_ticket_number:
-                email_notifications = script_context.mail_format_as_csv(template=Template.from_strings('Test Subject', 'Body\n${events_as_csv}'),
+                new_ticket_number.return_value = 1
+                email_notifications = script_context.mail_format_as_csv(template=Template.from_strings('${ticket_number} Test Subject', 'Body\n${events_as_csv}'),
                                                                         envelope_tos=['contact@example.com'])  # the internal contact, Envelope-To
             assert len(email_notifications) == 1
             assert email_notifications[0].email.get_all('To') == ['admin@example.com']  # the normal recipient, header-to
+            assert email_notifications[0].email.get('Subject') == '1 Test Subject'
             with unittest.mock.patch('smtplib.SMTP', autospec=True) as mock_smtp:
                 import smtplib
                 email_notifications[0].send(SendContext(cur=cursor, smtp=smtplib.SMTP()))
