@@ -268,7 +268,7 @@ class ScriptContext:
     def mail_format_as_csv(self, format_spec: Optional[TableFormat] = None, template=None,
                            substitutions=None, attach_event_data=False,
                            template_name=None, envelope_tos: Optional[List[str]] = None,
-                           ticket_number: Optional[int] = None):
+                           ticket_number: Optional[int] = None, mark_as_sent: bool = True):
         """Create an email with the event data formatted as CSV.
 
         The subject and body of the mail are taken from a template. The
@@ -353,7 +353,7 @@ class ScriptContext:
                            recipient=self.directive.recipient_address,
                            subject=subject, body=body,
                            attachments=attachments, gpgme_ctx=self.gpgme_ctx)
-        return [EmailNotification(self.directive, mail, ticket_number, envelope_tos=envelope_tos)]
+        return [EmailNotification(self.directive, mail, ticket_number, envelope_tos=envelope_tos, mark_as_sent=mark_as_sent)]
 
     if pyxarf:
         def mail_format_as_xarf(self, xarf_schema):  # noqa
@@ -472,7 +472,10 @@ class Notification:
 
 class EmailNotification(Notification):
 
-    def __init__(self, directive, email, ticket, envelope_tos: Optional[List[str]] = None):
+    mark_as_sent: bool = True
+
+    def __init__(self, directive, email, ticket, envelope_tos: Optional[List[str]] = None,
+                 mark_as_sent: bool = True):
         """
         Parameters:
         * directive
@@ -481,16 +484,19 @@ class EmailNotification(Notification):
         * envelope_tos: Optional. A list of string to send the e-mail to if different to the Header-To.
           If None, the email will be sent to all To/Cc/Bcc recipients
           https://docs.python.org/3/library/smtplib.html#smtplib.SMTP.send_message
+        * mark_as_sent: Optional, default: true. Mark the e-mail as sent in the database
         """
         self.email = email
         self.ticket = ticket
         self.envelope_tos = envelope_tos
+        self.mark_as_sent = mark_as_sent
         super().__init__(directive)
 
     def send(self, send_context):
         send_context.smtp.send_message(self.email, to_addrs=self.envelope_tos)
-        send_context.mark_as_sent(self.directive.directive_ids, self.ticket,
-                                  self.email["Date"].datetime)
+        if self.mark_as_sent:
+            send_context.mark_as_sent(self.directive.directive_ids, self.ticket,
+                                    self.email["Date"].datetime)
 
     def __repr__(self) -> str:
         return f'EmailNotification(email={self.email!r}, ticket={self.ticket!r})'
