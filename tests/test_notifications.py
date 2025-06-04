@@ -3,7 +3,8 @@
 Tests for intelmqmail.notifications.
 """
 
-import unittest, unittest.mock
+import unittest
+import unittest.mock
 import smtplib
 from datetime import datetime, timedelta, timezone
 
@@ -14,22 +15,22 @@ from intelmqmail.templates import Template
 class TestScriptContext(unittest.TestCase):
 
     def context_with_directive(self, recipient_address="admin@example.com",
-                                template_name="generic_plaintext.txt",
-                                notification_format="generic_plaintext",
-                                event_data_format="inline_csv",
-                                aggregate_identifier=(),
-                                event_ids=(100001, 100302),
-                                directive_ids=(10, 11, 12), inserted_at=None,
-                                last_sent=None, notification_interval=None,
-                                cur=None):
+                               template_name="generic_plaintext.txt",
+                               notification_format="generic_plaintext",
+                               event_data_format="inline_csv",
+                               aggregate_identifier=(),
+                               event_ids=(100001, 100302),
+                               directive_ids=(10, 11, 12), inserted_at=None,
+                               last_sent=None, notification_interval=None,
+                               cur=None):
         directive = Directive(recipient_address=recipient_address,
-                                template_name=template_name,
-                                notification_format=notification_format,
-                                event_data_format=event_data_format,
-                                aggregate_identifier=aggregate_identifier,
-                                event_ids=event_ids, directive_ids=directive_ids,
-                                inserted_at=inserted_at, last_sent=last_sent,
-                                notification_interval=notification_interval)
+                              template_name=template_name,
+                              notification_format=notification_format,
+                              event_data_format=event_data_format,
+                              aggregate_identifier=aggregate_identifier,
+                              event_ids=event_ids, directive_ids=directive_ids,
+                              inserted_at=inserted_at, last_sent=last_sent,
+                              notification_interval=notification_interval)
         return ScriptContext(config={'sender': 'intelmqmail@intelmq.example'}, cur=cur, gpgme_ctx=None, directive=directive, logger=None)
 
     def test_notification_interval_exceeded_no_last_sent(self):

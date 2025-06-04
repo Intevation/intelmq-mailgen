@@ -496,7 +496,7 @@ class EmailNotification(Notification):
         send_context.smtp.send_message(self.email, to_addrs=self.envelope_tos)
         if self.mark_as_sent:
             send_context.mark_as_sent(self.directive.directive_ids, self.ticket,
-                                    self.email["Date"].datetime)
+                                      self.email["Date"].datetime)
 
     def __repr__(self) -> str:
         return f'EmailNotification(email={self.email!r}, ticket={self.ticket!r})'
