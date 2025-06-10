@@ -15,11 +15,11 @@ def mail_format_as_csv_bcc(self, *args, **kwargs):
     if recipient_group and recipient_group in bcc_contacts:
         for bcc_contact in bcc_contacts[recipient_group]:
             self.logger.debug(f"Sending email in bcc to {bcc_contact['recipients']} with format {bcc_contact['format']}'")
-            notifications.extend(self.old_mail_format_as_csv(*args, **kwargs,
-                                                             envelope_tos=bcc_contact['recipients'],
-                                                             attach_event_data=bcc_contact['format'] == 'CSV_attachment',
-                                                             ticket_number=ticket_number,
-                                                             mark_as_sent=False))
+            kwargs.update({"envelope_tos": bcc_contact['recipients'],
+                           "attach_event_data": bcc_contact['format'] == 'CSV_attachment',
+                           "ticket_number": ticket_number,
+                           "mark_as_sent": False})
+            notifications.extend(self.old_mail_format_as_csv(*args, **kwargs))
     return notifications
 
 
