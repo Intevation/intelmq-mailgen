@@ -304,6 +304,7 @@ class ScriptContext:
                 https://docs.python.org/3/library/smtplib.html#smtplib.SMTP.send_message
             ticket_number: Optional integer. Default: get a new ticket number
                 with self.new_ticket_number()
+            mark_as_sent: Optional, boolean
 
         Return:
             list of EmailNotification instances. The list has one
