@@ -30,7 +30,7 @@ jobs:
       run: pip install pytest
     - run: echo $PYTHON
     - name: Install gpgme python bindings
-      run: pip install gpgme
+      run: pip install https://test-files.pythonhosted.org/packages/aa/8d/d431eb66d98721abf847129d09c47e1610d6d771e003f0cf5a90bbc45f4b/gpg-2.0.1.tar.gz
 
     - name: Install dependencies
       run: pip install -e .
