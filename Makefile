@@ -11,3 +11,6 @@ docs:
 
 pycodestyle:
 	pycodestyle docs/ example_scripts/ extras/ intelmqmail/ sql/ templates/ tests/
+
+codespell:
+	codespell . docs/ -S './debian/*,./build/*,./.github,docs/_build' -x .github/workflows/codespell.excludelines -I .github/workflows/codespell.excludewords
