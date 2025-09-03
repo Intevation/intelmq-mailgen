@@ -10,7 +10,8 @@ intelmq-mailgen (1.4.0-1) UNRELEASED; urgency=medium
       deleting the corresponding entries from the directives.
   * intelmqcbmail tool:
     * in verbose mode, also print the event IDs.
-    * New parameter `--batch-size` (#55).
+    * New parameter `--batch-size` (#56).
+    * No exception & traceback when no notifications are generated (#57, fixes #48).
 
  -- Sebastian Wagner <sebix@sebix.at>  Tue, 10 Jun 2025 16:06:05 +0200
 
