@@ -157,7 +157,7 @@ def create_notifications(cur, directive, config, scripts, gpgme_ctx, template: O
             log.debug("Script %r finished. Result: %r", script.filename, notifications)
         if notifications:
             return notifications
-    raise NotImplementedError(f"No notifications created by scripts for directive {directive!r}")
+    log.error(f"No notifications created by scripts for this directive.")  # send_notifications will print the details of the directive
 
 
 def send_notifications(config, directives, cur, scripts, template: Optional[Template] = None,
@@ -225,6 +225,9 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
             if not notifications:
                 log.warning("No emails for sending were generated for %r!",
                             directive)
+                # A directive which is neither postponed, nor sent is an error. Previously this threw an exception with traceback
+                # See https://github.com/Intevation/intelmq-mailgen/issues/48
+                errors += 1
             elif notifications is Postponed:
                 postponed += 1
             else:
