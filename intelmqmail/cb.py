@@ -267,9 +267,7 @@ def send_notifications(config, directives, cur, scripts, template: Optional[Temp
     return (sent_mails, postponed, errors)
 
 
-def generate_notifications_interactively(config, cur, directives, scripts, dry_run: bool = False):
-    batch_size = 10
-
+def generate_notifications_interactively(config, cur, directives, scripts, dry_run: bool = False, batch_size: int = 10):
     pending = directives[:]
     while pending:
         batch, pending = pending[:batch_size], pending[batch_size:]
@@ -307,7 +305,7 @@ def generate_notifications_interactively(config, cur, directives, scripts, dry_r
 
 def mailgen(config: dict, scripts: list, process_all: bool = False, template: Optional[str] = None, templates: Optional[Dict[str, str]] = None,
             dry_run: bool = False, get_preview: bool = False, conn: Optional[psycopg2_connection] = None,
-            additional_directive_where=Optional[str], default_format_spec: Optional[TableFormat] = None) -> str:
+            additional_directive_where=Optional[str], default_format_spec: Optional[TableFormat] = None, batch_size: Optional[int] = None) -> str:
     """
     Run mailgen either interactively (process_all=False) or non-interactively (process_all=True)
 
@@ -373,7 +371,7 @@ def mailgen(config: dict, scripts: list, process_all: bool = False, template: Op
             log.info(result)
         else:
             generate_notifications_interactively(config, cur, directives,
-                                                 scripts, dry_run=dry_run)
+                                                 scripts, dry_run=dry_run, batch_size=batch_size)
     finally:
         if cur is not None:
             cur.close()
@@ -411,6 +409,8 @@ def main():
                         help='Activate verbose debug logging')
     parser.add_argument('-n', '--dry-run', action='store_true',
                         help='Dry run. Simulate only.')
+    parser.add_argument('-N', '--batch-size', default=10, type=int,
+                        help='Size of the batches to process when run interactively')
     args = parser.parse_args()
 
     config = read_configuration(conf_file_path=args.config)
@@ -422,12 +422,13 @@ def main():
     if args.verbose:
         log.setLevel(logging.DEBUG)
 
-    start(config, process_all=args.all, dry_run=args.dry_run)
+    start(config, process_all=args.all, dry_run=args.dry_run, batch_size=args.batch_size)
 
 
 def start(config: dict, process_all=False, template: Optional[str] = None, templates: Optional[Dict[str, str]] = None,
           dry_run: bool = False, get_preview: bool = False, conn: Optional[psycopg2_connection] = None,
-          additional_directive_where: Optional[str] = None, default_format_spec: Optional[TableFormat] = None) -> str:
+          additional_directive_where: Optional[str] = None, default_format_spec: Optional[TableFormat] = None,
+          batch_size: Optional[int] = None) -> str:
     """
     Start mailgen
     can be used by other programs
@@ -447,7 +448,7 @@ def start(config: dict, process_all=False, template: Optional[str] = None, templ
 
     return mailgen(config, scripts, process_all=process_all, template=template, templates=templates, dry_run=dry_run,
                    get_preview=get_preview, conn=conn, additional_directive_where=additional_directive_where,
-                   default_format_spec=default_format_spec)
+                   default_format_spec=default_format_spec, batch_size=batch_size)
 
 
 # to lower the chance of problems like
