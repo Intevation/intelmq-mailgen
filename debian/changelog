@@ -1,4 +1,4 @@
-intelmq-mailgen (1.4.0-1) UNRELEASED; urgency=medium
+intelmq-mailgen (1.4.0-1) stable; urgency=medium
 
   * example script to add bcc contacts: handle existing parameters to mail_format_as_csv
   * Raise error when scripts directory is not a directory or cannot be read.
@@ -13,7 +13,7 @@ intelmq-mailgen (1.4.0-1) UNRELEASED; urgency=medium
     * New parameter `--batch-size` (#56).
     * No exception & traceback when no notifications are generated (#57, fixes #48).
 
- -- Sebastian Wagner <sebix@sebix.at>  Tue, 10 Jun 2025 16:06:05 +0200
+ -- Sebastian Wagner <sebix@sebix.at>  Thu, 04 Sep 2025 22:14:10 +0200
 
 intelmq-mailgen (1.3.8-1) stable; urgency=medium
 

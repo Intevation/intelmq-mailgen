@@ -2,7 +2,7 @@
 
 (most recent on top)
 
-## Add `DROP CASCADE` to foreign keys
+## Add `DROP CASCADE` to foreign keys (1.4.0)
 
 ```sql
 ALTER TABLE directives
@@ -12,7 +12,7 @@ ALTER TABLE directives
     ADD CONSTRAINT directives_sent_id_fkey FOREIGN KEY (sent_id) REFERENCES sent(id) ON DELETE CASCADE;
 ```
 
-## Adapt to JSONB type of IntelMQ's `extra` field
+## Adapt to JSONB type of IntelMQ's `extra` field (1.3.7)
 
 ```sql
 SET ROLE eventdb_owner;
