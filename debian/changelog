@@ -9,7 +9,7 @@ intelmq-mailgen (1.4.0-1) UNRELEASED; urgency=medium
       that allows deleting data from tables events and sent without manually
       deleting the corresponding entries from the directives.
   * intelmqcbmail tool:
-    * in verbose mode, also print the event IDs.
+    * in double verbose mode, also print the event IDs.
     * New parameter `--batch-size` (#56).
     * No exception & traceback when no notifications are generated (#57, fixes #48).
 

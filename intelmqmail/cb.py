@@ -56,7 +56,7 @@ from typing import Optional
 
 logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
-
+debug_level = 0
 
 if locale.getpreferredencoding() != 'UTF-8':
     log.critical(
@@ -276,7 +276,7 @@ def generate_notifications_interactively(config, cur, directives, scripts, dry_r
         batch, pending = pending[:batch_size], pending[batch_size:]
         print(f'Current batch ({len(batch)} of {len(batch) + len(pending)} total):')
         for i in batch:
-            ids = f": {i['event_ids']}" if log.level == logging.DEBUG else ""
+            ids = f": {i['event_ids']}" if debug_level >= 2 else ""
             print(f'    * {i["recipient_address"]} {i["template_name"]} ({i["notification_format"]}/{i["event_data_format"]}): {len(i["event_ids"])} events{ids}')
         valid_answers = ("c", "s", "a", "q")
         while True:
@@ -408,7 +408,7 @@ def main():
                         help='Process all events (batch mode) non-interactively')
     parser.add_argument('-c', '--config',
                         help='Alternative system configuration file')
-    parser.add_argument('-v', '--verbose', action='store_true',
+    parser.add_argument('-v', '--verbose', action='count', default=0,
                         help='Activate verbose debug logging')
     parser.add_argument('-n', '--dry-run', action='store_true',
                         help='Dry run. Simulate only.')
@@ -424,6 +424,8 @@ def main():
     module_logger.setLevel(config.get("logging_level", "INFO"))
     if args.verbose:
         log.setLevel(logging.DEBUG)
+        global debug_level
+        debug_level = args.verbose
 
     start(config, process_all=args.all, dry_run=args.dry_run, batch_size=args.batch_size)
 
