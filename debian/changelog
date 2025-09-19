@@ -1,3 +1,9 @@
+intelmq-mailgen (1.4.1-1) UNRELEASED; urgency=medium
+
+  * Locale detection: Make check case-insensitive
+
+ -- Sebastian Wagner <sebix@sebix.at>  Fri, 19 Sep 2025 09:02:39 +0200
+
 intelmq-mailgen (1.4.0-1) stable; urgency=medium
 
   * example script to add bcc contacts: handle existing parameters to mail_format_as_csv

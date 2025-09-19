@@ -1,6 +1,8 @@
 As this component is to be used and released together with others, see
 [intelmq-cb-mailgen/NEWS](https://github.com/Intevation/intelmq-mailgen-release).
 
+## 1.4.1
+
 ## 1.4.0
 
 Add `ON DELETE CASCADE` to the foreign keys of table `directives`

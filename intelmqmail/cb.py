@@ -58,7 +58,7 @@ logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
 debug_level = 0
 
-if locale.getpreferredencoding() != 'UTF-8':
+if locale.getpreferredencoding().lower() != 'utf-8':
     log.critical(
         'The preferred encoding of your locale setting is not UTF-8'
         ' but %r. Exiting.', locale.getpreferredencoding())
