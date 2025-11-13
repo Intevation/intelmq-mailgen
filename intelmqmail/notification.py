@@ -54,6 +54,9 @@ FALLBACK_FORMAT_SPEC = build_table_format(
 class NotificationError(Exception):
     """Base class for notification related exceptions"""
 
+    def __repr__(self):
+        return f'NotificationError({self.args!r})'
+
 
 class InvalidDirective(NotificationError):
     """Indicates an invalid notification directive.
@@ -65,6 +68,9 @@ class InvalidDirective(NotificationError):
     formats or templates.
     """
 
+    def __repr__(self):
+        return f'InvalidDirective({self.args!r})'
+
 
 class InvalidTemplate(InvalidDirective):
     """Indicates a problem with a template needed for a directive.
@@ -73,6 +79,9 @@ class InvalidTemplate(InvalidDirective):
     def __init__(self, template_name):
         self.template_name = template_name
         super().__init__(f"Invalid template {self.template_name!r}")
+
+    def __repr__(self):
+        return f'InvalidTemplate(template_name={self.template_name!r})'
 
 
 class Directive:
@@ -145,6 +154,18 @@ class Directive:
         it, return ``None`` otherwise.
         """
         return self.aggregate_identifier.get(key)
+
+    def __repr__(self):
+        return (f'Directive(recipient_address={self.recipient_address!r}, '
+                f'template_name={self.template_name!r}, '
+                f'notification_format={self.notification_format!r}, '
+                f'event_data_format={self.event_data_format!r}, '
+                f'aggregate_identifier={self.aggregate_identifier!r}, '
+                f'event_ids={self.event_ids!r}, '
+                f'directive_ids={self.directive_ids!r}, '
+                f'inserted_at={self.inserted_at!r}, '
+                f'notification_interval={self.notification_interval!r}, '
+                f'last_sent={self.last_sent!r})')
 
 
 def parse_timestamp(raw):
@@ -451,6 +472,17 @@ class ScriptContext:
 
             return msg
 
+    def __repr__(self):
+        return (f'ScriptContext(config={self.config!r}, '
+                f'db_cursor={self.db_cursor!r}, '
+                f'gpgme_ctx={self.gpgme_ctx!r}, '
+                f'directive={self.directive!r}, '
+                f'logger={self.logger!r}, '
+                f'now={self.now!r}, '
+                f'fallback_template={self.fallback_template!r}, '
+                f'templates={self.templates!r}, '
+                f'default_format_spec={self.default_format_spec!r})')
+
 
 class SendContext:
 
@@ -461,6 +493,9 @@ class SendContext:
     def mark_as_sent(self, directive_ids, ticket, sent_at):
         mark_as_sent(self.cur, directive_ids, ticket, sent_at)
 
+    def __repr__(self):
+        return f'SendContext(cur={self.cur!r}, smtp={self.smtp!r})'
+
 
 class Notification:
 
@@ -469,6 +504,9 @@ class Notification:
 
     def send(self, context):
         pass
+
+    def __repr__(self):
+        return f'Notification(directive={self.directive!r})'
 
 
 class EmailNotification(Notification):
@@ -500,7 +538,11 @@ class EmailNotification(Notification):
                                       self.email["Date"].datetime)
 
     def __repr__(self) -> str:
-        return f'EmailNotification(email={self.email!r}, ticket={self.ticket!r})'
+        return (f'EmailNotification(directive={self.directive!r}, '
+                f'email={self.email!r}, '
+                f'ticket={self.ticket!r}, '
+                f'envelope_tos={self.envelope_tos!r}, '
+                f'mark_as_sent={self.mark_as_sent!r})')
 
 
 class _Postponed:
