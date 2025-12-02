@@ -19,6 +19,7 @@ CREATE ROLE eventdb_send_notifications
 ALTER DATABASE :"DBNAME" OWNER TO eventdb_owner;
 
 ALTER TABLE events OWNER TO eventdb_owner;
+GRANT ALL PRIVILEGES ON SCHEMA public TO eventdb_owner;
 
 -- must be superuser to create type
 CREATE TYPE ip_endpoint AS ENUM ('source', 'destination');
