@@ -2,6 +2,14 @@
 
 (most recent on top)
 
+## Privileges to database owner (1.4.1)
+
+This change is primarily important for new setups, executing the SQL setup script.
+Applying the change to existing installations just keeps them in sync and has no operational effects.
+```sql
+GRANT ALL PRIVILEGES ON SCHEMA public TO eventdb_owner;
+```
+
 ## Add `DROP CASCADE` to foreign keys (1.4.0)
 
 ```sql
