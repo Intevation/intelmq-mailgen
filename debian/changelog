@@ -1,7 +1,9 @@
 intelmq-mailgen (1.4.1-1) UNRELEASED; urgency=medium
 
   * Locale detection: Make check case-insensitive
-  * Database: Grant the `eventdb_owner` some privileges
+  * Database:
+    * Grant the `eventdb_owner` some privileges
+    * Allow re-execution of the initialization script (#66)
   * Documentation:
     * Add documentation on the configuration (#65)
 
