@@ -1,4 +1,7 @@
 sql/*  usr/share/intelmq-mailgen/sql/
 tests/*  usr/share/intelmq-mailgen/tests/
 intelmq-mailgen.conf.example etc/intelmq/
-example_scripts/* etc/intelmq/mailgen/formats/
+example_scripts/00_add_variables_to_context.py etc/intelmq/mailgen/formats/
+example_scripts/20_demo.py etc/intelmq/mailgen/formats/
+example_scripts/variables.json etc/intelmq/mailgen/formats/
+templates/demo.txt etc/intelmq/mailgen/templates/
