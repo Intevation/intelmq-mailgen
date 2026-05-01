@@ -1,0 +1,12 @@
+[CSIRT] Incidents in your network
+
+There are problems in your network that cause troubles.
+
+This is not a good text at all.
+
+This report was generated my IntelMQ + Mailgen.
+
+Best regards
+
+Your favorite CSIRT team
+
