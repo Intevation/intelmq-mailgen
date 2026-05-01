@@ -6,6 +6,11 @@ intelmq-mailgen (1.4.1-1) UNRELEASED; urgency=medium
     * Allow re-execution of the initialization script (#66)
   * Documentation:
     * Add documentation on the configuration (#65)
+  * Example scripts (#69):
+    * Add minimal demo script and template
+    * Consistently name the files 00_name.py
+    * Install example scripts to documentation path, do not overwrite existing configuration (fixes #68)
+    * create template directory with demo template and install all templates as documentation (#fixes 67)
 
  -- Sebastian Wagner <sebix@sebix.at>  Fri, 19 Sep 2025 09:02:39 +0200
 
